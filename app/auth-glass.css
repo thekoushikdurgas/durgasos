@@ -78,6 +78,7 @@
   position: relative;
   width: 100%;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   border-radius: 9999px;
   padding: 0.25rem;
@@ -98,4 +99,26 @@
 }
 .glass-input-wrap:focus-within .glass-auth-input-shell {
   backdrop-filter: blur(0.01em);
+}
+
+/* Inputs sit on the glass pill; strip default form borders / focus ring shadow so only the shell reads as chrome */
+.glass-auth-input-shell :where(input[type='email'], input[type='password'], input[type='text']) {
+  appearance: none;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  border-image: none !important;
+  box-shadow: none !important;
+}
+
+.glass-auth-input-shell :where(input):focus,
+.glass-auth-input-shell :where(input):focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-width: 0px;
 }

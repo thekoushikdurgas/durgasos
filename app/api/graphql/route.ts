@@ -1,15 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const DEFAULT_DEV_GRAPHQL = 'http://127.0.0.1:8000/graphql';
+
 function backendGraphqlUrl(): string | null {
-  return process.env.BACKEND_GRAPHQL_URL || process.env.NEXT_PUBLIC_GRAPHQL_URL || null;
+  const explicit =
+    process.env.BACKEND_GRAPHQL_URL || process.env.NEXT_PUBLIC_GRAPHQL_URL || null;
+  if (explicit) return explicit;
+  if (process.env.NODE_ENV === 'development') {
+    return DEFAULT_DEV_GRAPHQL;
+  }
+  return null;
 }
 
 export async function POST(req: NextRequest) {
   const target = backendGraphqlUrl();
   if (!target) {
     return NextResponse.json(
-      { errors: [{ message: 'BACKEND_GRAPHQL_URL or NEXT_PUBLIC_GRAPHQL_URL is not set' }] },
-      { status: 500 }
+      {
+        errors: [
+          {
+            message:
+              'Set BACKEND_GRAPHQL_URL or NEXT_PUBLIC_GRAPHQL_URL (see durgasos/.env.example).',
+          },
+        ],
+      },
+      { status: 503 }
     );
   }
 

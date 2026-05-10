@@ -105,7 +105,7 @@ export function AuthSignUpFieldset({
     <fieldset
       disabled={disabled}
       {...(ariaBusy ? { 'aria-busy': 'true' as const } : {})}
-      className="relative z-10 mx-auto flex w-full max-w-[min(320px,100vw-2rem)] flex-col items-center gap-8 p-4"
+      className="relative z-10 mx-0 flex w-full max-w-full flex-col items-center justify-center gap-[5px] p-0"
     >
       <AnimatePresence mode="wait">
         {authStep === 'email' && (
@@ -115,19 +115,12 @@ export function AuthSignUpFieldset({
             animate={{ y: 0, opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={t}
-            className="flex w-full flex-col items-center gap-4"
+            className="flex w-full flex-col items-center gap-[10px]"
           >
-            <BlurFade delay={0.25 * 1} className="w-full">
-              <div className="text-center">
-                <p className="text-foreground text-balance px-1 font-serif text-3xl font-light tracking-tight sm:text-5xl md:text-6xl">
-                  Create your Durgas OS account
-                </p>
-              </div>
-            </BlurFade>
-            <BlurFade delay={0.25 * 2}>
+            <BlurFade delay={0.25 * 1}>
               <p className="text-muted-foreground text-sm font-medium">Or continue with</p>
             </BlurFade>
-            <BlurFade delay={0.25 * 3}>
+            <BlurFade delay={0.25 * 2}>
               <div className="flex w-full max-w-[300px] flex-wrap items-center justify-center gap-3 sm:gap-4">
                 <GlassButton
                   type="button"
@@ -151,7 +144,7 @@ export function AuthSignUpFieldset({
                 </GlassButton>
               </div>
             </BlurFade>
-            <BlurFade delay={0.25 * 4} className="w-full max-w-[300px]">
+            <BlurFade delay={0.25 * 3} className="w-full max-w-[300px]">
               <div className="flex w-full items-center gap-2 py-2">
                 <hr className="border-border w-full" />
                 <span className="text-muted-foreground text-xs font-semibold">OR</span>
@@ -167,7 +160,7 @@ export function AuthSignUpFieldset({
             animate={{ y: 0, opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={t}
-            className="flex w-full flex-col items-center gap-4 text-center"
+            className="flex w-fit flex-col items-center gap-[15px] text-center"
           >
             <BlurFade delay={0} className="w-full">
               <div className="text-center">
@@ -190,7 +183,7 @@ export function AuthSignUpFieldset({
             animate={{ y: 0, opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={t}
-            className="flex w-full flex-col items-center gap-4 text-center"
+            className="flex w-fit flex-col items-center gap-[15px] text-center"
           >
             <BlurFade delay={0} className="w-full">
               <div className="text-center">
@@ -208,7 +201,7 @@ export function AuthSignUpFieldset({
         )}
       </AnimatePresence>
 
-      <form onSubmit={handleFinalSubmit} className="w-full max-w-[300px] space-y-6">
+      <form onSubmit={handleFinalSubmit} className="mt-[15px] w-full max-w-[300px] space-y-6">
         <AnimatePresence>
           {authStep !== 'confirmPassword' && (
             <motion.div
@@ -218,7 +211,7 @@ export function AuthSignUpFieldset({
               className="w-full space-y-6"
             >
               <BlurFade
-                delay={authStep === 'email' ? 0.25 * 5 : 0}
+                delay={authStep === 'email' ? 0.25 * 4 : 0}
                 inView={true}
                 className="w-full"
               >
@@ -259,7 +252,7 @@ export function AuthSignUpFieldset({
                       <div
                         className={cn(
                           'relative z-10 flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out',
-                          isEmailValid && authStep === 'email' ? 'w-10 pr-1' : 'w-0'
+                          isEmailValid && authStep === 'email' ? 'self-stretch w-fit pr-1' : 'w-0'
                         )}
                       >
                         <GlassButton
@@ -326,7 +319,7 @@ export function AuthSignUpFieldset({
                           <div
                             className={cn(
                               'relative z-10 flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out',
-                              isPasswordValid ? 'w-10 pr-1' : 'w-0'
+                              isPasswordValid ? 'self-stretch w-fit pr-1' : 'w-0'
                             )}
                           >
                             <GlassButton
@@ -406,7 +399,7 @@ export function AuthSignUpFieldset({
                     <div
                       className={cn(
                         'relative z-10 flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out',
-                        isConfirmPasswordValid ? 'w-10 pr-1' : 'w-0'
+                        isConfirmPasswordValid ? 'self-stretch w-fit pr-1' : 'w-0'
                       )}
                     >
                       <GlassButton
