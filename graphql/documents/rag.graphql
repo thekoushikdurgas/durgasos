@@ -1,0 +1,11 @@
+query RagList($collectionName: String, $limit: Int, $offset: Int) {
+  ragList(collectionName: $collectionName, limit: $limit, offset: $offset)
+}
+
+query RagQuery($query: String!, $k: Int, $collectionName: String) {
+  ragQuery(query: $query, k: $k, collectionName: $collectionName)
+}
+
+mutation RagIngest($params: JSON!) {
+  ragIngest(params: $params)
+}

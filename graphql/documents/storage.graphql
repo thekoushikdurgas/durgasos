@@ -1,0 +1,11 @@
+query StorageBuckets($params: JSON) {
+  storageBuckets(params: $params)
+}
+
+query StorageList($params: JSON) {
+  storageList(params: $params)
+}
+
+mutation StorageUpload($params: JSON!) {
+  storageUpload(params: $params)
+}

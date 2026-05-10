@@ -1,0 +1,11 @@
+query SystemHealth($params: JSON) {
+  systemHealth(params: $params)
+}
+
+query SystemReady($params: JSON) {
+  systemReady(params: $params)
+}
+
+query MetricsSummary($params: JSON) {
+  metricsSummary(params: $params)
+}

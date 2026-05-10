@@ -1,0 +1,3 @@
+mutation AnalyzeImage($params: JSON!) {
+  analyzeImage(params: $params)
+}

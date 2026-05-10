@@ -1,0 +1,3 @@
+mutation TextToImage($params: JSON!) {
+  textToImage(params: $params)
+}

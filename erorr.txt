@@ -1,0 +1,615 @@
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos>codebase.bat
+
+========================================
+  CONTACT360 DASHBOARD STATE CHECK
+========================================
+
+Current directory: E:\durgas_ai\thekoushikdurgas.ai\durgasos
+
+[0] CSS styling inventory...
+----------------------------------------
+  Lists @import graph, Tailwind signals, inline style={{}} locations.
+  Output: reports\css-inventory.txt
+CSS inventory written to reports/css-inventory.txt
+  OK CSS inventory written
+
+
+[1/10] Cleaning and preparing...
+----------------------------------------
+  Running: npm run clean:all
+
+> ai-studio-applet@0.1.0 clean:all
+> node scripts/clean.mjs --all
+
+Cleaned .next, out, coverage, .turbo, reports, tsconfig.tsbuildinfo
+  OK Clean completed
+
+  Running: npm install
+
+up to date, audited 716 packages in 4s
+
+205 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+  OK Dependencies installed
+
+[2/10] GraphQL Codegen...
+----------------------------------------
+  Regenerates graphql/generated from graphql/schema.graphql + graphql/documents (offline).
+  Optional: set CODEGEN_SCHEMA_URL for introspection instead of local SDL (.env.example).
+  Running: npm run codegen
+
+> ai-studio-applet@0.1.0 codegen
+> node scripts/codegen.mjs
+
+√ Parse Configuration
+√ Generate outputs
+  OK GraphQL types regenerated
+
+[3/10] Type checking...
+----------------------------------------
+  Same as npm run typecheck (tsc --noEmit); duplicates removed vs older bat.
+  Running: npm run typecheck
+
+> ai-studio-applet@0.1.0 typecheck
+> tsc --noEmit
+
+  OK Type check passed
+
+[4/10] Prettier (format check)...
+----------------------------------------
+  Formatter: Prettier (respects .prettierrc / .prettierignore if present)
+  Running: npx prettier --check .
+Checking formatting...
+[warn] components/apps/AppsManagerApp.tsx
+[warn] components/apps/ArchiverApp.tsx
+[warn] components/apps/BrowserApp.tsx
+[warn] components/apps/DocsApp.tsx
+[warn] components/apps/FileExplorer.tsx
+[warn] components/apps/FolderTree.tsx
+[warn] components/apps/PlayerApp.tsx
+[warn] components/apps/RemoteApp.tsx
+[warn] components/apps/SheetsApp.tsx
+[warn] components/apps/TransferApp.tsx
+[warn] components/apps/VolumeManagerApp.tsx
+[warn] components/os-context.tsx
+[warn] components/window-launch-context.tsx
+[warn] graphql/generated/fragment-masking.ts
+[warn] graphql/generated/gql.ts
+[warn] graphql/generated/graphql.ts
+[warn] graphql/generated/index.ts
+[warn] lib/apps-catalog-mock.ts
+[warn] lib/archive-mock.ts
+[warn] lib/transfer-mock.ts
+[warn] lib/volume-mock.ts
+[warn] lib/window-launch.ts
+[warn] Code style issues found in 22 files. Run Prettier with --write to fix.
+  Prettier found issues  -  running: npx prettier --write .
+.eslintrc.json 110ms (unchanged)
+app/api/auth/session/route.ts 219ms (unchanged)
+app/api/graphql/route.ts 48ms (unchanged)
+app/auth-glass.css 133ms (unchanged)
+app/auth/page.tsx 14ms (unchanged)
+app/globals.css 106ms (unchanged)
+app/layout.tsx 24ms (unchanged)
+app/page.tsx 44ms (unchanged)
+app/welcome/page.tsx 42ms (unchanged)
+codegen.yml 100ms (unchanged)
+components/ApolloGraphQLProvider.tsx 36ms (unchanged)
+components/apps/AppsManagerApp.tsx 197ms
+components/apps/ArchiverApp.tsx 150ms
+components/apps/BrowserApp.tsx 163ms
+components/apps/ChatApp.tsx 34ms (unchanged)
+components/apps/CouncilApp.tsx 22ms (unchanged)
+components/apps/DocsApp.tsx 53ms
+components/apps/FileExplorer.tsx 379ms
+components/apps/FolderTree.tsx 66ms
+components/apps/MetricsApp.tsx 15ms (unchanged)
+components/apps/ModuleAppShell.tsx 16ms (unchanged)
+components/apps/MultimodalApp.tsx 16ms (unchanged)
+components/apps/PlayerApp.tsx 130ms
+components/apps/RagApp.tsx 19ms (unchanged)
+components/apps/RemoteApp.tsx 74ms
+components/apps/Settings.tsx 91ms (unchanged)
+components/apps/SheetsApp.tsx 63ms
+components/apps/StorageApp.tsx 8ms (unchanged)
+components/apps/Terminal.tsx 25ms (unchanged)
+components/apps/TransferApp.tsx 143ms
+components/apps/VisionApp.tsx 20ms (unchanged)
+components/apps/VolumeManagerApp.tsx 44ms
+components/auth/AuthFlow.tsx 416ms (unchanged)
+components/auth/AuthGradientBackground.tsx 14ms (unchanged)
+components/DesktopWidgets.tsx 11ms (unchanged)
+components/Dock.tsx 18ms (unchanged)
+components/GlobalShellContextMenu.tsx 5ms (unchanged)
+components/GlobalUserContextMenuContent.tsx 20ms (unchanged)
+components/Launcher.tsx 26ms (unchanged)
+components/NotificationCenter.tsx 75ms (unchanged)
+components/os-context.tsx 108ms
+components/ThemePreferences.tsx 21ms (unchanged)
+components/TopBar.tsx 59ms (unchanged)
+components/ui/avatar.tsx 11ms (unchanged)
+components/ui/checkbox.tsx 5ms (unchanged)
+components/ui/context-menu.tsx 48ms (unchanged)
+components/ui/desktop-menu-bar.tsx 99ms (unchanged)
+components/ui/input.tsx 14ms (unchanged)
+components/ui/liquid-glass.tsx 23ms (unchanged)
+components/ui/magnified-dock-strip.tsx 151ms (unchanged)
+components/ui/message-dock.tsx 162ms (unchanged)
+components/ui/progress.tsx 9ms (unchanged)
+components/ui/radio.tsx 8ms (unchanged)
+components/ui/tabs.tsx 17ms (unchanged)
+components/window-launch-context.tsx 7ms
+components/Window.tsx 25ms (unchanged)
+components/WindowManager.tsx 11ms (unchanged)
+docs/ReadME.md 34ms (unchanged)
+eslint.config.mjs 25ms (unchanged)
+graphql/documents/auth.graphql 14ms (unchanged)
+graphql/documents/chat.graphql 2ms (unchanged)
+graphql/documents/council.graphql 2ms (unchanged)
+graphql/documents/health.graphql 2ms (unchanged)
+graphql/documents/multimodal.graphql 1ms (unchanged)
+graphql/documents/rag.graphql 2ms (unchanged)
+graphql/documents/storage.graphql 1ms (unchanged)
+graphql/documents/vision.graphql 2ms (unchanged)
+graphql/generated/fragment-masking.ts 31ms
+graphql/generated/gql.ts 19ms
+graphql/generated/graphql.ts 117ms
+graphql/generated/index.ts 3ms
+graphql/schema.graphql 18ms (unchanged)
+lib/apps-catalog-mock.ts 11ms
+lib/apps.ts 18ms (unchanged)
+lib/archive-mock.ts 14ms
+lib/auth-cookies.ts 2ms (unchanged)
+lib/establish-session.ts 5ms (unchanged)
+lib/file-explorer-mock.ts 40ms (unchanged)
+lib/graphql-auth.ts 12ms (unchanged)
+lib/graphql-modules.ts 25ms (unchanged)
+lib/transfer-mock.ts 19ms
+lib/use-prefers-reduced-motion.ts 9ms (unchanged)
+lib/utils.test.ts 4ms (unchanged)
+lib/utils.ts 2ms (unchanged)
+lib/volume-mock.ts 10ms
+lib/window-launch.ts 3ms
+metadata.json 3ms (unchanged)
+middleware.ts 6ms (unchanged)
+next-env.d.ts 3ms (unchanged)
+next.config.ts 6ms (unchanged)
+package-lock.json 250ms (unchanged)
+package.json 5ms (unchanged)
+postcss.config.mjs 20ms (unchanged)
+README.md 87ms (unchanged)
+scripts/check-best-practices.mjs 35ms (unchanged)
+scripts/clean.mjs 13ms (unchanged)
+scripts/codegen.mjs 9ms (unchanged)
+scripts/css-inventory.mjs 35ms (unchanged)
+tailwind.config.ts 20ms (unchanged)
+tsconfig.json 3ms (unchanged)
+vitest.config.ts 3ms (unchanged)
+  Verifying: npx prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+  OK Prettier formatted and verified
+
+[5/10] Linting...
+----------------------------------------
+  Running: npm run lint
+
+> ai-studio-applet@0.1.0 lint
+> eslint .
+
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\BrowserApp.tsx
+   62:16  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\BrowserApp.tsx:62:16
+  60 |     try {
+  61 |       const raw = localStorage.getItem(BOOKMARKS_KEY);
+> 62 |       if (raw) setBookmarks(JSON.parse(raw) as string[]);
+     |                ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  63 |     } catch {
+  64 |       /* ignore */
+  65 |     }  react-hooks/set-state-in-effect
+   74:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\BrowserApp.tsx:74:5
+  72 |
+  73 |   useEffect(() => {
+> 74 |     setAddress(active.url === 'about:start' ? '' : active.url);
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  75 |     setIframeError(null);
+  76 |   }, [active.id, active.url]);
+  77 |                                     react-hooks/set-state-in-effect
+  107:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\BrowserApp.tsx:107:7
+  105 |     if (launch.initialUrl) {
+  106 |       launchAppliedRef.current = true;
+> 107 |       go(launch.initialUrl);
+      |       ^^ Avoid calling setState() directly within an effect
+  108 |       return;
+  109 |     }
+  110 |     if (launch.fileName?.match(/\.html?$/i)) {            react-hooks/set-state-in-effect
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\DocsApp.tsx
+  41:6  warning  React Hook useEffect has a missing dependency: 'syncStats'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\PlayerApp.tsx
+  41:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\PlayerApp.tsx:41:7
+  39 |   useEffect(() => {
+  40 |     if (launch?.fileName?.match(/\.(mp4|webm|mp3)$/i)) {
+> 41 |       setSrc(DEMO_VIDEO);
+     |       ^^^^^^ Avoid calling setState() directly within an effect
+  42 |     }
+  43 |   }, [launch?.fileName]);
+  44 |  react-hooks/set-state-in-effect
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\RemoteApp.tsx
+  40:16  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\RemoteApp.tsx:40:16
+  38 |     try {
+  39 |       const raw = localStorage.getItem(STORAGE_KEY);
+> 40 |       if (raw) setProfiles(JSON.parse(raw) as SessionProfile[]);
+     |                ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  41 |     } catch {
+  42 |       /* ignore */
+  43 |     }  react-hooks/set-state-in-effect
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\TransferApp.tsx
+  32:72  warning  React Hook useMemo has a missing dependency: 'localHist'. Either include it or remove the dependency array. Mutable values like 'localHist.current' aren't valid dependencies because mutating them doesn't re-render the component  react-hooks/exhaustive-deps
+
+✖ 7 problems (5 errors, 2 warnings)
+
+  X Linting errors found
+
+> ai-studio-applet@0.1.0 lint:fix
+> eslint . --fix
+
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\BrowserApp.tsx
+   62:16  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\BrowserApp.tsx:62:16
+  60 |     try {
+  61 |       const raw = localStorage.getItem(BOOKMARKS_KEY);
+> 62 |       if (raw) setBookmarks(JSON.parse(raw) as string[]);
+     |                ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  63 |     } catch {
+  64 |       /* ignore */
+  65 |     }  react-hooks/set-state-in-effect
+   74:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\BrowserApp.tsx:74:5
+  72 |
+  73 |   useEffect(() => {
+> 74 |     setAddress(active.url === 'about:start' ? '' : active.url);
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  75 |     setIframeError(null);
+  76 |   }, [active.id, active.url]);
+  77 |                                     react-hooks/set-state-in-effect
+  107:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\BrowserApp.tsx:107:7
+  105 |     if (launch.initialUrl) {
+  106 |       launchAppliedRef.current = true;
+> 107 |       go(launch.initialUrl);
+      |       ^^ Avoid calling setState() directly within an effect
+  108 |       return;
+  109 |     }
+  110 |     if (launch.fileName?.match(/\.html?$/i)) {            react-hooks/set-state-in-effect
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\DocsApp.tsx
+  41:6  warning  React Hook useEffect has a missing dependency: 'syncStats'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\PlayerApp.tsx
+  41:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\PlayerApp.tsx:41:7
+  39 |   useEffect(() => {
+  40 |     if (launch?.fileName?.match(/\.(mp4|webm|mp3)$/i)) {
+> 41 |       setSrc(DEMO_VIDEO);
+     |       ^^^^^^ Avoid calling setState() directly within an effect
+  42 |     }
+  43 |   }, [launch?.fileName]);
+  44 |  react-hooks/set-state-in-effect
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\RemoteApp.tsx
+  40:16  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\RemoteApp.tsx:40:16
+  38 |     try {
+  39 |       const raw = localStorage.getItem(STORAGE_KEY);
+> 40 |       if (raw) setProfiles(JSON.parse(raw) as SessionProfile[]);
+     |                ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  41 |     } catch {
+  42 |       /* ignore */
+  43 |     }  react-hooks/set-state-in-effect
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\TransferApp.tsx
+  32:72  warning  React Hook useMemo has a missing dependency: 'localHist'. Either include it or remove the dependency array. Mutable values like 'localHist.current' aren't valid dependencies because mutating them doesn't re-render the component  react-hooks/exhaustive-deps
+
+✖ 7 problems (5 errors, 2 warnings)
+
+
+[6/10] Running tests...
+----------------------------------------
+  Running: npm run test
+
+> ai-studio-applet@0.1.0 test
+> vitest run --passWithNoTests
+
+
+ RUN  v4.1.5 E:/durgas_ai/thekoushikdurgas.ai/durgasos
+
+ ✓ lib/utils.test.ts (1 test) 12ms
+   ✓ cn merges class names 10ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  23:15:40
+   Duration  3.62s (transform 45ms, setup 0ms, import 75ms, tests 12ms, environment 0ms)
+
+  OK All tests passed
+
+[6b] Coverage skipped (set RUN_TEST_COVERAGE=1 to run npm run test:coverage)
+
+[7/10] Next.js best-practices checklist...
+----------------------------------------
+  ~86 scored checks (default threshold 80 reports\check_report_*.json
+  Config: .next-checker-config.json  -  env BEST_PRACTICES_THRESHOLD, BEST_PRACTICES_FORMAT, BEST_PRACTICES_NO_FAIL
+  Running: node scripts\check-best-practices.mjs
+Best-practices score: 100% (10/10)
+OK Next app directory exists
+OK Global stylesheet exists
+OK TypeScript config exists
+OK ESLint config exists
+OK Environment example exists
+OK Ignore file exists
+OK README exists
+OK No committed Next build output
+OK Package has CI script
+OK Package has typecheck script
+  OK Best-practices check passed
+
+[8/10] Final format verification (Prettier via npm)...
+----------------------------------------
+  Running: npm run format
+
+> ai-studio-applet@0.1.0 format
+> prettier --write .
+
+.eslintrc.json 24ms (unchanged)
+app/api/auth/session/route.ts 68ms (unchanged)
+app/api/graphql/route.ts 17ms (unchanged)
+app/auth-glass.css 73ms (unchanged)
+app/auth/page.tsx 5ms (unchanged)
+app/globals.css 33ms (unchanged)
+app/layout.tsx 10ms (unchanged)
+app/page.tsx 24ms (unchanged)
+app/welcome/page.tsx 15ms (unchanged)
+codegen.yml 28ms (unchanged)
+components/ApolloGraphQLProvider.tsx 5ms (unchanged)
+components/apps/AppsManagerApp.tsx 71ms (unchanged)
+components/apps/ArchiverApp.tsx 44ms (unchanged)
+components/apps/BrowserApp.tsx 58ms (unchanged)
+components/apps/ChatApp.tsx 16ms (unchanged)
+components/apps/CouncilApp.tsx 10ms (unchanged)
+components/apps/DocsApp.tsx 18ms (unchanged)
+components/apps/FileExplorer.tsx 202ms (unchanged)
+components/apps/FolderTree.tsx 21ms (unchanged)
+components/apps/MetricsApp.tsx 9ms (unchanged)
+components/apps/ModuleAppShell.tsx 5ms (unchanged)
+components/apps/MultimodalApp.tsx 7ms (unchanged)
+components/apps/PlayerApp.tsx 20ms (unchanged)
+components/apps/RagApp.tsx 3ms (unchanged)
+components/apps/RemoteApp.tsx 25ms (unchanged)
+components/apps/Settings.tsx 14ms (unchanged)
+components/apps/SheetsApp.tsx 20ms (unchanged)
+components/apps/StorageApp.tsx 3ms (unchanged)
+components/apps/Terminal.tsx 13ms (unchanged)
+components/apps/TransferApp.tsx 40ms (unchanged)
+components/apps/VisionApp.tsx 14ms (unchanged)
+components/apps/VolumeManagerApp.tsx 15ms (unchanged)
+components/auth/AuthFlow.tsx 134ms (unchanged)
+components/auth/AuthGradientBackground.tsx 11ms (unchanged)
+components/DesktopWidgets.tsx 9ms (unchanged)
+components/Dock.tsx 14ms (unchanged)
+components/GlobalShellContextMenu.tsx 6ms (unchanged)
+components/GlobalUserContextMenuContent.tsx 22ms (unchanged)
+components/Launcher.tsx 12ms (unchanged)
+components/NotificationCenter.tsx 13ms (unchanged)
+components/os-context.tsx 23ms (unchanged)
+components/ThemePreferences.tsx 6ms (unchanged)
+components/TopBar.tsx 32ms (unchanged)
+components/ui/avatar.tsx 7ms (unchanged)
+components/ui/checkbox.tsx 4ms (unchanged)
+components/ui/context-menu.tsx 24ms (unchanged)
+components/ui/desktop-menu-bar.tsx 44ms (unchanged)
+components/ui/input.tsx 7ms (unchanged)
+components/ui/liquid-glass.tsx 22ms (unchanged)
+components/ui/magnified-dock-strip.tsx 60ms (unchanged)
+components/ui/message-dock.tsx 85ms (unchanged)
+components/ui/progress.tsx 5ms (unchanged)
+components/ui/radio.tsx 3ms (unchanged)
+components/ui/tabs.tsx 7ms (unchanged)
+components/window-launch-context.tsx 3ms (unchanged)
+components/Window.tsx 9ms (unchanged)
+components/WindowManager.tsx 5ms (unchanged)
+docs/ReadME.md 18ms (unchanged)
+eslint.config.mjs 14ms (unchanged)
+graphql/documents/auth.graphql 8ms (unchanged)
+graphql/documents/chat.graphql 1ms (unchanged)
+graphql/documents/council.graphql 1ms (unchanged)
+graphql/documents/health.graphql 1ms (unchanged)
+graphql/documents/multimodal.graphql 1ms (unchanged)
+graphql/documents/rag.graphql 1ms (unchanged)
+graphql/documents/storage.graphql 1ms (unchanged)
+graphql/documents/vision.graphql 1ms (unchanged)
+graphql/generated/fragment-masking.ts 20ms (unchanged)
+graphql/generated/gql.ts 11ms (unchanged)
+graphql/generated/graphql.ts 107ms (unchanged)
+graphql/generated/index.ts 2ms (unchanged)
+graphql/schema.graphql 6ms (unchanged)
+lib/apps-catalog-mock.ts 5ms (unchanged)
+lib/apps.ts 10ms (unchanged)
+lib/archive-mock.ts 4ms (unchanged)
+lib/auth-cookies.ts 1ms (unchanged)
+lib/establish-session.ts 4ms (unchanged)
+lib/file-explorer-mock.ts 29ms (unchanged)
+lib/graphql-auth.ts 7ms (unchanged)
+lib/graphql-modules.ts 16ms (unchanged)
+lib/transfer-mock.ts 13ms (unchanged)
+lib/use-prefers-reduced-motion.ts 4ms (unchanged)
+lib/utils.test.ts 3ms (unchanged)
+lib/utils.ts 2ms (unchanged)
+lib/volume-mock.ts 6ms (unchanged)
+lib/window-launch.ts 2ms (unchanged)
+metadata.json 2ms (unchanged)
+middleware.ts 5ms (unchanged)
+next-env.d.ts 2ms (unchanged)
+next.config.ts 5ms (unchanged)
+package-lock.json 106ms (unchanged)
+package.json 2ms (unchanged)
+postcss.config.mjs 5ms (unchanged)
+README.md 25ms (unchanged)
+scripts/check-best-practices.mjs 15ms (unchanged)
+scripts/clean.mjs 3ms (unchanged)
+scripts/codegen.mjs 4ms (unchanged)
+scripts/css-inventory.mjs 18ms (unchanged)
+tailwind.config.ts 7ms (unchanged)
+tsconfig.json 2ms (unchanged)
+vitest.config.ts 2ms (unchanged)
+  OK Final formatting applied
+
+[9/10] Production build check...
+----------------------------------------
+  Running: npm run build
+
+> ai-studio-applet@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.15
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 66s
+   Skipping linting
+ ✓ Checking validity of types
+ ✓ Collecting page data
+ ✓ Generating static pages (8/8)
+ ✓ Collecting build traces
+ ✓ Finalizing page optimization
+
+Route (app)                                 Size  First Load JS
+┌ ƒ /                                      70 kB         241 kB
+├ ○ /_not-found                            993 B         103 kB
+├ ƒ /api/auth/session                      126 B         102 kB
+├ ƒ /api/graphql                           126 B         102 kB
+├ ○ /auth                                12.5 kB         184 kB
+└ ○ /welcome                             2.04 kB         156 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/255-4f212684648fcab9.js         46 kB
+  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB
+  └ other shared chunks (total)             2 kB
+
+
+ƒ Middleware                             34.2 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+  OK Build successful
+
+
+========================================
+  SUMMARY
+========================================
+
+Section Status:
+  [0] CSS inventory:                  see reports\css-inventory.txt if not skipped
+  [1] Cleanup and Preparation:        PASSED
+  [2] GraphQL Codegen:                PASSED
+  [3] Type Checking:                  PASSED
+  [4] Prettier:                       WARNING_FIXED
+  [5] Linting:                        FAILED
+  [6] Testing:                        PASSED
+  [6b] Vitest coverage:               SKIPPED
+  [7] Best practices ~86 checks:      PASSED
+  [8] Final Format:                   PASSED
+  [9] Build Verification:             PASSED
+
+  X Found 1 error(s)
+  Found 1 warning(s)
+
+  Please fix the errors before proceeding.
+
+========================================
+  CHECK COMPLETE
+========================================
+
+
+E:\durgas_ai\thekoushikdurgas.ai\durgasos>

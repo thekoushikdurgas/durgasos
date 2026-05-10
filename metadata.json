@@ -1,0 +1,6 @@
+{
+  "name": "Durgasos Operating System",
+  "description": "A mixed-paradigm OS interface combining macOS, Windows, Android, and Linux elements.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

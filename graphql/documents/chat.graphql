@@ -1,0 +1,15 @@
+query ChatProviders {
+  chatProviders
+}
+
+query ChatConversations($limit: Int) {
+  chatConversations(limit: $limit)
+}
+
+mutation ChatCompletion($params: JSON!) {
+  chatCompletion(params: $params)
+}
+
+mutation DeleteConversation($conversationId: String!) {
+  deleteConversation(conversationId: $conversationId)
+}

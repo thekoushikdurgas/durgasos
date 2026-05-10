@@ -1,0 +1,109 @@
+scalar JSON
+
+"""
+Mirrors Strawberry schema in ai.backend/app/graphql/schema.py (camelCase field names).
+"""
+type Query {
+  me: GqlUser
+  chatProviders: JSON
+  chatConversations(limit: Int = 50): JSON
+  chatConversation(conversationId: String!): JSON
+  listAgents: JSON
+  ragDocuments(collectionName: String, limit: Int = 100, offset: Int = 0): JSON
+  ragQuery(query: String!, k: Int = 5, collectionName: String): JSON
+  ragList(collectionName: String, limit: Int = 100, offset: Int = 0): JSON
+  storageList(params: JSON): JSON
+  storageBuckets(params: JSON): JSON
+  metricsSummary(params: JSON): JSON
+  metricsProviders(params: JSON): JSON
+  metricsCouncil(params: JSON): JSON
+  listModels(providerName: String!): JSON
+  systemHealth(params: JSON): JSON
+  systemReady(params: JSON): JSON
+}
+
+type Mutation {
+  signUp(email: String!, password: String!, metadata: JSON): AuthPayload!
+  signIn(email: String!, password: String!): AuthPayload!
+  refreshSession(refreshToken: String): RefreshPayload!
+
+  chatCompletion(params: JSON!): JSON!
+  deleteConversation(conversationId: String!): JSON!
+
+  analyzeAgent(agentType: String!, pageData: JSON!, query: String, options: JSON): JSON!
+  autoAnalyze(pageData: JSON!, query: String!): JSON!
+  batchAnalyze(params: JSON!): JSON!
+  agentsQuickSeo(params: JSON!): JSON!
+  agentsSummarize(params: JSON!): JSON!
+
+  ragIngest(params: JSON!): JSON!
+  ragDelete(documentId: String!): JSON!
+  ragUpload(params: JSON!): JSON!
+  ragChat(params: JSON!): JSON!
+
+  storageUpload(params: JSON!): JSON!
+  storageDelete(params: JSON!): JSON!
+  storageMove(params: JSON!): JSON!
+  storageGetUrl(params: JSON!): JSON!
+  storageCreateSignedUrl(params: JSON!): JSON!
+  storageBucketsCreate(params: JSON!): JSON!
+  storageBucketsDelete(params: JSON!): JSON!
+
+  analyzeImage(params: JSON!): JSON!
+  visionNvidia(params: JSON!): JSON!
+
+  textToImage(params: JSON!): JSON!
+  imageToText(params: JSON!): JSON!
+  speechToText(params: JSON!): JSON!
+  textToSpeech(params: JSON!): JSON!
+  objectDetection(params: JSON!): JSON!
+
+  runCouncil(params: JSON!): JSON!
+
+  providerChat(providerName: String!, params: JSON!): JSON!
+
+  generateImage(params: JSON!): JSON!
+  generateAudio(params: JSON!): JSON!
+  generateVideo(params: JSON!): JSON!
+  elevenlabsTextToSpeech(params: JSON!): JSON!
+  deepgramTranscribe(params: JSON!): JSON!
+  imagenGenerate(params: JSON!): JSON!
+  veoGenerate(params: JSON!): JSON!
+
+  processNlp(params: JSON!): JSON!
+  scrape(params: JSON!): JSON!
+  runBenchmark(params: JSON!): JSON!
+  batchProcess(params: JSON!): JSON!
+  embeddingsGemini(params: JSON!): JSON!
+  cohereSummarize(params: JSON!): JSON!
+  cohereEmbed(params: JSON!): JSON!
+  cohereClassify(params: JSON!): JSON!
+}
+
+type GqlUser {
+  id: String!
+  email: String
+  userMetadata: JSON!
+  appMetadata: JSON!
+  createdAt: String
+}
+
+type GqlSession {
+  accessToken: String!
+  refreshToken: String!
+  expiresIn: Int!
+  expiresAt: Float
+  tokenType: String!
+}
+
+type AuthPayload {
+  success: Boolean!
+  requiresConfirmation: Boolean!
+  user: GqlUser
+  session: GqlSession
+}
+
+type RefreshPayload {
+  success: Boolean!
+  session: GqlSession
+}

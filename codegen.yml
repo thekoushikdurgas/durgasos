@@ -1,0 +1,10 @@
+# SDL mirrors Strawberry schema in ai.backend/app/graphql/schema.py (offline codegen).
+schema: graphql/schema.graphql
+documents:
+  - 'graphql/**/*.graphql'
+ignoreNoDocuments: true
+generates:
+  graphql/generated/:
+    preset: client
+    presetConfig:
+      gqlTagName: gql

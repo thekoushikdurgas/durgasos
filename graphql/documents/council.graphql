@@ -1,0 +1,3 @@
+mutation RunCouncil($params: JSON!) {
+  runCouncil(params: $params)
+}

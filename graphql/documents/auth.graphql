@@ -1,0 +1,42 @@
+mutation SignUp($email: String!, $password: String!, $metadata: JSON) {
+  signUp(email: $email, password: $password, metadata: $metadata) {
+    success
+    requiresConfirmation
+    user {
+      id
+      email
+    }
+    session {
+      accessToken
+      refreshToken
+      expiresIn
+      expiresAt
+      tokenType
+    }
+  }
+}
+
+mutation SignIn($email: String!, $password: String!) {
+  signIn(email: $email, password: $password) {
+    success
+    requiresConfirmation
+    user {
+      id
+      email
+    }
+    session {
+      accessToken
+      refreshToken
+      expiresIn
+      expiresAt
+      tokenType
+    }
+  }
+}
+
+query Me {
+  me {
+    id
+    email
+  }
+}

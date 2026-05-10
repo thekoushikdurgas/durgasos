@@ -1,0 +1,258 @@
+@import 'tailwindcss';
+@config '../tailwind.config.ts';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/container-queries';
+@import 'tw-animate-css';
+
+@theme {
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-yellow-500: #eab308;
+  --color-yellow-600: #ca8a04;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+
+  --color-durgasos-bg: #1a1c2c;
+  --color-durgasos-violet: #4a1942;
+  --color-durgasos-cyan: #06b6d4;
+  --color-durgasos-magenta: #d946ef;
+  --color-glass-bg: rgba(255, 255, 255, 0.05);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --color-glass-panel: rgba(15, 23, 42, 0.6);
+  --color-liquid-frost-tint: rgba(255, 255, 255, 0.12);
+  --color-liquid-frost-tint-strong: rgba(255, 255, 255, 0.18);
+
+  --shadow-liquid-glass: 0 6px 6px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 0, 0, 0.1);
+  --ease-liquid: cubic-bezier(0.175, 0.885, 0.32, 2.2);
+  --duration-liquid: 700ms;
+
+  --spacing-component-xs: 0.25rem;
+  --spacing-component-sm: 0.5rem;
+  --spacing-component: 0.75rem;
+  --spacing-component-lg: 1rem;
+  --spacing-section-sm: 2rem;
+  --spacing-section: 3rem;
+  --spacing-section-lg: 4rem;
+  --spacing-page-x: 1rem;
+  --spacing-page-y: 1.5rem;
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-5xl: 3rem;
+
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  --radius-none: 0;
+  --radius-sm: 0.125rem;
+  --radius-default: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-full: 9999px;
+
+  --shadow-glow: 0 0 20px rgba(6, 182, 212, 0.22);
+  --shadow-glass-panel: 0 20px 25px -5px rgb(0 0 0 / 0.24), 0 8px 10px -6px rgb(0 0 0 / 0.2);
+
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-modal: 1200;
+  --z-popover: 1300;
+  --z-tooltip: 1400;
+}
+
+:root {
+  --background: 220 14% 96%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 217 91% 60%;
+  --primary-hover: 221 83% 53%;
+  --primary-active: 224 76% 48%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 14% 96%;
+  --secondary-hover: 220 13% 91%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 220 14% 96%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 72% 51%;
+  --destructive-hover: 0 74% 42%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+  --warning: 45 93% 47%;
+  --warning-foreground: 222 47% 11%;
+  --error: 0 72% 51%;
+  --error-foreground: 0 0% 100%;
+  --info: 217 91% 60%;
+  --info-foreground: 0 0% 100%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 217 91% 60%;
+}
+
+.dark {
+  --background: 224 31% 14%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 11%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 47% 11%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 217 91% 60%;
+  --primary-hover: 213 94% 68%;
+  --primary-active: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 217 33% 17%;
+  --secondary-hover: 215 28% 24%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 217 33% 17%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 72% 51%;
+  --destructive-hover: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+  --warning: 45 93% 47%;
+  --warning-foreground: 222 47% 11%;
+  --error: 0 72% 51%;
+  --error-foreground: 0 0% 100%;
+  --info: 217 91% 60%;
+  --info-foreground: 0 0% 100%;
+  --border: 217 33% 17%;
+  --input: 217 33% 17%;
+  --ring: 217 91% 60%;
+}
+
+body {
+  @apply overflow-hidden bg-background text-foreground font-sans select-none;
+  margin: 0;
+  height: 100vh;
+  width: 100vw;
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes moveBackground {
+  from {
+    background-position: 0% 0%;
+  }
+  to {
+    background-position: 0% -1000%;
+  }
+}
+
+.desktop-liquid-bg {
+  animation: moveBackground 120s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-liquid-bg {
+    animation: none;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    background: var(--color-glass-panel);
+    border: 1px solid var(--color-glass-border);
+    box-shadow: var(--shadow-glass-panel);
+    backdrop-filter: blur(24px);
+  }
+
+  /** Frost tier: blur + panel tint without SVG displacement (lists, menus, dense UI). */
+  .frost-glass-surface {
+    background: var(--color-glass-panel);
+    border: 1px solid var(--color-glass-border);
+    box-shadow: var(--shadow-glass-panel);
+    backdrop-filter: blur(24px);
+  }
+
+  /** Inset highlights matching liquid-glass doc (used inside layered surfaces). */
+  .liquid-glass-inset {
+    box-shadow:
+      inset 2px 2px 1px 0 rgba(255, 255, 255, 0.35),
+      inset -1px -1px 1px 1px rgba(255, 255, 255, 0.28);
+  }
+
+  /** Outer shell for liquid tier; pair with filter url(#glass-distortion) on inner layer via LiquidGlassSurface. */
+  .liquid-glass-shell {
+    box-shadow: var(--shadow-liquid-glass);
+    transition-duration: var(--duration-liquid);
+    transition-timing-function: var(--ease-liquid);
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+}
+
+/* Custom scrollbars for a sleek OS feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
