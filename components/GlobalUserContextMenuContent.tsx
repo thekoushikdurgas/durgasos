@@ -1,5 +1,7 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   ContextMenuItem,
@@ -8,6 +10,7 @@ import {
 } from '@/components/ui/context-menu';
 import { useOS } from '@/components/os-context';
 import { APPS, type AppId } from '@/lib/apps';
+import { clearSession } from '@/lib/establish-session';
 import { cn } from '@/lib/utils';
 import { Bell, Info, LayoutGrid, LogOut, Maximize2, Minimize2, X } from 'lucide-react';
 
@@ -18,6 +21,7 @@ const itemClass =
 const APP_MENU_ORDER: AppId[] = ['explorer', 'browser', 'terminal', 'gallery', 'settings'];
 
 export function GlobalUserContextMenuContent() {
+  const router = useRouter();
   const {
     openApp,
     toggleLauncher,
@@ -119,9 +123,15 @@ export function GlobalUserContextMenuContent() {
       <ContextMenuItem
         className={`${itemClass} font-medium text-destructive focus:bg-destructive/10 focus:text-destructive data-[highlighted]:bg-destructive/10 data-[highlighted]:text-destructive`}
         onSelect={() => {
-          if (typeof window !== 'undefined' && 'console' in window) {
-            console.info('[durgasos] End session (stub — no sign-in in this demo)');
-          }
+          void (async () => {
+            try {
+              await clearSession();
+              router.push('/welcome');
+              router.refresh();
+            } catch (err) {
+              console.error('[durgasos] End session failed', err);
+            }
+          })();
         }}
       >
         <LogOut className="size-4 shrink-0" />

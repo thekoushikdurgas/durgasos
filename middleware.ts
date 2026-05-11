@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { ACCESS_TOKEN_COOKIE } from '@/lib/auth-cookies';
 
-const PUBLIC_PREFIXES = ['/welcome', '/login', '/api/auth', '/api/graphql'];
+const PUBLIC_PREFIXES = ['/welcome', '/login'];
 const PUBLIC_FILES = ['/favicon.ico'];
 
 export function middleware(request: NextRequest) {

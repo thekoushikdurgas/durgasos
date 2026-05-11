@@ -17,7 +17,7 @@ export default function WelcomePage() {
       >
         <span className="sr-only">Durgas OS</span>
         {/* Vapor wordmark; primary page title lives in WelcomeSignUpSection */}
-        <div className="flex h-7 min-w-[7rem] max-w-[10rem] origin-center scale-[2] justify-center">
+        <div className="flex h-[200px] w-[100px] origin-center scale-[2] justify-center">
           <VaporizeTextCycle
             className="h-full w-full"
             texts={['Durgas OS', 'Durgasos']}
