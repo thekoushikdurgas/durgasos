@@ -1,0 +1,3 @@
+query WeatherForecast($params: JSON) {
+  weatherForecast(params: $params)
+}

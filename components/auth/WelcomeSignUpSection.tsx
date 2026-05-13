@@ -96,7 +96,7 @@ export function WelcomeSignUpSection() {
               passwordInputRef={signUp.passwordInputRef}
               confirmPasswordInputRef={signUp.confirmPasswordInputRef}
               oauthSoon={signUp.oauthSoon}
-              signUpFooter="sign-in-cta"
+              isExistingAccount={signUp.isExistingAccount}
             />
           </div>
         </div>

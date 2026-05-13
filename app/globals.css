@@ -45,6 +45,23 @@
   --color-glass-panel: rgba(15, 23, 42, 0.6);
   --color-liquid-frost-tint: rgba(255, 255, 255, 0.12);
   --color-liquid-frost-tint-strong: rgba(255, 255, 255, 0.18);
+  /** AI chat bar: liquid tier z-10 tint overrides (see `liquid_glass_theme.md`). */
+  --color-ai-chat-idle-liquid-frost: rgba(255, 255, 255, 0.52);
+  --color-ai-chat-expanded-liquid-frost: rgba(15, 23, 42, 0.78);
+
+  /* DurgasOS shell: window / dock / surfaces (design doc) */
+  --radius-window: 16px;
+  --radius-dock: 24px;
+  --duration-window-open: 150ms;
+  --duration-window-close: 120ms;
+  --duration-dock-bounce: 300ms;
+  --shadow-window-active: 0 24px 80px rgba(0, 0, 0, 0.65);
+  --shadow-window-inactive: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --color-accent-primary: var(--color-blue-500);
+  --color-accent-secondary: var(--color-durgasos-violet);
+  --color-surface-base: #050711;
+  --color-surface-elevated: #0d101f;
+  --color-surface-panel: rgba(15, 23, 42, 0.78);
 
   --shadow-liquid-glass: 0 6px 6px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 0, 0, 0.1);
   --ease-liquid: cubic-bezier(0.175, 0.885, 0.32, 2.2);
@@ -238,6 +255,33 @@ body {
 
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /** Optional readability tweak for light idle pill on busy wallpapers. */
+  [data-ai-chat-surface='idle'] {
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@keyframes window-open {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes window-close {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
   }
 }
 

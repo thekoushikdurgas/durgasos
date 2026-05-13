@@ -14,7 +14,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
-  'mutation SignUp($email: String!, $password: String!, $metadata: JSON) {\n  signUp(email: $email, password: $password, metadata: $metadata) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nmutation SignIn($email: String!, $password: String!) {\n  signIn(email: $email, password: $password) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nquery Me {\n  me {\n    id\n    email\n  }\n}': typeof types.SignUpDocument;
+  'query EmailRegistered($email: String!) {\n  emailRegistered(email: $email)\n}\n\nmutation SignUp($email: String!, $password: String!, $metadata: JSON) {\n  signUp(email: $email, password: $password, metadata: $metadata) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nmutation SignIn($email: String!, $password: String!) {\n  signIn(email: $email, password: $password) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nquery Me {\n  me {\n    id\n    email\n  }\n}': typeof types.EmailRegisteredDocument;
   'query ChatProviders {\n  chatProviders\n}\n\nquery ChatConversations($limit: Int) {\n  chatConversations(limit: $limit)\n}\n\nmutation ChatCompletion($params: JSON!) {\n  chatCompletion(params: $params)\n}\n\nmutation DeleteConversation($conversationId: String!) {\n  deleteConversation(conversationId: $conversationId)\n}': typeof types.ChatProvidersDocument;
   'mutation RunCouncil($params: JSON!) {\n  runCouncil(params: $params)\n}': typeof types.RunCouncilDocument;
   'query SystemHealth($params: JSON) {\n  systemHealth(params: $params)\n}\n\nquery SystemReady($params: JSON) {\n  systemReady(params: $params)\n}\n\nquery MetricsSummary($params: JSON) {\n  metricsSummary(params: $params)\n}': typeof types.SystemHealthDocument;
@@ -22,10 +22,11 @@ type Documents = {
   'query RagList($collectionName: String, $limit: Int, $offset: Int) {\n  ragList(collectionName: $collectionName, limit: $limit, offset: $offset)\n}\n\nquery RagQuery($query: String!, $k: Int, $collectionName: String) {\n  ragQuery(query: $query, k: $k, collectionName: $collectionName)\n}\n\nmutation RagIngest($params: JSON!) {\n  ragIngest(params: $params)\n}': typeof types.RagListDocument;
   'query StorageBuckets($params: JSON) {\n  storageBuckets(params: $params)\n}\n\nquery StorageList($params: JSON) {\n  storageList(params: $params)\n}\n\nmutation StorageUpload($params: JSON!) {\n  storageUpload(params: $params)\n}': typeof types.StorageBucketsDocument;
   'mutation AnalyzeImage($params: JSON!) {\n  analyzeImage(params: $params)\n}': typeof types.AnalyzeImageDocument;
+  'query WeatherForecast($params: JSON) {\n  weatherForecast(params: $params)\n}': typeof types.WeatherForecastDocument;
 };
 const documents: Documents = {
-  'mutation SignUp($email: String!, $password: String!, $metadata: JSON) {\n  signUp(email: $email, password: $password, metadata: $metadata) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nmutation SignIn($email: String!, $password: String!) {\n  signIn(email: $email, password: $password) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nquery Me {\n  me {\n    id\n    email\n  }\n}':
-    types.SignUpDocument,
+  'query EmailRegistered($email: String!) {\n  emailRegistered(email: $email)\n}\n\nmutation SignUp($email: String!, $password: String!, $metadata: JSON) {\n  signUp(email: $email, password: $password, metadata: $metadata) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nmutation SignIn($email: String!, $password: String!) {\n  signIn(email: $email, password: $password) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nquery Me {\n  me {\n    id\n    email\n  }\n}':
+    types.EmailRegisteredDocument,
   'query ChatProviders {\n  chatProviders\n}\n\nquery ChatConversations($limit: Int) {\n  chatConversations(limit: $limit)\n}\n\nmutation ChatCompletion($params: JSON!) {\n  chatCompletion(params: $params)\n}\n\nmutation DeleteConversation($conversationId: String!) {\n  deleteConversation(conversationId: $conversationId)\n}':
     types.ChatProvidersDocument,
   'mutation RunCouncil($params: JSON!) {\n  runCouncil(params: $params)\n}':
@@ -40,6 +41,8 @@ const documents: Documents = {
     types.StorageBucketsDocument,
   'mutation AnalyzeImage($params: JSON!) {\n  analyzeImage(params: $params)\n}':
     types.AnalyzeImageDocument,
+  'query WeatherForecast($params: JSON) {\n  weatherForecast(params: $params)\n}':
+    types.WeatherForecastDocument,
 };
 
 /**
@@ -60,8 +63,8 @@ export function gql(source: string): unknown;
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: 'mutation SignUp($email: String!, $password: String!, $metadata: JSON) {\n  signUp(email: $email, password: $password, metadata: $metadata) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nmutation SignIn($email: String!, $password: String!) {\n  signIn(email: $email, password: $password) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nquery Me {\n  me {\n    id\n    email\n  }\n}'
-): (typeof documents)['mutation SignUp($email: String!, $password: String!, $metadata: JSON) {\n  signUp(email: $email, password: $password, metadata: $metadata) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nmutation SignIn($email: String!, $password: String!) {\n  signIn(email: $email, password: $password) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nquery Me {\n  me {\n    id\n    email\n  }\n}'];
+  source: 'query EmailRegistered($email: String!) {\n  emailRegistered(email: $email)\n}\n\nmutation SignUp($email: String!, $password: String!, $metadata: JSON) {\n  signUp(email: $email, password: $password, metadata: $metadata) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nmutation SignIn($email: String!, $password: String!) {\n  signIn(email: $email, password: $password) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nquery Me {\n  me {\n    id\n    email\n  }\n}'
+): (typeof documents)['query EmailRegistered($email: String!) {\n  emailRegistered(email: $email)\n}\n\nmutation SignUp($email: String!, $password: String!, $metadata: JSON) {\n  signUp(email: $email, password: $password, metadata: $metadata) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nmutation SignIn($email: String!, $password: String!) {\n  signIn(email: $email, password: $password) {\n    success\n    requiresConfirmation\n    user {\n      id\n      email\n    }\n    session {\n      accessToken\n      refreshToken\n      expiresIn\n      expiresAt\n      tokenType\n    }\n  }\n}\n\nquery Me {\n  me {\n    id\n    email\n  }\n}'];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -104,6 +107,12 @@ export function gql(
 export function gql(
   source: 'mutation AnalyzeImage($params: JSON!) {\n  analyzeImage(params: $params)\n}'
 ): (typeof documents)['mutation AnalyzeImage($params: JSON!) {\n  analyzeImage(params: $params)\n}'];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(
+  source: 'query WeatherForecast($params: JSON) {\n  weatherForecast(params: $params)\n}'
+): (typeof documents)['query WeatherForecast($params: JSON) {\n  weatherForecast(params: $params)\n}'];
 
 export function gql(source: string) {
   return (documents as any)[source] ?? {};

@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: process.cwd(),
   async redirects() {
-    return [{ source: '/auth', destination: '/login', permanent: true }];
+    return [{ source: '/auth', destination: '/welcome', permanent: true }];
   },
   eslint: {
     ignoreDuringBuilds: true,

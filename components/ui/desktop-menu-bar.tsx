@@ -285,6 +285,7 @@ export function DesktopMenuBar({
               ref={logoButtonRef}
               type="button"
               role="menuitem"
+              aria-label="Durgasos"
               className="flex max-w-[min(100%,14rem)] shrink-0 items-center gap-2 rounded px-1 py-0.5 font-bold tracking-tight text-white outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-cyan-400/40"
               aria-haspopup="menu"
               aria-expanded={openKey === LOGO_MENU_KEY}

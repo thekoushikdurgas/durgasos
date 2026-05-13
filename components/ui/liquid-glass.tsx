@@ -67,6 +67,10 @@ export interface LiquidGlassSurfaceProps extends React.HTMLAttributes<HTMLDivEle
   variant?: 'liquid' | 'frost';
   /** When false, skips `.liquid-glass-shell` (outer shadow); use for flush strips like the menu bar. Default true. */
   withLiquidShell?: boolean;
+  /** Liquid tier only: merged into the inner content wrapper (`div.relative.z-30`). */
+  contentClassName?: string;
+  /** Liquid tier only: merged into the z-10 frost tint layer (defaults to `--color-liquid-frost-tint-strong`). */
+  liquidFrostStyle?: React.CSSProperties;
 }
 
 /**
@@ -74,7 +78,18 @@ export interface LiquidGlassSurfaceProps extends React.HTMLAttributes<HTMLDivEle
  * Respects `prefers-reduced-motion` by downgrading `liquid` → `frost`.
  */
 export const LiquidGlassSurface = React.forwardRef<HTMLDivElement, LiquidGlassSurfaceProps>(
-  ({ variant = 'frost', withLiquidShell = true, className, children, ...props }, ref) => {
+  (
+    {
+      variant = 'frost',
+      withLiquidShell = true,
+      className,
+      children,
+      contentClassName,
+      liquidFrostStyle,
+      ...props
+    },
+    ref
+  ) => {
     const reducedMotion = usePrefersReducedMotion();
     const effectiveVariant = reducedMotion ? 'frost' : variant;
 
@@ -114,7 +129,10 @@ export const LiquidGlassSurface = React.forwardRef<HTMLDivElement, LiquidGlassSu
         />
         <div
           className="absolute inset-0 z-10 rounded-[inherit]"
-          style={{ background: 'var(--color-liquid-frost-tint-strong)' }}
+          style={{
+            background: 'var(--color-liquid-frost-tint-strong)',
+            ...liquidFrostStyle,
+          }}
         />
         <div
           className={cn(
@@ -122,7 +140,7 @@ export const LiquidGlassSurface = React.forwardRef<HTMLDivElement, LiquidGlassSu
             'liquid-glass-inset'
           )}
         />
-        <div className="relative z-30">{children}</div>
+        <div className={cn('relative z-30', contentClassName)}>{children}</div>
       </div>
     );
   }

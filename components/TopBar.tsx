@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Battery, Monitor, Search, Wifi } from 'lucide-react';
 import { useOS } from '@/components/os-context';
+import { SystemStatusIcons } from '@/components/SystemStatusIcons';
 import {
   DesktopMenuBar,
   type MenuConfig,
@@ -195,38 +196,39 @@ export function TopBar() {
       onMenuAction={handleMenuAction}
       activeAppName={activeApp?.name ?? null}
       brandSlot={
-        <>
-          <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-gradient-to-tr from-cyan-500 to-blue-600 text-[10px] text-white shadow-sm">
-            D
-          </div>
-          {/* Performance: one vapor canvas in the shell menubar; pauses off-screen via VaporizeTextCycle */}
-          <span className="sr-only">Durgasos</span>
-          <div className="h-5 min-w-[4.5rem] max-w-[9rem] shrink">
-            <VaporizeTextCycle
-              className="h-full w-full"
-              texts={['Durgasos', 'Durgas OS']}
-              font={{
-                fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-                fontSize: '13px',
-                fontWeight: 700,
-              }}
-              color="rgb(248, 250, 252)"
-              alignment="left"
-              direction="left-to-right"
-              tag={Tag.P}
-              spread={3}
-              density={6}
-              animation={{
-                vaporizeDuration: 2.2,
-                fadeInDuration: 0.85,
-                waitDuration: 1.1,
-              }}
-            />
-          </div>
-        </>
+        <div className="h-5 min-w-[4.5rem] max-w-[9rem] shrink">
+          <VaporizeTextCycle
+            className="h-full w-full"
+            texts={['Durgasos', 'Durgas OS']}
+            font={{
+              fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+              fontSize: '13px',
+              fontWeight: 700,
+            }}
+            color="rgb(248, 250, 252)"
+            alignment="left"
+            direction="left-to-right"
+            tag={Tag.P}
+            spread={3}
+            density={6}
+            animation={{
+              vaporizeDuration: 2.2,
+              fadeInDuration: 0.85,
+              waitDuration: 1.1,
+            }}
+          />
+        </div>
       }
       rightSlot={
         <>
+          <div
+            className="hidden sm:inline-flex items-center"
+            onClick={(e) => e.stopPropagation()}
+            role="group"
+            aria-label="Backend status"
+          >
+            <SystemStatusIcons />
+          </div>
           <button
             type="button"
             aria-label="Open app launcher"

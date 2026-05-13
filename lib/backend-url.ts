@@ -37,5 +37,31 @@ export function getGraphqlHttpUrl(): string {
 }
 
 export function getSessionUrl(): string {
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}/api/auth/session`;
+  }
   return `${getBackendOrigin()}/api/auth/session`;
+}
+
+/**
+ * WebSocket URL for ai.backend JSON-RPC gateway (`/ws/gateway`).
+ * Prefer JWT from the logged-in session; optional `NEXT_PUBLIC_AI_WS_API_KEY` for local dev.
+ */
+export function getAiWebSocketGatewayUrl(options?: {
+  accessToken?: string | null;
+  apiKey?: string | null;
+}): string {
+  const httpOrigin = getBackendOrigin();
+  const u = new URL(httpOrigin);
+  u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
+  u.pathname = '/ws/gateway';
+  u.search = '';
+  const token = options?.accessToken?.trim();
+  const apiKey = options?.apiKey?.trim() || process.env.NEXT_PUBLIC_AI_WS_API_KEY?.trim();
+  if (token) {
+    u.searchParams.set('token', token);
+  } else if (apiKey) {
+    u.searchParams.set('api_key', apiKey);
+  }
+  return u.toString();
 }

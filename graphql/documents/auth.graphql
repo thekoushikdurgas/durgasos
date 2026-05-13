@@ -1,3 +1,7 @@
+query EmailRegistered($email: String!) {
+  emailRegistered(email: $email)
+}
+
 mutation SignUp($email: String!, $password: String!, $metadata: JSON) {
   signUp(email: $email, password: $password, metadata: $metadata) {
     success

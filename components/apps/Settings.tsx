@@ -1,12 +1,26 @@
 'use client';
 
 import { useDesktopBackground } from '@/components/desktop-background/DesktopBackgroundProvider';
-import { Settings, Wifi, Bluetooth, Monitor, Battery, Lock, Bell, Palette } from 'lucide-react';
-import { useState } from 'react';
+import {
+  Settings,
+  Wifi,
+  Bluetooth,
+  Monitor,
+  Battery,
+  Lock,
+  Bell,
+  Palette,
+  Cpu,
+  Activity,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Radio } from '@/components/ui/radio';
 import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { useSystemHealth } from '@/hooks/use-system-health';
 import {
   DESKTOP_BACKGROUND_OPTIONS,
   type DesktopBackgroundId,
@@ -66,15 +80,25 @@ function DesktopBackgroundThumb({ id }: { id: DesktopBackgroundId }) {
 }
 
 export function SettingsApp() {
-  const [activeTab, setActiveTab] = useState('Personalization');
+  const [activeTab, setActiveTab] = useState('Appearance');
   const [transparencyOn, setTransparencyOn] = useState(true);
+  const [accent, setAccent] = useState<'blue' | 'violet' | 'cyan'>('blue');
+  const [agentsTab, setAgentsTab] = useState('routing');
   const { backgroundId, setBackgroundId } = useDesktopBackground();
+  const { raw, overall, loading, error, refetch } = useSystemHealth(20_000);
+
+  const chatProvider = useMemo(
+    () => process.env.NEXT_PUBLIC_CHAT_PROVIDER ?? '(not set — default stack)',
+    []
+  );
 
   const TABS = [
     { name: 'System', icon: Settings },
     { name: 'Network & internet', icon: Wifi },
     { name: 'Bluetooth & devices', icon: Bluetooth },
-    { name: 'Personalization', icon: Palette },
+    { name: 'Appearance', icon: Palette },
+    { name: 'Agents & models', icon: Cpu },
+    { name: 'System health', icon: Activity },
     { name: 'Display', icon: Monitor },
     { name: 'Power & battery', icon: Battery },
     { name: 'Privacy & security', icon: Lock },
@@ -123,8 +147,36 @@ export function SettingsApp() {
       <div className="flex-1 overflow-y-auto bg-slate-900/50 p-8">
         <h1 className="text-3xl font-bold text-white/90 mb-8">{activeTab}</h1>
 
-        {activeTab === 'Personalization' && (
+        {activeTab === 'Appearance' && (
           <div className="max-w-2xl space-y-8">
+            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+              <h2 className="mb-4 text-lg font-semibold text-white/90">Accent color</h2>
+              <p className="mb-4 text-sm text-white/50">Preview-only accent selection for the shell.</p>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                {(
+                  [
+                    { id: 'blue' as const, label: 'Blue', className: 'bg-blue-500' },
+                    { id: 'violet' as const, label: 'Violet', className: 'bg-violet-500' },
+                    { id: 'cyan' as const, label: 'Cyan', className: 'bg-cyan-400' },
+                  ] as const
+                ).map((opt) => (
+                  <label
+                    key={opt.id}
+                    className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 hover:bg-white/[0.07]"
+                  >
+                    <Radio
+                      name="accent"
+                      checked={accent === opt.id}
+                      onChange={() => setAccent(opt.id)}
+                      aria-label={`Accent ${opt.label}`}
+                    />
+                    <span className={`h-8 w-8 rounded-full border border-white/20 ${opt.className}`} aria-hidden />
+                    <span className="text-sm font-medium text-white/90">{opt.label}</span>
+                  </label>
+                ))}
+              </div>
+            </section>
+
             <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
                 <Monitor className="h-5 w-5 text-cyan-400" />
@@ -196,12 +248,19 @@ export function SettingsApp() {
                 />
               </label>
               <div className="mx-2 my-1 h-px bg-white/10" />
-              <div className="flex items-center justify-between p-4 transition-colors hover:bg-white/5 rounded-xl cursor-default">
+              <div className="flex items-center justify-between rounded-xl p-4 transition-colors hover:bg-white/5">
                 <div>
-                  <div className="font-medium text-white/90">Accent color</div>
-                  <div className="text-sm text-white/50">Blue</div>
+                  <div className="font-medium text-white/90">Current accent</div>
+                  <div className="text-sm capitalize text-white/50">{accent}</div>
                 </div>
-                <div className="h-6 w-6 rounded-full bg-blue-500 border-2 border-white/20" />
+                <div
+                  className={cn(
+                    'h-6 w-6 rounded-full border-2 border-white/20',
+                    accent === 'blue' && 'bg-blue-500',
+                    accent === 'violet' && 'bg-violet-500',
+                    accent === 'cyan' && 'bg-cyan-400'
+                  )}
+                />
               </div>
             </section>
 
@@ -215,8 +274,79 @@ export function SettingsApp() {
           </div>
         )}
 
+        {activeTab === 'Agents & models' && (
+          <div className="max-w-2xl space-y-6">
+            <Tabs value={agentsTab} onValueChange={setAgentsTab} variant="pill" className="w-full">
+              <TabsList className="w-full flex-wrap gap-1 bg-white/5 p-1">
+                <TabsTrigger value="routing">Routing</TabsTrigger>
+                <TabsTrigger value="models">Models</TabsTrigger>
+              </TabsList>
+              <TabsContent value="routing" className="mt-4">
+                <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+                  <h2 className="mb-2 text-lg font-semibold text-white/90">Chat provider</h2>
+                  <p className="mb-4 text-sm text-white/50">
+                    Public build-time hint only. Never put API keys in{' '}
+                    <code className="rounded bg-black/40 px-1">NEXT_PUBLIC_*</code>.
+                  </p>
+                  <p className="rounded-lg border border-white/10 bg-black/30 p-3 font-mono text-sm text-cyan-200">
+                    {chatProvider}
+                  </p>
+                </section>
+              </TabsContent>
+              <TabsContent value="models" className="mt-4">
+                <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+                  <h2 className="mb-2 text-lg font-semibold text-white/90">Models</h2>
+                  <p className="text-sm text-white/50">
+                    Model lists are loaded from the gateway when apps connect. Open Chat or Metrics
+                    for live catalogs.
+                  </p>
+                </section>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+
+        {activeTab === 'System health' && (
+          <div className="max-w-2xl space-y-6">
+            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold text-white/90">API health</h2>
+                <span
+                  className={cn(
+                    'rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
+                    overall === 'online' && 'bg-emerald-500/20 text-emerald-300',
+                    overall === 'degraded' && 'bg-amber-500/20 text-amber-200',
+                    overall === 'offline' && 'bg-red-500/20 text-red-200'
+                  )}
+                >
+                  {loading ? 'loading' : overall}
+                </span>
+              </div>
+              {error ? (
+                <p className="text-sm text-red-300">Could not reach GraphQL health: {error.message}</p>
+              ) : null}
+              <Progress
+                variant="linear"
+                value={loading ? 35 : overall === 'online' ? 100 : overall === 'degraded' ? 66 : 25}
+                max={100}
+                className="mb-4"
+              />
+              <button
+                type="button"
+                className="mb-4 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-sm text-white/90 hover:bg-white/15"
+                onClick={() => void refetch()}
+              >
+                Refresh
+              </button>
+              <pre className="max-h-64 overflow-auto rounded-lg border border-white/10 bg-black/50 p-3 text-[11px] text-slate-300">
+                {JSON.stringify(raw ?? {}, null, 2)}
+              </pre>
+            </section>
+          </div>
+        )}
+
         {/* Fallback for other tabs */}
-        {activeTab !== 'Personalization' && (
+        {!['Appearance', 'Agents & models', 'System health'].includes(activeTab) && (
           <div className="flex flex-col items-center justify-center h-64 text-white/30 border-2 border-dashed border-white/10 rounded-2xl">
             <Settings className="w-12 h-12 mb-4 opacity-50" />
             <p>Settings modules for {activeTab} are under construction.</p>

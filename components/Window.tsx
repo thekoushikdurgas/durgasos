@@ -46,9 +46,16 @@ export function Window({
         isMaximized
           ? 'inset-0 rounded-none'
           : 'rounded-xl border border-white/20 w-[800px] h-[550px]',
-        isActive ? 'shadow-black/60 border-white/30' : 'shadow-black/20'
+        isActive ? 'border-white/30' : ''
       )}
-      style={{ zIndex, top: isMaximized ? 0 : '10%', left: isMaximized ? 0 : '15%' }}
+      style={{
+        zIndex,
+        top: isMaximized ? 0 : '10%',
+        left: isMaximized ? 0 : '15%',
+        boxShadow: isActive
+          ? 'var(--shadow-window-active, 0 24px 80px rgba(0,0,0,0.65))'
+          : 'var(--shadow-window-inactive, 0 8px 32px rgba(0,0,0,0.3))',
+      }}
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 10 }}

@@ -402,7 +402,7 @@ export function MagnifiedDockStrip({
           return (
             <div
               key={item.id}
-              className="absolute flex flex-col items-center justify-end"
+              className="absolute flex flex-col items-center justify-end rounded-[50px]"
               style={{
                 left: `${position - scaledSize / 2}px`,
                 bottom: '5px',
@@ -416,7 +416,7 @@ export function MagnifiedDockStrip({
                 aria-label={item.label}
                 onClick={() => handleItemActivate(item.id, item.onClick)}
                 className={cn(
-                  'group relative flex h-full w-full flex-col items-center justify-center rounded-[5px] border outline-none transition-[box-shadow,background-color,border-color] duration-150',
+                  'group relative flex h-full w-full flex-col items-center justify-center rounded-[50px] border outline-none transition-[box-shadow,background-color,border-color] duration-150',
                   'border-white/10 bg-white/5 shadow-inner',
                   'hover:bg-white/10 hover:border-white/20',
                   'focus-visible:border-cyan-400/60 focus-visible:ring-2 focus-visible:ring-cyan-400/40',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation } from '@apollo/client/react';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { useReducedMotion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -9,7 +9,7 @@ import type { AuthModalStatus } from '@/components/auth/AuthStatusModal';
 import { getAuthModalLoadingDurationMs } from '@/components/auth/AuthStatusModal';
 import { formatMutationFailure } from '@/components/auth/auth-mutation-helpers';
 import { establishSession } from '@/lib/establish-session';
-import { SIGN_UP } from '@/lib/graphql-auth';
+import { EMAIL_REGISTERED, SIGN_IN, SIGN_UP } from '@/lib/graphql-auth';
 
 import type { RefObject } from 'react';
 
@@ -30,8 +30,22 @@ type SignUpMutationData = {
   };
 };
 
+type SignInMutationData = {
+  signIn: {
+    success: boolean;
+    requiresConfirmation: boolean;
+    user?: { id: string; email?: string | null } | null;
+    session?: AuthSessionGql | null;
+  };
+};
+
+type EmailRegisteredQueryData = {
+  emailRegistered: boolean;
+};
+
 export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
   const router = useRouter();
+  const client = useApolloClient();
   const prefersReducedMotion = useReducedMotion();
   const reduceMotion = prefersReducedMotion === true;
 
@@ -62,8 +76,11 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
   const [authStep, setAuthStep] = useState<'email' | 'password' | 'confirmPassword'>('email');
   const [modalStatus, setModalStatus] = useState<AuthModalStatus>('closed');
   const [modalErrorMessage, setModalErrorMessage] = useState('');
+  const [isExistingAccount, setIsExistingAccount] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
   const [signUpMutation, { loading: signingUp }] = useMutation<SignUpMutationData>(SIGN_UP);
+  const [signInMutation, { loading: signingIn }] = useMutation<SignInMutationData>(SIGN_IN);
 
   const isEmailValid = /\S+@\S+\.\S+/.test(email);
   const isPasswordValid = password.length >= 6;
@@ -92,6 +109,37 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
     [router]
   );
 
+  const submitSignIn = useCallback(async () => {
+    if (!isEmailValid || !isPasswordValid || modalStatus !== 'closed') return;
+    setModalStatus('loading');
+    try {
+      setModalErrorMessage('');
+      const result = await signInMutation({
+        variables: { email: email.trim(), password },
+      });
+      if (result.error) {
+        throw new Error(formatMutationFailure(result.error));
+      }
+      const payload = result.data?.signIn;
+      const sess = payload?.session;
+      if (!payload?.success || !sess?.accessToken || !sess.refreshToken) {
+        throw new Error('Invalid email or password');
+      }
+      await persistSessionAndGoHome(sess.accessToken, sess.refreshToken, sess.expiresIn);
+    } catch (err) {
+      setModalErrorMessage(err instanceof Error ? err.message : 'Sign in failed');
+      setModalStatus('error');
+    }
+  }, [
+    email,
+    isEmailValid,
+    isPasswordValid,
+    modalStatus,
+    password,
+    persistSessionAndGoHome,
+    signInMutation,
+  ]);
+
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (modalStatus !== 'closed' || authStep !== 'confirmPassword') return;
@@ -105,7 +153,7 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
     setModalStatus('loading');
     try {
       const result = await signUpMutation({
-        variables: { email, password, metadata: {} },
+        variables: { email: email.trim(), password, metadata: {} },
       });
       if (result.error) {
         throw new Error(formatMutationFailure(result.error));
@@ -142,18 +190,53 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
     }
   };
 
-  const handleProgressStep = () => {
+  const handleProgressStep = useCallback(async () => {
     if (authStep === 'email') {
-      if (isEmailValid) setAuthStep('password');
+      if (!isEmailValid || checkingEmail) return;
+      setCheckingEmail(true);
+      setModalErrorMessage('');
+      try {
+        const { data, error } = await client.query<EmailRegisteredQueryData>({
+          query: EMAIL_REGISTERED,
+          variables: { email: email.trim() },
+          fetchPolicy: 'network-only',
+        });
+        if (error) {
+          throw new Error(formatMutationFailure(error));
+        }
+        if (typeof data?.emailRegistered !== 'boolean') {
+          throw new Error('Could not verify email');
+        }
+        setIsExistingAccount(data.emailRegistered);
+        setAuthStep('password');
+      } catch (err) {
+        setModalErrorMessage(err instanceof Error ? err.message : 'Could not verify email');
+        setModalStatus('error');
+      } finally {
+        setCheckingEmail(false);
+      }
     } else if (authStep === 'password') {
-      if (isPasswordValid) setAuthStep('confirmPassword');
+      if (isExistingAccount) {
+        await submitSignIn();
+      } else if (isPasswordValid) {
+        setAuthStep('confirmPassword');
+      }
     }
-  };
+  }, [
+    authStep,
+    checkingEmail,
+    client,
+    email,
+    isEmailValid,
+    isExistingAccount,
+    isPasswordValid,
+    submitSignIn,
+  ]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleProgressStep();
+      void handleProgressStep();
     }
   };
 
@@ -161,7 +244,11 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
     if (authStep === 'confirmPassword') {
       setAuthStep('password');
       setConfirmPassword('');
-    } else if (authStep === 'password') setAuthStep('email');
+    } else if (authStep === 'password') {
+      setAuthStep('email');
+      setIsExistingAccount(false);
+      setPassword('');
+    }
   };
 
   const closeModal = () => {
@@ -191,7 +278,7 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
     setModalStatus('error');
   };
 
-  const busy = signingUp;
+  const busy = signingUp || signingIn || checkingEmail;
   const fieldsetAriaBusy = busy || modalStatus === 'loading';
 
   const onContinueSuccess = useCallback(() => {
@@ -228,5 +315,7 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
     isEmailValid,
     isPasswordValid,
     isConfirmPasswordValid,
+    isExistingAccount,
+    checkingEmail,
   };
 }

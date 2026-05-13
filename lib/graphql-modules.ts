@@ -69,3 +69,9 @@ export const RUN_COUNCIL = gql`
     runCouncil(params: $params)
   }
 `;
+
+export const WEATHER_FORECAST = gql`
+  query WeatherForecast($params: JSON) {
+    weatherForecast(params: $params)
+  }
+`;

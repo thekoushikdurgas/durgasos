@@ -2,11 +2,18 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { ACCESS_TOKEN_COOKIE } from '@/lib/auth-cookies';
 
-const PUBLIC_PREFIXES = ['/welcome', '/login'];
+const PUBLIC_PREFIXES = ['/welcome'];
 const PUBLIC_FILES = ['/favicon.ico'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (pathname === '/login' || pathname.startsWith('/login/')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/welcome';
+    url.search = '';
+    return NextResponse.redirect(url);
+  }
 
   if (
     pathname.startsWith('/_next') ||
@@ -16,9 +23,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (pathname === '/api/auth/session' || pathname.startsWith('/api/auth/session/')) {
+    return NextResponse.next();
+  }
+
   const hasSession = request.cookies.has(ACCESS_TOKEN_COOKIE);
 
-  if (hasSession && (pathname === '/welcome' || pathname === '/login')) {
+  if (hasSession && pathname === '/welcome') {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     url.search = '';

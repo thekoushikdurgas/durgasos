@@ -1,9 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Sun } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+import { DesktopWeatherPanel } from '@/components/DesktopWeatherPanel';
+import { WidgetShell } from '@/components/widgets/WidgetShell';
+import { useWidgetLayout } from '@/hooks/use-widget-layout';
+import { useOS } from '@/components/os-context';
+import { cn } from '@/lib/utils';
 
 export function DesktopWidgets() {
+  const { items, setEnabled, removeWidget } = useWidgetLayout();
+  const { toggleLauncher, openApp } = useOS();
   const [time, setTime] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -12,28 +19,97 @@ export function DesktopWidgets() {
   }, []);
 
   return (
-    <div className="absolute bottom-32 right-12 flex flex-col gap-6 z-0 pointer-events-none items-end text-right">
-      {/* Clock Widget (Android Vibe) */}
-      <div className="pointer-events-auto">
-        <div className="text-[80px] font-thin leading-none text-white/90 tracking-tight drop-shadow-md">
-          {time
-            ? time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
-            : '00:00'}
-        </div>
-        <div className="text-lg font-medium text-blue-400 -mt-2 tracking-widest uppercase mb-4 drop-shadow-md">
-          Durgasos Interface
-        </div>
-      </div>
-
-      {/* Weather Widget */}
-      <div className="bg-white/5 backdrop-blur-md rounded-xl p-3 border border-white/10 flex items-center space-x-3 pointer-events-auto shadow-lg hover:bg-white/10 transition-colors">
-        <div className="text-3xl">
-          <Sun className="w-8 h-8 text-yellow-300 drop-shadow-sm" fill="currentColor" />
-        </div>
-        <div className="text-left text-white">
-          <p className="text-xs font-bold opacity-90">Mostly Sunny</p>
-          <p className="text-lg leading-none font-medium">74°F</p>
-        </div>
+    <div className="pointer-events-none absolute inset-0 z-0 flex flex-col items-end justify-end gap-4 p-6 pb-36 pr-6 pt-24">
+      <div className="flex w-full max-w-md flex-col items-end gap-4">
+        {items
+          .filter((w) => w.enabled)
+          .map((w) => {
+            if (w.type === 'clock') {
+              return (
+                <WidgetShell
+                  key={w.id}
+                  title="Clock"
+                  onRemove={() => removeWidget(w.id)}
+                  onConfigure={() => setEnabled(w.id, false)}
+                >
+                  <div className="text-right">
+                    <div className="text-5xl font-thin leading-none tracking-tight text-white/90 drop-shadow-md sm:text-[80px]">
+                      {time
+                        ? time.toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                          })
+                        : '00:00'}
+                    </div>
+                    <div className="-mt-1 text-lg font-medium uppercase tracking-widest text-blue-400 drop-shadow-md">
+                      Durgasos Interface
+                    </div>
+                  </div>
+                </WidgetShell>
+              );
+            }
+            if (w.type === 'weather') {
+              return (
+                <WidgetShell
+                  key={w.id}
+                  title="Weather"
+                  onRemove={() => removeWidget(w.id)}
+                  onConfigure={() => setEnabled(w.id, false)}
+                >
+                  <DesktopWeatherPanel />
+                </WidgetShell>
+              );
+            }
+            if (w.type === 'agent_status') {
+              return (
+                <WidgetShell key={w.id} title="Agents" onRemove={() => removeWidget(w.id)}>
+                  <p className="max-w-xs text-right text-xs text-white/55">
+                    Agent status feed will connect to workflow events (Kafka) when enabled on the
+                    backend.
+                  </p>
+                </WidgetShell>
+              );
+            }
+            if (w.type === 'system_feed') {
+              return (
+                <WidgetShell key={w.id} title="System feed" onRemove={() => removeWidget(w.id)}>
+                  <p className="max-w-xs text-right text-xs text-white/55">
+                    Desktop event timeline — wire to `system.feed` WebSocket when available.
+                  </p>
+                </WidgetShell>
+              );
+            }
+            if (w.type === 'quick_actions') {
+              return (
+                <WidgetShell key={w.id} title="Quick actions" onRemove={() => removeWidget(w.id)}>
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <button
+                      type="button"
+                      className={cn(
+                        'pointer-events-auto rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90',
+                        'hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary,#3b82f6)]'
+                      )}
+                      onClick={toggleLauncher}
+                    >
+                      Launcher
+                    </button>
+                    <button
+                      type="button"
+                      className={cn(
+                        'pointer-events-auto rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90',
+                        'hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary,#3b82f6)]'
+                      )}
+                      onClick={() => openApp('workflow')}
+                    >
+                      Workflows
+                    </button>
+                  </div>
+                </WidgetShell>
+              );
+            }
+            return null;
+          })}
       </div>
     </div>
   );

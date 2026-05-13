@@ -5,6 +5,7 @@ Mirrors Strawberry schema in ai.backend/app/graphql/schema.py (camelCase field n
 """
 type Query {
   me: GqlUser
+  emailRegistered(email: String!): Boolean!
   chatProviders: JSON
   chatConversations(limit: Int = 50): JSON
   chatConversation(conversationId: String!): JSON
@@ -20,6 +21,10 @@ type Query {
   listModels(providerName: String!): JSON
   systemHealth(params: JSON): JSON
   systemReady(params: JSON): JSON
+  weatherForecast(params: JSON): JSON
+  workflowDefinitions: [WorkflowDefinition!]!
+  workflowRuns(workflowId: String): [WorkflowRun!]!
+  widgetLayout: WidgetLayout
 }
 
 type Mutation {
@@ -78,6 +83,10 @@ type Mutation {
   cohereSummarize(params: JSON!): JSON!
   cohereEmbed(params: JSON!): JSON!
   cohereClassify(params: JSON!): JSON!
+
+  createWorkflowDefinition(name: String!, spec: JSON!): WorkflowDefinition!
+  startWorkflowRun(workflowId: String!): WorkflowRun!
+  saveWidgetLayout(layoutJson: JSON!): WidgetLayout!
 }
 
 type GqlUser {
@@ -106,4 +115,29 @@ type AuthPayload {
 type RefreshPayload {
   success: Boolean!
   session: GqlSession
+}
+
+type WorkflowDefinition {
+  id: ID!
+  name: String!
+  ownerId: String
+  spec: JSON!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type WorkflowRun {
+  id: ID!
+  workflowId: String!
+  ownerId: String
+  status: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type WidgetLayout {
+  id: ID!
+  ownerId: String!
+  layoutJson: JSON!
+  updatedAt: String!
 }

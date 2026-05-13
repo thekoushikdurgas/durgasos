@@ -10,6 +10,7 @@ import {
 import { MagnifiedDockStrip, type MagnifiedDockItem } from '@/components/ui/magnified-dock-strip';
 import { APPS } from '@/lib/apps';
 import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
+import { SystemStatusIcons } from '@/components/SystemStatusIcons';
 import { cn } from '@/lib/utils';
 
 export function Dock() {
@@ -21,7 +22,7 @@ export function Dock() {
     setLastSentPreview(`${character.name}: ${message}`);
   }, []);
 
-  const pinnedAppIds = ['explorer', 'browser', 'settings'];
+  const pinnedAppIds = ['explorer', 'browser', 'workflow', 'settings'];
   const openAppIds = windows.map((w) => w.appId);
   const dockApps = Array.from(new Set([...pinnedAppIds, ...openAppIds]));
 
@@ -82,8 +83,9 @@ export function Dock() {
 
       <LiquidGlassSurface
         variant="liquid"
+        contentClassName="flex flex-row items-center justify-center gap-[5px] py-[5px]"
         className={cn(
-          'pointer-events-auto flex h-fit w-fit shrink-0 flex-row items-center justify-center gap-2 rounded-3xl border border-white/20 px-[10px]'
+          'pointer-events-auto h-fit w-fit shrink-0 rounded-[50px] border border-white/20 px-[10px]'
         )}
       >
         <button
@@ -91,11 +93,13 @@ export function Dock() {
           aria-label="Open app launcher"
           onClick={toggleLauncher}
           className={cn(
-            'flex h-12 w-12 shrink-0 items-center justify-center rounded-[5px] shadow-lg outline-none',
+            'flex h-12 w-12 shrink-0 items-center justify-center rounded-[50px] shadow-lg outline-none',
             'bg-gradient-to-tr from-cyan-400 to-blue-600 transition-transform',
             'hover:scale-105 active:scale-95',
+            'motion-reduce:transition-none motion-reduce:hover:scale-100',
             'focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900/80'
           )}
+          style={{ transitionDuration: 'var(--duration-dock-bounce, 300ms)' }}
         >
           <span className="pointer-events-none grid grid-cols-2 gap-0.5" aria-hidden>
             <span className="h-2 w-2 rounded-sm bg-white/90" />
@@ -107,11 +111,19 @@ export function Dock() {
 
         <div className="h-10 w-px shrink-0 bg-white/10" aria-hidden />
 
-        <MagnifiedDockStrip
-          items={items}
-          stripAriaLabel="Pinned and open applications"
-          className="h-full shrink-0 self-stretch"
-        />
+        <div
+          role="toolbar"
+          aria-label="Pinned and open applications"
+          className="flex min-h-0 flex-1 items-center justify-center"
+        >
+          <MagnifiedDockStrip items={items} className="h-full shrink-0 self-stretch" />
+        </div>
+
+        <div className="hidden h-10 w-px shrink-0 bg-white/10 sm:block" aria-hidden />
+
+        <div className="hidden sm:flex" aria-label="Connection status">
+          <SystemStatusIcons compact />
+        </div>
       </LiquidGlassSurface>
     </nav>
   );

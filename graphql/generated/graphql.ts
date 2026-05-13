@@ -6,6 +6,12 @@ export type Incremental<T> =
   | T
   | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+export type EmailRegisteredQueryVariables = Exact<{
+  email: string;
+}>;
+
+export type EmailRegisteredQuery = { emailRegistered: boolean };
+
 export type SignUpMutationVariables = Exact<{
   email: string;
   password: string;
@@ -149,6 +155,48 @@ export type AnalyzeImageMutationVariables = Exact<{
 
 export type AnalyzeImageMutation = { analyzeImage: unknown };
 
+export type WeatherForecastQueryVariables = Exact<{
+  params?: unknown;
+}>;
+
+export type WeatherForecastQuery = { weatherForecast: unknown };
+
+export const EmailRegisteredDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'EmailRegistered' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'email' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'emailRegistered' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'email' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'email' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EmailRegisteredQuery, EmailRegisteredQueryVariables>;
 export const SignUpDocument = {
   kind: 'Document',
   definitions: [
@@ -920,3 +968,36 @@ export const AnalyzeImageDocument = {
     },
   ],
 } as unknown as DocumentNode<AnalyzeImageMutation, AnalyzeImageMutationVariables>;
+export const WeatherForecastDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'WeatherForecast' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'params' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'JSON' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'weatherForecast' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'params' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'params' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<WeatherForecastQuery, WeatherForecastQueryVariables>;

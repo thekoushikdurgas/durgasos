@@ -1,7 +1,6 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
-import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 
 import { BlurFade } from '@/components/auth/BlurFade';
@@ -69,12 +68,13 @@ export function AuthSignUpFieldset({
   passwordInputRef,
   confirmPasswordInputRef,
   oauthSoon,
-  signUpFooter = 'sign-in-cta',
+  isExistingAccount,
 }: {
   disabled: boolean;
   ariaBusy: boolean;
   reduceMotion: boolean;
   authStep: 'email' | 'password' | 'confirmPassword';
+  isExistingAccount: boolean;
   email: string;
   setEmail: (v: string) => void;
   password: string;
@@ -88,15 +88,13 @@ export function AuthSignUpFieldset({
   isEmailValid: boolean;
   isPasswordValid: boolean;
   isConfirmPasswordValid: boolean;
-  handleProgressStep: () => void;
+  handleProgressStep: () => void | Promise<void>;
   handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   handleGoBack: () => void;
   handleFinalSubmit: (e: React.FormEvent) => void;
   passwordInputRef: React.RefObject<HTMLInputElement | null>;
   confirmPasswordInputRef: React.RefObject<HTMLInputElement | null>;
   oauthSoon: () => void;
-  /** `sign-in-cta`: link to /login. `back-to-welcome`: legacy footer link to /welcome. */
-  signUpFooter?: 'sign-in-cta' | 'back-to-welcome';
 }) {
   const t = reduceMotion ? { duration: 0 } : stepEase;
   const exitBlur = reduceMotion ? { opacity: 0 } : { opacity: 0, filter: 'blur(4px)' };
@@ -155,7 +153,7 @@ export function AuthSignUpFieldset({
         )}
         {authStep === 'password' && (
           <motion.div
-            key="password-title"
+            key={isExistingAccount ? 'password-title-existing' : 'password-title-new'}
             initial={reduceMotion ? false : { y: 6, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -165,13 +163,15 @@ export function AuthSignUpFieldset({
             <BlurFade delay={0} className="w-full">
               <div className="text-center">
                 <p className="text-foreground text-balance px-1 font-serif text-3xl font-light tracking-tight sm:text-5xl">
-                  Choose a password
+                  {isExistingAccount ? 'Welcome back' : 'Choose a password'}
                 </p>
               </div>
             </BlurFade>
             <BlurFade delay={0.25 * 1}>
               <p className="text-muted-foreground text-sm font-medium">
-                Use at least 6 characters. You will use this to unlock Durgas OS.
+                {isExistingAccount
+                  ? 'Enter your password to unlock Durgas OS.'
+                  : 'Use at least 6 characters. You will use this to unlock Durgas OS.'}
               </p>
             </BlurFade>
           </motion.div>
@@ -257,7 +257,7 @@ export function AuthSignUpFieldset({
                       >
                         <GlassButton
                           type="button"
-                          onClick={handleProgressStep}
+                          onClick={() => void handleProgressStep()}
                           size="icon"
                           aria-label="Continue with email"
                           contentClassName="text-foreground/80 hover:text-foreground"
@@ -324,9 +324,9 @@ export function AuthSignUpFieldset({
                           >
                             <GlassButton
                               type="button"
-                              onClick={handleProgressStep}
+                              onClick={() => void handleProgressStep()}
                               size="icon"
-                              aria-label="Submit password"
+                              aria-label={isExistingAccount ? 'Sign in' : 'Submit password'}
                               contentClassName="text-foreground/80 hover:text-foreground"
                             >
                               <ArrowRight className="h-5 w-5" />
@@ -427,19 +427,8 @@ export function AuthSignUpFieldset({
           )}
         </AnimatePresence>
       </form>
-      <p className="text-muted-foreground relative z-10 text-center text-xs">
-        {signUpFooter === 'sign-in-cta' ? (
-          <>
-            <span className="text-muted-foreground">Already have an account? </span>
-            <Link href="/login" className="text-primary underline-offset-4 hover:underline">
-              Sign in
-            </Link>
-          </>
-        ) : (
-          <Link href="/welcome" className="text-primary underline-offset-4 hover:underline">
-            Back to welcome
-          </Link>
-        )}
+      <p className="text-muted-foreground relative z-10 max-w-[280px] px-2 text-center text-xs">
+        Enter your email — we detect whether you already have an account and continue from there.
       </p>
     </fieldset>
   );
