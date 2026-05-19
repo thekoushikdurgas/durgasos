@@ -1,0 +1,3 @@
+query GoogleCalendarListEvents($params: JSON) {
+  googleCalendarListEvents(params: $params)
+}

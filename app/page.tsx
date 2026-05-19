@@ -2,6 +2,7 @@
 
 import { GlobalShellContextMenu } from '@/components/GlobalShellContextMenu';
 import { OSProvider, useOS } from '@/components/os-context';
+import { InstalledAppsProvider } from '@/hooks/use-installed-apps';
 import { TopBar } from '@/components/TopBar';
 import { Dock } from '@/components/Dock';
 import { Launcher } from '@/components/Launcher';
@@ -11,6 +12,7 @@ import { DesktopAiSearchBar } from '@/components/DesktopAiSearchBar';
 import { DesktopWidgets } from '@/components/DesktopWidgets';
 import { CommandPalette } from '@/components/CommandPalette';
 import { SystemStatusBridge } from '@/components/SystemStatusIcons';
+import { DesktopNoticeHost } from '@/components/DesktopNoticeHost';
 import React, { use } from 'react';
 
 // Wrapper to handle global desktop clicks
@@ -52,32 +54,35 @@ export default function Home({ params, searchParams }: HomePageProps) {
       id="main-content"
       className="relative flex h-screen min-h-[100dvh] w-full flex-col overflow-hidden bg-transparent font-sans text-slate-200"
     >
-      <OSProvider>
-        <SystemStatusBridge />
-        <GlobalShellContextMenu>
-          <header className="relative z-[100] w-full shrink-0">
-            <TopBar />
-          </header>
+      <InstalledAppsProvider>
+        <OSProvider>
+          <SystemStatusBridge />
+          <DesktopNoticeHost />
+          <GlobalShellContextMenu>
+            <header className="relative z-[100] w-full shrink-0">
+              <TopBar />
+            </header>
 
-          <div className="relative z-10 flex h-full min-h-0 w-full flex-1">
-            <DesktopInteractionManager>
-              <DesktopWidgets />
+            <div className="relative z-10 flex h-full min-h-0 w-full flex-1">
+              <DesktopInteractionManager>
+                <DesktopWidgets />
 
-              <DesktopAiSearchBar />
+                <DesktopAiSearchBar />
 
-              <WindowManager />
+                <WindowManager />
 
-              <Launcher />
-              <NotificationCenter />
-              <CommandPalette />
-            </DesktopInteractionManager>
-          </div>
+                <Launcher />
+                <NotificationCenter />
+                <CommandPalette />
+              </DesktopInteractionManager>
+            </div>
 
-          <Dock />
+            <Dock />
 
-          <div className="pointer-events-none absolute bottom-0 z-50 h-1 w-full bg-gradient-to-r from-cyan-500 via-transparent to-purple-500 opacity-40" />
-        </GlobalShellContextMenu>
-      </OSProvider>
+            <div className="pointer-events-none absolute bottom-0 z-[94] h-1 w-full bg-gradient-to-r from-cyan-500 via-transparent to-purple-500 opacity-40" />
+          </GlobalShellContextMenu>
+        </OSProvider>
+      </InstalledAppsProvider>
     </main>
   );
 }

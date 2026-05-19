@@ -1,18 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type MouseEvent } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { Activity, Circle, User } from 'lucide-react';
 
 import { useOS } from '@/components/os-context';
 import { useSystemHealth } from '@/hooks/use-system-health';
-import { getBackendOrigin } from '@/lib/backend-url';
-import { clearSession } from '@/lib/establish-session';
+import { notifyAuthSessionChanged, notifyFocusWelcomeAuth } from '@/lib/auth-session-events';
 import { readStoredAuthTokens } from '@/lib/auth-tokens-local';
+import { fetchBackendHealthSnapshot } from '@/lib/backend-http';
+import { clearSession } from '@/lib/establish-session';
 import { cn } from '@/lib/utils';
 
-function dotClass(
-  status: 'online' | 'degraded' | 'offline' | 'up' | 'down' | 'unknown'
-) {
+function dotClass(status: 'online' | 'degraded' | 'offline' | 'up' | 'down' | 'unknown') {
   if (status === 'online' || status === 'up')
     return 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]';
   if (status === 'degraded' || status === 'unknown')
@@ -24,12 +24,20 @@ export function SystemStatusBridge() {
   const { setSystemStatus } = useOS();
   const { overall } = useSystemHealth();
   useEffect(() => {
-    setSystemStatus(overall);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setSystemStatus(overall);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [overall, setSystemStatus]);
   return null;
 }
 
 export function SystemStatusIcons({ compact = false }: { compact?: boolean }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const { systemStatus, openApp } = useOS();
   const [wsHttp, setWsHttp] = useState<'up' | 'down' | 'unknown'>('unknown');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -37,20 +45,32 @@ export function SystemStatusIcons({ compact = false }: { compact?: boolean }) {
 
   const pollWs = useCallback(async () => {
     try {
-      const r = await fetch(`${getBackendOrigin()}/ws/status`);
-      setWsHttp(r.ok ? 'up' : 'down');
+      const j = await fetchBackendHealthSnapshot();
+      setWsHttp(j?.wsGateway?.ok ? 'up' : 'down');
     } catch {
       setWsHttp('down');
     }
   }, []);
 
   useEffect(() => {
-    void pollWs();
+    const first = window.setTimeout(() => void pollWs(), 0);
     const id = window.setInterval(() => void pollWs(), 15_000);
-    return () => window.clearInterval(id);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(id);
+    };
   }, [pollWs]);
 
-  const apiDot = systemStatus === 'online' ? 'online' : systemStatus === 'degraded' ? 'degraded' : 'offline';
+  const apiDot =
+    systemStatus === 'online' ? 'online' : systemStatus === 'degraded' ? 'degraded' : 'offline';
+
+  const accountMenuButtonClassName =
+    'flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-white/10 text-slate-200 outline-none hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary,#3b82f6)]';
+
+  const onAccountMenuButtonClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    setMenuOpen((o) => !o);
+  };
 
   return (
     <div className={cn('flex items-center gap-2', compact && 'gap-1.5')}>
@@ -69,19 +89,29 @@ export function SystemStatusIcons({ compact = false }: { compact?: boolean }) {
         {!compact && 'WS'}
       </span>
       <div className="relative">
-        <button
-          type="button"
-          aria-expanded={menuOpen}
-          aria-haspopup="menu"
-          className="flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-white/10 text-slate-200 outline-none hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary,#3b82f6)]"
-          onClick={(e) => {
-            e.stopPropagation();
-            setMenuOpen((o) => !o);
-          }}
-          title="Account"
-        >
-          <User className="h-4 w-4" aria-hidden />
-        </button>
+        {menuOpen ? (
+          <button
+            type="button"
+            aria-expanded="true"
+            aria-haspopup="menu"
+            className={accountMenuButtonClassName}
+            onClick={onAccountMenuButtonClick}
+            title="Account"
+          >
+            <User className="h-4 w-4" aria-hidden />
+          </button>
+        ) : (
+          <button
+            type="button"
+            aria-expanded="false"
+            aria-haspopup="menu"
+            className={accountMenuButtonClassName}
+            onClick={onAccountMenuButtonClick}
+            title="Account"
+          >
+            <User className="h-4 w-4" aria-hidden />
+          </button>
+        )}
         {menuOpen ? (
           <>
             <button
@@ -113,7 +143,9 @@ export function SystemStatusIcons({ compact = false }: { compact?: boolean }) {
                   onClick={async () => {
                     setMenuOpen(false);
                     await clearSession();
-                    window.location.href = '/welcome';
+                    notifyAuthSessionChanged();
+                    router.push('/');
+                    router.refresh();
                   }}
                 >
                   Log out
@@ -125,7 +157,8 @@ export function SystemStatusIcons({ compact = false }: { compact?: boolean }) {
                   className="block w-full px-3 py-2 text-left text-slate-300 hover:bg-white/10"
                   onClick={() => {
                     setMenuOpen(false);
-                    window.location.href = '/welcome';
+                    if (pathname !== '/') router.push('/');
+                    notifyFocusWelcomeAuth();
                   }}
                 >
                   Sign in…

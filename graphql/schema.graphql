@@ -13,8 +13,20 @@ type Query {
   ragDocuments(collectionName: String, limit: Int = 100, offset: Int = 0): JSON
   ragQuery(query: String!, k: Int = 5, collectionName: String): JSON
   ragList(collectionName: String, limit: Int = 100, offset: Int = 0): JSON
+  ragStats(collectionName: String): JSON
   storageList(params: JSON): JSON
   storageBuckets(params: JSON): JSON
+  googlePhotosList(params: JSON): JSON
+  gmailListMessages(params: JSON): JSON
+  gmailGetMessage(params: JSON): JSON
+  gmailListThreads(params: JSON): JSON
+  gmailGetThread(params: JSON): JSON
+  googleCalendarListEvents(params: JSON): JSON
+  googlePeopleListContacts(params: JSON): JSON
+  googleDriveListFiles(params: JSON): JSON
+  googleTasksListTasklists(params: JSON): JSON
+  googleTasksEnsureKanbanLists(params: JSON): JSON
+  googleTasksListTasks(params: JSON): JSON
   metricsSummary(params: JSON): JSON
   metricsProviders(params: JSON): JSON
   metricsCouncil(params: JSON): JSON
@@ -25,6 +37,11 @@ type Query {
   workflowDefinitions: [WorkflowDefinition!]!
   workflowRuns(workflowId: String): [WorkflowRun!]!
   widgetLayout: WidgetLayout
+  installedApps: InstalledApps
+  linkedGoogleAccounts: JSON
+  getLinkedGoogleAccountToken(googleUserId: String!): JSON
+  todoWorkspaces(googleUserId: String!): [TodoWorkspace!]!
+  todoTasks(workspaceId: String!): [TodoTask!]!
 }
 
 type Mutation {
@@ -49,6 +66,7 @@ type Mutation {
   storageUpload(params: JSON!): JSON!
   storageDelete(params: JSON!): JSON!
   storageMove(params: JSON!): JSON!
+  storageMkdir(params: JSON!): JSON!
   storageGetUrl(params: JSON!): JSON!
   storageCreateSignedUrl(params: JSON!): JSON!
   storageBucketsCreate(params: JSON!): JSON!
@@ -87,6 +105,39 @@ type Mutation {
   createWorkflowDefinition(name: String!, spec: JSON!): WorkflowDefinition!
   startWorkflowRun(workflowId: String!): WorkflowRun!
   saveWidgetLayout(layoutJson: JSON!): WidgetLayout!
+  saveInstalledApps(appIds: [String!]!): InstalledApps!
+  saveFileAssociations(associations: JSON!): InstalledApps!
+
+  addLinkedGoogleAccount(params: JSON!): JSON!
+  removeLinkedGoogleAccount(googleUserId: String!): JSON!
+  refreshLinkedGoogleAccountToken(
+    googleUserId: String!
+    accessToken: String!
+    expiresAt: Float!
+    scopesGranted: String
+  ): JSON!
+
+  googleTasksInsertTask(params: JSON): JSON!
+  googleTasksUpdateTask(params: JSON): JSON!
+  googleTasksDeleteTask(params: JSON): JSON!
+  googleTasksMoveTask(params: JSON): JSON!
+
+  createTodoWorkspace(googleUserId: String!, name: String!, params: JSON): TodoWorkspace!
+  renameTodoWorkspace(workspaceId: String!, name: String!): TodoWorkspace!
+  deleteTodoWorkspace(workspaceId: String!): Boolean!
+
+  createTodoTask(workspaceId: String!, column: String!, title: String!): TodoTask!
+  moveTodoTask(taskId: String!, column: String!, previousTaskId: String): TodoTask!
+  deleteTodoTask(taskId: String!): Boolean!
+}
+
+type GqlUserProfile {
+  username: String
+  avatarUrl: String
+  bio: String
+  preferences: JSON
+  createdAt: String
+  updatedAt: String
 }
 
 type GqlUser {
@@ -95,6 +146,10 @@ type GqlUser {
   userMetadata: JSON!
   appMetadata: JSON!
   createdAt: String
+  updatedAt: String
+  isActive: Boolean!
+  isVerified: Boolean!
+  profile: GqlUserProfile
 }
 
 type GqlSession {
@@ -126,6 +181,29 @@ type WorkflowDefinition {
   updatedAt: String!
 }
 
+type TodoWorkspace {
+  id: ID!
+  name: String!
+  storage: String!
+  googleUserId: String!
+  backlogListId: String!
+  todoListId: String!
+  doingListId: String!
+  doneListId: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type TodoTask {
+  id: ID!
+  title: String!
+  column: String!
+  sortOrder: Float!
+  workspaceId: ID!
+  createdAt: String!
+  updatedAt: String!
+}
+
 type WorkflowRun {
   id: ID!
   workflowId: String!
@@ -139,5 +217,13 @@ type WidgetLayout {
   id: ID!
   ownerId: String!
   layoutJson: JSON!
+  updatedAt: String!
+}
+
+type InstalledApps {
+  id: ID!
+  ownerId: String!
+  appIds: [String!]!
+  fileAssociations: JSON
   updatedAt: String!
 }

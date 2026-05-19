@@ -8,11 +8,18 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { useOS } from '@/components/os-context';
+import { useInstalledApps } from '@/hooks/use-installed-apps';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search } from 'lucide-react';
 import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { APP_CATEGORY_LABELS, APPS, type AppCategory, type AppDefinition, type AppId } from '@/lib/apps';
+import {
+  APP_CATEGORY_LABELS,
+  APPS,
+  type AppCategory,
+  type AppDefinition,
+  type AppId,
+} from '@/lib/apps';
 import { cn } from '@/lib/utils';
 
 const PINNED_KEY = 'durgasos_launcher_pins_v1';
@@ -42,14 +49,21 @@ const CATEGORIES: AppCategory[] = ['core', 'workflows', 'data', 'system'];
 
 export function Launcher() {
   const { isLauncherOpen, toggleLauncher, openApp } = useOS();
+  const { isInstalled } = useInstalledApps();
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState<AppCategory>('core');
   const [pins, setPins] = useState<AppId[]>([]);
 
   useEffect(() => {
-    if (isLauncherOpen) {
+    if (!isLauncherOpen) return;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
       setPins(loadPins());
-    }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [isLauncherOpen]);
 
   const searchResults = useMemo(() => {
@@ -57,11 +71,12 @@ export function Launcher() {
     if (!q) return null;
     return Object.values(APPS).filter(
       (a) =>
-        a.name.toLowerCase().includes(q) ||
-        a.id.toLowerCase().includes(q) ||
-        APP_CATEGORY_LABELS[a.category].toLowerCase().includes(q)
+        isInstalled(a.id) &&
+        (a.name.toLowerCase().includes(q) ||
+          a.id.toLowerCase().includes(q) ||
+          APP_CATEGORY_LABELS[a.category].toLowerCase().includes(q))
     );
-  }, [query]);
+  }, [query, isInstalled]);
 
   const pinApp = (id: AppId) => {
     const next = pins.includes(id) ? pins : [...pins, id];
@@ -155,32 +170,40 @@ export function Launcher() {
                   ))}
                 </TabsList>
                 {CATEGORIES.map((c) => (
-                  <TabsContent key={c} value={c} className="min-h-0 flex-1 overflow-y-auto p-2 pt-0">
-                    {renderAppGrid(Object.values(APPS).filter((a) => a.category === c))}
+                  <TabsContent
+                    key={c}
+                    value={c}
+                    className="min-h-0 flex-1 overflow-y-auto p-2 pt-0"
+                  >
+                    {renderAppGrid(
+                      Object.values(APPS).filter((a) => a.category === c && isInstalled(a.id))
+                    )}
                   </TabsContent>
                 ))}
               </Tabs>
             )}
 
-            {!searchResults && pins.length > 0 && (
+            {!searchResults && pins.some((id) => isInstalled(id)) && (
               <div className="border-t border-white/10 px-4 py-3">
                 <h3 className="mb-2 text-xs font-semibold text-white/50">Pinned (local)</h3>
                 <div className="flex flex-wrap gap-2">
-                  {pins.map((id) => {
-                    const app = APPS[id];
-                    if (!app) return null;
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => openApp(id)}
-                        className="flex items-center gap-2 rounded-lg border border-cyan-500/25 bg-cyan-500/10 px-2 py-1.5 text-xs text-white/90 hover:bg-cyan-500/20"
-                      >
-                        <app.icon className={cn('h-4 w-4', app.color)} strokeWidth={2} />
-                        {app.name}
-                      </button>
-                    );
-                  })}
+                  {pins
+                    .filter((id) => isInstalled(id))
+                    .map((id) => {
+                      const app = APPS[id];
+                      if (!app) return null;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => openApp(id)}
+                          className="flex items-center gap-2 rounded-lg border border-cyan-500/25 bg-cyan-500/10 px-2 py-1.5 text-xs text-white/90 hover:bg-cyan-500/20"
+                        >
+                          <app.icon className={cn('h-4 w-4', app.color)} strokeWidth={2} />
+                          {app.name}
+                        </button>
+                      );
+                    })}
                 </div>
               </div>
             )}

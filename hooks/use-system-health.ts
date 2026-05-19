@@ -10,7 +10,8 @@ export function useSystemHealth(pollIntervalMs = 30_000) {
   const { data, loading, error, refetch } = useQuery(SYSTEM_HEALTH, {
     variables: { params: {} },
     pollInterval: pollIntervalMs,
-    fetchPolicy: 'network-only',
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
   });
 
   const raw = (data as { systemHealth?: Record<string, unknown> } | undefined)?.systemHealth;

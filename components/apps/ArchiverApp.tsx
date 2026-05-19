@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Archive, File, Folder, Info, Plus, Minus, Search, Wand2, Stethoscope } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { useWindowLaunch } from '@/components/window-launch-context';
 import {
   formatPathDisplay,
   listDirectory,
@@ -19,14 +20,30 @@ function formatBytes(n: number): string {
   return `${(n / 1024).toFixed(1)} KB`;
 }
 
+const ARCHIVE_EXTS =
+  /\.(zip|tar|gz|tgz|rar|7z|bz2|xz|lzma|zst|cab|iso|deb|rpm|jar|war|ear|apk|ipa|whl)$/i;
+
 export function ArchiverApp() {
+  const launch = useWindowLaunch();
   const [fsPath, setFsPath] = useState<PathSegments>(['This PC']);
   /** Empty string = filesystem; else path key inside ARCHIVE_MOCK_TREE */
   const [archiveKey, setArchiveKey] = useState('');
   const [selectedFs, setSelectedFs] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [openedFrom, setOpenedFrom] = useState<string | null>(null);
 
   const inArchive = archiveKey.length > 0;
+
+  useEffect(() => {
+    const fp = launch?.storage?.file_path ?? '';
+    const fn = launch?.fileName ?? '';
+    const isArchive = ARCHIVE_EXTS.test(fp) || ARCHIVE_EXTS.test(fn);
+    if (!isArchive) return;
+    queueMicrotask(() => {
+      setArchiveKey(DEMO_ARCHIVE_ROOT);
+      setOpenedFrom(fp || fn || null);
+    });
+  }, [launch?.storage?.file_path, launch?.fileName]);
 
   const fsEntries = useMemo(() => listDirectory(fsPath), [fsPath]);
   const archiveEntries = useMemo(
@@ -39,7 +56,7 @@ export function ArchiverApp() {
       setFsPath([...fsPath, e.name] as PathSegments);
       return;
     }
-    if (e.name.endsWith('.zip')) {
+    if (ARCHIVE_EXTS.test(e.name)) {
       setArchiveKey(DEMO_ARCHIVE_ROOT);
     }
   };
@@ -79,6 +96,11 @@ export function ArchiverApp() {
           </button>
         ))}
       </div>
+      {openedFrom ? (
+        <div className="shrink-0 border-b border-amber-500/20 bg-amber-500/10 px-2 py-1 text-[10px] text-amber-100/90">
+          Opened from Files: {openedFrom} (demo archive view)
+        </div>
+      ) : null}
       <div className="flex h-10 shrink-0 items-center gap-2 border-b border-white/5 px-2">
         <button
           type="button"

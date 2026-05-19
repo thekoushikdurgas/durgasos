@@ -243,7 +243,7 @@ export function ParticleTextEffect({
       const offscreenCanvas = document.createElement('canvas');
       offscreenCanvas.width = canvas.width;
       offscreenCanvas.height = canvas.height;
-      const offscreenCtx = offscreenCanvas.getContext('2d');
+      const offscreenCtx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
       if (!offscreenCtx) return;
 
       const fontPx = Math.max(10, Math.floor(canvas.height * 0.52));
@@ -354,7 +354,7 @@ export function ParticleTextEffect({
       const c = canvasRef.current;
       if (!c) return;
 
-      const ctx = c.getContext('2d');
+      const ctx = c.getContext('2d', { willReadFrequently: true });
       if (!ctx) return;
 
       const particles = particlesRef.current;

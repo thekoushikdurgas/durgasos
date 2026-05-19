@@ -16,6 +16,10 @@ export default defineConfig([
       'coverage/**',
       'out/**',
       'graphql/generated/**',
+      'dist-electron/**',
+      'electron/**/*.cjs',
+      'android/**',
+      'ios/**',
     ],
   },
   {

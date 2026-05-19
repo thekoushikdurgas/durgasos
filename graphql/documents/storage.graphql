@@ -9,3 +9,19 @@ query StorageList($params: JSON) {
 mutation StorageUpload($params: JSON!) {
   storageUpload(params: $params)
 }
+
+mutation StorageGetUrl($params: JSON!) {
+  storageGetUrl(params: $params)
+}
+
+mutation StorageDelete($params: JSON!) {
+  storageDelete(params: $params)
+}
+
+mutation StorageMove($params: JSON!) {
+  storageMove(params: $params)
+}
+
+mutation StorageMkdir($params: JSON!) {
+  storageMkdir(params: $params)
+}

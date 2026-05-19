@@ -1,0 +1,39 @@
+query TodoTasks($workspaceId: String!) {
+  todoTasks(workspaceId: $workspaceId) {
+    id
+    title
+    column
+    sortOrder
+    workspaceId
+    createdAt
+    updatedAt
+  }
+}
+
+mutation CreateTodoTask($workspaceId: String!, $column: String!, $title: String!) {
+  createTodoTask(workspaceId: $workspaceId, column: $column, title: $title) {
+    id
+    title
+    column
+    sortOrder
+    workspaceId
+    createdAt
+    updatedAt
+  }
+}
+
+mutation MoveTodoTask($taskId: String!, $column: String!, $previousTaskId: String) {
+  moveTodoTask(taskId: $taskId, column: $column, previousTaskId: $previousTaskId) {
+    id
+    title
+    column
+    sortOrder
+    workspaceId
+    createdAt
+    updatedAt
+  }
+}
+
+mutation DeleteTodoTask($taskId: String!) {
+  deleteTodoTask(taskId: $taskId)
+}

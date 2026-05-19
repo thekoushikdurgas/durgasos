@@ -9,19 +9,29 @@ import {
   ContextMenuSeparator,
 } from '@/components/ui/context-menu';
 import { useOS } from '@/components/os-context';
+import { useInstalledApps } from '@/hooks/use-installed-apps';
 import { APPS, type AppId } from '@/lib/apps';
+import { notifyAuthSessionChanged } from '@/lib/auth-session-events';
 import { clearSession } from '@/lib/establish-session';
 import { cn } from '@/lib/utils';
-import { Bell, Info, LayoutGrid, LogOut, Maximize2, Minimize2, X } from 'lucide-react';
+import { Bell, Info, LayoutGrid, LogOut, Maximize2, Minimize2, RefreshCw, X } from 'lucide-react';
 
 const itemClass =
   'flex cursor-pointer items-center gap-2 focus:bg-accent/70 data-[highlighted]:bg-accent/70';
 
 /** Launcher / menubar order: Files, Web, Terminal, Gallery, Settings */
-const APP_MENU_ORDER: AppId[] = ['explorer', 'browser', 'terminal', 'gallery', 'settings'];
+const APP_MENU_ORDER: AppId[] = [
+  'explorer',
+  'browser',
+  'terminal',
+  'gallery',
+  'resume',
+  'settings',
+];
 
 export function GlobalUserContextMenuContent() {
   const router = useRouter();
+  const { isInstalled } = useInstalledApps();
   const {
     openApp,
     toggleLauncher,
@@ -62,7 +72,7 @@ export function GlobalUserContextMenuContent() {
 
       <ContextMenuSeparator />
 
-      {APP_MENU_ORDER.map((appId) => {
+      {APP_MENU_ORDER.filter((id) => isInstalled(id)).map((appId) => {
         const app = APPS[appId];
         const Icon = app.icon;
         return (
@@ -118,6 +128,16 @@ export function GlobalUserContextMenuContent() {
         About DurgasOS
       </ContextMenuItem>
 
+      <ContextMenuItem
+        className={itemClass}
+        onSelect={() => {
+          window.location.reload();
+        }}
+      >
+        <RefreshCw className="size-4 shrink-0 text-muted-foreground" />
+        Reload DurgasOS
+      </ContextMenuItem>
+
       <ContextMenuSeparator />
 
       <ContextMenuItem
@@ -126,7 +146,8 @@ export function GlobalUserContextMenuContent() {
           void (async () => {
             try {
               await clearSession();
-              router.push('/welcome');
+              notifyAuthSessionChanged();
+              router.push('/');
               router.refresh();
             } catch (err) {
               console.error('[durgasos] End session failed', err);

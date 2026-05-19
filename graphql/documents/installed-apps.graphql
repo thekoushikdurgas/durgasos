@@ -1,0 +1,29 @@
+query InstalledApps {
+  installedApps {
+    id
+    ownerId
+    appIds
+    fileAssociations
+    updatedAt
+  }
+}
+
+mutation SaveInstalledApps($appIds: [String!]!) {
+  saveInstalledApps(appIds: $appIds) {
+    id
+    ownerId
+    appIds
+    fileAssociations
+    updatedAt
+  }
+}
+
+mutation SaveFileAssociations($associations: JSON!) {
+  saveFileAssociations(associations: $associations) {
+    id
+    ownerId
+    appIds
+    fileAssociations
+    updatedAt
+  }
+}

@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-
-import { useQuery } from '@apollo/client/react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { WeatherForecastQuery } from '@/graphql/generated/graphql';
-import { WEATHER_FORECAST } from '@/lib/graphql-modules';
+import { CACHE_TTL_MS, cachedFetch } from '@/lib/api-client';
+import { buildBackendAuthHeaders } from '@/lib/backend-http';
+import { getGraphqlHttpUrl } from '@/lib/backend-url';
 import {
   parseWeatherForecastPayload,
   type WeatherForecastPayload,
@@ -35,7 +35,12 @@ export type UseDesktopWeatherResult = {
 };
 
 export function useDesktopWeather(): UseDesktopWeatherResult {
-  const [params, setParams] = useState<Record<string, number> | undefined>(undefined);
+  const [params, setParams] = useState<Record<string, number> | Record<string, never> | undefined>(
+    undefined
+  );
+  const [rawForecast, setRawForecast] = useState<unknown>(undefined);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,27 +75,68 @@ export function useDesktopWeather(): UseDesktopWeatherResult {
     };
   }, []);
 
-  const q = useQuery<WeatherForecastQuery>(WEATHER_FORECAST, {
-    variables: {
-      params: params === undefined ? null : Object.keys(params).length > 0 ? params : null,
-    },
-    skip: params === undefined,
-    pollInterval: POLL_MS,
-    fetchPolicy: 'network-only',
-  });
+  const cacheKey = useMemo(() => {
+    if (params === undefined) return 'weather:pending';
+    const q =
+      Object.keys(params).length > 0 ? `?params=${encodeURIComponent(JSON.stringify(params))}` : '';
+    return `weather${q}`;
+  }, [params]);
 
-  const forecast = useMemo(() => {
-    const raw = q.data?.weatherForecast;
-    return parseWeatherForecastPayload(raw);
-  }, [q.data]);
+  const load = useCallback(
+    async (force = false) => {
+      if (params === undefined) return;
+      setLoading(true);
+      try {
+        const paramsVar =
+          params && typeof params === 'object' && Object.keys(params).length > 0 ? params : null;
+        const json = await cachedFetch<{ data?: WeatherForecastQuery }>(getGraphqlHttpUrl(), {
+          cacheKey,
+          ttlMs: CACHE_TTL_MS.weather,
+          force,
+          init: {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...buildBackendAuthHeaders(),
+            },
+            body: JSON.stringify({
+              query: `query WeatherForecast($params: JSON) { weatherForecast(params: $params) }`,
+              variables: { params: paramsVar },
+            }),
+          },
+        });
+        setRawForecast(json.data?.weatherForecast);
+        setError(null);
+      } catch (e) {
+        setError(e instanceof Error ? e : new Error(String(e)));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [params, cacheKey]
+  );
+
+  useEffect(() => {
+    if (params === undefined) return;
+    const kick = window.setTimeout(() => {
+      void load(false);
+    }, 0);
+    const id = window.setInterval(() => void load(false), POLL_MS);
+    return () => {
+      window.clearTimeout(kick);
+      window.clearInterval(id);
+    };
+  }, [params, load]);
+
+  const forecast = useMemo(() => parseWeatherForecastPayload(rawForecast), [rawForecast]);
 
   return {
     coordsReady: params !== undefined,
     forecast,
-    loading: q.loading,
-    error: q.error ?? null,
+    loading,
+    error,
     refetch: () => {
-      void q.refetch();
+      void load(true);
     },
   };
 }

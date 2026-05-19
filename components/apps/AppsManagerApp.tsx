@@ -1,132 +1,58 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
-import { Download, RefreshCw, Trash2, CheckSquare, Square, Package } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { AppWindow, ExternalLink, Package } from 'lucide-react';
+
+import { useOS } from '@/components/os-context';
+import { useInstalledApps } from '@/hooks/use-installed-apps';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import {
-  MOCK_APP_PACKAGES,
-  packagesByCategory,
-  type AppPackage,
-  type AppPackageCategory,
-} from '@/lib/apps-catalog-mock';
+  APP_CATEGORY_LABELS,
+  APP_DESCRIPTIONS,
+  APPS,
+  type AppCategory,
+  type AppId,
+} from '@/lib/apps';
 
-const CATEGORIES: (AppPackageCategory | 'All')[] = [
-  'All',
-  'Graphics',
-  'Video',
-  'Development',
-  'Tools',
-  'Audio',
-  'Internet',
-  'Office',
-  'Games',
-  'Other',
-];
-
-type Job = { id: string; name: string; progress: number; status: string };
-
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
-}
+const CATEGORIES: (AppCategory | 'All')[] = ['All', 'core', 'workflows', 'data', 'system'];
 
 export function AppsManagerApp() {
-  const [cat, setCat] = useState<AppPackageCategory | 'All'>('All');
+  const { openApp } = useOS();
+  const { installedIds, isInstalled, isMandatory, installApp, uninstallApp } = useInstalledApps();
+
+  const [cat, setCat] = useState<AppCategory | 'All'>('All');
   const [query, setQuery] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(MOCK_APP_PACKAGES[0]?.id ?? null);
-  const [checked, setChecked] = useState<Set<string>>(new Set());
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [selectedId, setSelectedId] = useState<AppId | null>(() => {
+    const ids = Object.keys(APPS) as AppId[];
+    return ids[0] ?? null;
+  });
 
   const list = useMemo(() => {
-    const base = packagesByCategory(cat);
+    const base = Object.values(APPS).filter((a) => cat === 'All' || a.category === cat);
     const q = query.trim().toLowerCase();
     if (!q) return base;
     return base.filter(
-      (p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.id.toLowerCase().includes(q) ||
+        APP_CATEGORY_LABELS[p.category].toLowerCase().includes(q) ||
+        (APP_DESCRIPTIONS[p.id]?.toLowerCase().includes(q) ?? false)
     );
   }, [cat, query]);
 
-  const detail: AppPackage | undefined = useMemo(
-    () => MOCK_APP_PACKAGES.find((p) => p.id === selectedId),
-    [selectedId]
-  );
-
-  const toggleCheck = (id: string) => {
-    setChecked((prev) => {
-      const n = new Set(prev);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
-  };
-
-  const mockInstall = useCallback((p: AppPackage) => {
-    const id = `job-${Date.now()}`;
-    setJobs((prev) => [...prev, { id, name: p.name, progress: 0, status: 'Downloading…' }]);
-    let t = 0;
-    const iv = setInterval(() => {
-      t += 12;
-      setJobs((prev) =>
-        prev.map((j) =>
-          j.id === id
-            ? {
-                ...j,
-                progress: Math.min(100, t),
-                status: t >= 100 ? 'Installing…' : 'Downloading…',
-              }
-            : j
-        )
-      );
-      if (t >= 100) {
-        clearInterval(iv);
-        setTimeout(() => {
-          setJobs((prev) => prev.filter((j) => j.id !== id));
-        }, 600);
-      }
-    }, 120);
-  }, []);
+  const detail = selectedId ? APPS[selectedId] : undefined;
+  const installed = detail ? isInstalled(detail.id) : false;
+  const mandatory = detail ? isMandatory(detail.id) : false;
 
   return (
     <div className="absolute inset-0 flex flex-col bg-slate-950/90 text-slate-100">
       <div className="flex h-9 shrink-0 items-center gap-2 border-b border-white/10 px-2">
-        <button
-          type="button"
-          className="rounded px-2 py-1 text-[10px] uppercase text-white/60 hover:bg-white/10"
-        >
-          File
-        </button>
-        <button
-          type="button"
-          className="rounded px-2 py-1 text-[10px] uppercase text-white/60 hover:bg-white/10"
-        >
-          Help
-        </button>
-        <div className="ml-auto flex gap-1">
-          <button
-            type="button"
-            className="rounded border border-white/10 px-2 py-1 text-xs hover:bg-white/10"
-            onClick={() => {
-              const first = list.find((p) => checked.has(p.id));
-              if (first) mockInstall(first);
-            }}
-            title="Install first checked (demo)"
-          >
-            <Download className="mr-1 inline h-3.5 w-3.5" />
-            Install
-          </button>
-          <button
-            type="button"
-            className="rounded border border-white/10 px-2 py-1 text-xs opacity-50"
-          >
-            <Trash2 className="mr-1 inline h-3.5 w-3.5" />
-            Uninstall
-          </button>
-          <button type="button" className="rounded border border-white/10 p-1 hover:bg-white/10">
-            <RefreshCw className="h-4 w-4" />
-          </button>
-        </div>
+        <AppWindow className="h-4 w-4 text-sky-400" aria-hidden />
+        <span className="text-xs font-semibold text-white/80">My Apps</span>
+        <span className="text-[10px] text-white/40">
+          {installedIds.size} installed · {Object.keys(APPS).length} available
+        </span>
       </div>
 
       <div className="flex min-h-0 flex-1">
@@ -142,8 +68,8 @@ export function AppsManagerApp() {
                 cat === c ? 'bg-blue-500/25 text-blue-200' : 'text-white/60 hover:bg-white/5'
               )}
             >
-              <Package className="h-3 w-3 shrink-0 opacity-60" />
-              {c}
+              <Package className="h-3 w-3 shrink-0 opacity-60" aria-hidden />
+              {c === 'All' ? 'All' : APP_CATEGORY_LABELS[c]}
             </button>
           ))}
         </aside>
@@ -162,10 +88,9 @@ export function AppsManagerApp() {
               <table className="w-full border-collapse text-left text-xs">
                 <thead className="sticky top-0 border-b border-white/10 bg-slate-900/95 text-white/50">
                   <tr>
-                    <th className="w-10 p-2" />
                     <th className="p-2">Name</th>
-                    <th className="p-2">Version</th>
-                    <th className="p-2">Description</th>
+                    <th className="p-2">Category</th>
+                    <th className="p-2">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -178,25 +103,15 @@ export function AppsManagerApp() {
                       )}
                       onClick={() => setSelectedId(p.id)}
                     >
-                      <td className="p-2">
-                        <button
-                          type="button"
-                          aria-label="Select for install"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleCheck(p.id);
-                          }}
-                        >
-                          {checked.has(p.id) ? (
-                            <CheckSquare className="h-4 w-4 text-blue-400" />
-                          ) : (
-                            <Square className="h-4 w-4 text-white/30" />
-                          )}
-                        </button>
-                      </td>
                       <td className="p-2 font-medium text-white/90">{p.name}</td>
-                      <td className="p-2 text-white/60">{p.version}</td>
-                      <td className="max-w-[240px] truncate p-2 text-white/50">{p.description}</td>
+                      <td className="p-2 text-white/60">{APP_CATEGORY_LABELS[p.category]}</td>
+                      <td className="p-2 text-white/70">
+                        {isInstalled(p.id) ? (
+                          <span className="text-emerald-400/90">Installed</span>
+                        ) : (
+                          <span className="text-white/45">Not installed</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -204,30 +119,59 @@ export function AppsManagerApp() {
             </div>
             <div className="shrink-0 border-t border-white/10 bg-black/30 p-3 text-xs">
               {detail ? (
-                <div className="flex flex-wrap gap-4">
-                  <div>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
                     <p className="font-semibold text-white">{detail.name}</p>
                     <p className="text-white/50">
-                      {detail.installed ? 'Installed' : 'Not installed'} · {detail.license}
+                      {installed
+                        ? 'Installed on this desktop'
+                        : 'Not installed — hidden from launcher'}{' '}
+                      · ID <code className="text-white/60">{detail.id}</code>
                     </p>
-                    <p className="mt-1 text-white/60">{detail.description}</p>
-                    <p className="mt-1 text-white/40">Size: {formatBytes(detail.sizeBytes)}</p>
-                    <a
-                      href={detail.downloadUrl}
-                      className="text-blue-400 hover:underline"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {detail.downloadUrl}
-                    </a>
+                    <p className="mt-1 text-white/65">{APP_DESCRIPTIONS[detail.id]}</p>
+                    {mandatory ? (
+                      <p className="mt-2 text-[10px] uppercase tracking-wide text-amber-400/90">
+                        Core app — cannot be removed
+                      </p>
+                    ) : null}
                   </div>
-                  <button
-                    type="button"
-                    className="self-start rounded-lg bg-emerald-600/80 px-3 py-1.5 text-sm hover:bg-emerald-600"
-                    onClick={() => mockInstall(detail)}
-                  >
-                    Install (demo)
-                  </button>
+                  <div className="flex shrink-0 flex-col gap-2">
+                    {installed ? (
+                      <>
+                        <button
+                          type="button"
+                          className="rounded-lg bg-blue-600/85 px-3 py-1.5 text-sm text-white hover:bg-blue-600"
+                          onClick={() => openApp(detail.id, { bypassInstallCheck: true })}
+                        >
+                          Open
+                        </button>
+                        <button
+                          type="button"
+                          disabled={mandatory}
+                          title={
+                            mandatory ? 'This app is required for the desktop shell' : undefined
+                          }
+                          className={cn(
+                            'rounded-lg border border-white/15 px-3 py-1.5 text-sm',
+                            mandatory
+                              ? 'cursor-not-allowed opacity-40'
+                              : 'text-white/85 hover:bg-white/10'
+                          )}
+                          onClick={() => uninstallApp(detail.id)}
+                        >
+                          Uninstall
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        className="rounded-lg bg-emerald-600/80 px-3 py-1.5 text-sm text-white hover:bg-emerald-600"
+                        onClick={() => installApp(detail.id)}
+                      >
+                        Install
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -235,29 +179,11 @@ export function AppsManagerApp() {
         </div>
       </div>
 
-      {jobs.length > 0 ? (
-        <div className="fixed bottom-24 right-6 z-[200] w-80 rounded-lg border border-white/15 bg-slate-900/95 p-3 shadow-xl">
-          <p className="mb-2 text-xs font-semibold text-white/80">Progress</p>
-          {jobs.map((j) => (
-            <div key={j.id} className="mb-2">
-              <div className="mb-1 flex justify-between text-[10px] text-white/60">
-                <span>{j.name}</span>
-                <span>{j.progress}%</span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded bg-white/10">
-                <div
-                  className="h-full bg-blue-500 transition-all"
-                  style={{ width: `${j.progress}%` }}
-                />
-              </div>
-              <p className="mt-0.5 text-[10px] text-white/40">{j.status}</p>
-            </div>
-          ))}
-        </div>
-      ) : null}
-
       <footer className="flex h-7 shrink-0 items-center border-t border-white/10 bg-black/30 px-3 text-[10px] text-white/50">
-        {MOCK_APP_PACKAGES.length} applications · {checked.size} selected for install
+        <span className="inline-flex items-center gap-1">
+          <ExternalLink className="h-3 w-3 opacity-50" aria-hidden />
+          Catalog synced with this build. Signed-in users sync install state to the gateway.
+        </span>
       </footer>
     </div>
   );

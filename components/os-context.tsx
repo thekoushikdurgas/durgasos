@@ -1,8 +1,9 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useState, ReactNode } from 'react';
-import { AppId } from '@/lib/apps';
+import { APPS, AppId } from '@/lib/apps';
 import type { LaunchPayload } from '@/lib/window-launch';
+import { useInstalledApps } from '@/hooks/use-installed-apps';
 
 export type DesktopSystemStatus = 'online' | 'degraded' | 'offline';
 
@@ -42,6 +43,7 @@ function nextStackZ(prev: WindowState[]) {
 }
 
 export function OSProvider({ children }: { children: ReactNode }) {
+  const { isInstalled } = useInstalledApps();
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [activeWindow, setActiveWindow] = useState<string | null>(null);
   const [isLauncherOpen, setIsLauncherOpen] = useState(false);
@@ -59,14 +61,51 @@ export function OSProvider({ children }: { children: ReactNode }) {
 
   const openApp = useCallback(
     (appId: AppId, launch?: LaunchPayload) => {
+      if (!launch?.bypassInstallCheck && !isInstalled(appId)) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('durgasos-notice', {
+              detail: {
+                message: `“${APPS[appId]?.name ?? appId}” is not installed. Open Apps to install it.`,
+              },
+            })
+          );
+        }
+        return;
+      }
+
       setIsLauncherOpen(false);
       setIsCommandPaletteOpen(false);
 
+      const hasContentPayload = Boolean(
+        launch &&
+        (launch.pathSegments?.length ||
+          launch.fileName ||
+          launch.initialUrl ||
+          launch.storage ||
+          launch.voidIdeStorageFolder?.folder_path)
+      );
+      const persistLaunch =
+        launch && (hasContentPayload || launch.settingsTab) ? launch : undefined;
+      const reuseWindow = !hasContentPayload;
+
       setWindows((prev) => {
-        const existingWindow = !launch && prev.find((w) => w.appId === appId);
+        const existingWindow = reuseWindow && prev.find((w) => w.appId === appId);
         if (existingWindow) {
           const z = nextStackZ(prev);
           setActiveWindow(existingWindow.id);
+          if (appId === 'settings' && launch?.settingsTab) {
+            return prev.map((w) =>
+              w.id === existingWindow.id
+                ? {
+                    ...w,
+                    isMinimized: false,
+                    zIndex: z,
+                    launch: { ...w.launch, settingsTab: launch.settingsTab },
+                  }
+                : w
+            );
+          }
           return prev.map((w) =>
             w.id === existingWindow.id ? { ...w, isMinimized: false, zIndex: z } : w
           );
@@ -84,12 +123,12 @@ export function OSProvider({ children }: { children: ReactNode }) {
             isMinimized: false,
             isMaximized: false,
             zIndex: z,
-            ...(launch ? { launch } : {}),
+            ...(persistLaunch ? { launch: persistLaunch } : {}),
           },
         ];
       });
     },
-    []
+    [isInstalled]
   );
 
   const closeWindow = useCallback((id: string) => {
@@ -110,7 +149,9 @@ export function OSProvider({ children }: { children: ReactNode }) {
 
   const maximizeWindow = useCallback(
     (id: string) => {
-      setWindows((prev) => prev.map((w) => (w.id === id ? { ...w, isMaximized: !w.isMaximized } : w)));
+      setWindows((prev) =>
+        prev.map((w) => (w.id === id ? { ...w, isMaximized: !w.isMaximized } : w))
+      );
       focusWindow(id);
     },
     [focusWindow]

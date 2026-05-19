@@ -25,11 +25,21 @@ export type AiStreamHandlers = {
   onAborted?: () => void;
 };
 
-type Pending = {
+type StreamPending = {
+  kind: 'stream';
   handlers: AiStreamHandlers;
   aborted: boolean;
   acc: string;
 };
+
+type RpcPending = {
+  kind: 'rpc';
+  resolve: (value: unknown) => void;
+  reject: (err: Error) => void;
+  aborted: boolean;
+};
+
+type Pending = StreamPending | RpcPending;
 
 function defaultProvider(): string | undefined {
   const p = process.env.NEXT_PUBLIC_CHAT_PROVIDER?.trim();
@@ -78,7 +88,7 @@ function openWebSocket(
     const msg = data as {
       jsonrpc?: string;
       id?: string | number | null;
-      result?: RpcResult;
+      result?: RpcResult | unknown;
       error?: { message?: string; code?: number };
     };
     if (msg.jsonrpc !== '2.0') return;
@@ -96,19 +106,30 @@ function openWebSocket(
     }
 
     if (msg.error) {
-      pending.handlers.onError(msg.error.message ?? 'Request failed');
+      const errText = msg.error.message ?? 'Request failed';
+      if (pending.kind === 'rpc') {
+        pending.reject(new Error(errText));
+      } else {
+        pending.handlers.onError(errText);
+      }
+      pendingRef.current.delete(idKey);
+      return;
+    }
+
+    if (pending.kind === 'rpc') {
+      pending.resolve(msg.result);
       pendingRef.current.delete(idKey);
       return;
     }
 
     const result = msg.result;
     if (!result || typeof result !== 'object') return;
+    const streamResult = result as RpcResult;
+    const typ = streamResult.type;
 
-    const typ = result.type;
-
-    if (typ === 'chunk' && typeof result.content === 'string') {
-      pending.acc += result.content;
-      pending.handlers.onChunk?.(result.content, pending.acc);
+    if (typ === 'chunk' && typeof streamResult.content === 'string') {
+      pending.acc += streamResult.content;
+      pending.handlers.onChunk?.(streamResult.content, pending.acc);
       return;
     }
 
@@ -118,8 +139,8 @@ function openWebSocket(
 
     if (typ === 'done') {
       const full =
-        typeof result.full_response === 'string' && result.full_response.length > 0
-          ? result.full_response
+        typeof streamResult.full_response === 'string' && streamResult.full_response.length > 0
+          ? streamResult.full_response
           : pending.acc;
       pending.handlers.onDone(full);
       pendingRef.current.delete(idKey);
@@ -127,21 +148,26 @@ function openWebSocket(
     }
 
     if (typ === 'error') {
-      const err = typeof result.error === 'string' ? result.error : 'Stream error';
+      const err = typeof streamResult.error === 'string' ? streamResult.error : 'Stream error';
       pending.handlers.onError(err);
       pendingRef.current.delete(idKey);
       return;
     }
 
-    if (typeof result.message === 'string' && typ === undefined) {
-      pending.handlers.onDone(result.message);
+    if (typeof streamResult.message === 'string' && typ === undefined) {
+      pending.handlers.onDone(streamResult.message);
       pendingRef.current.delete(idKey);
     }
   };
 
   ws.onerror = () => {
     for (const [, p] of pendingRef.current) {
-      if (!p.aborted) p.handlers.onError('WebSocket error');
+      if (p.aborted) continue;
+      if (p.kind === 'rpc') {
+        p.reject(new Error('WebSocket error'));
+      } else {
+        p.handlers.onError('WebSocket error');
+      }
     }
     pendingRef.current.clear();
   };
@@ -149,13 +175,65 @@ function openWebSocket(
   ws.onclose = () => {
     if (wsRef.current === ws) wsRef.current = null;
     for (const [, p] of pendingRef.current) {
-      if (!p.aborted) p.handlers.onError('Connection closed');
+      if (p.aborted) continue;
+      if (p.kind === 'rpc') {
+        p.reject(new Error('Connection closed'));
+      } else {
+        p.handlers.onError('Connection closed');
+      }
     }
     pendingRef.current.clear();
     if (!unmountedRef.current) {
       scheduleReconnectRef.current();
     }
   };
+}
+
+function scheduleOrSend(
+  wsRef: MutableRefObject<WebSocket | null>,
+  pendingRef: MutableRefObject<Map<string, Pending>>,
+  connect: () => void,
+  rid: string,
+  payload: { jsonrpc: '2.0'; id: string; method: string; params: Record<string, unknown> }
+) {
+  const trySend = () => {
+    const ws = wsRef.current;
+    const p = pendingRef.current.get(rid);
+    if (!p || p.aborted) {
+      pendingRef.current.delete(rid);
+      return;
+    }
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      return;
+    }
+    ws.send(JSON.stringify(payload));
+  };
+
+  if (wsRef.current?.readyState === WebSocket.OPEN) {
+    trySend();
+  } else {
+    connect();
+    const deadline = Date.now() + 15_000;
+    const poll = () => {
+      const p = pendingRef.current.get(rid);
+      if (!p || p.aborted) return;
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        trySend();
+        return;
+      }
+      if (Date.now() > deadline) {
+        if (p.kind === 'rpc') {
+          p.reject(new Error('Connection timeout'));
+        } else {
+          p.handlers.onError('Connection timeout');
+        }
+        pendingRef.current.delete(rid);
+        return;
+      }
+      setTimeout(poll, 80);
+    };
+    setTimeout(poll, 50);
+  }
 }
 
 export function useAiChatGateway() {
@@ -194,6 +272,11 @@ export function useAiChatGateway() {
       }
       const w = wsRef.current;
       wsRef.current = null;
+      for (const [, p] of pendingMap) {
+        if (!p.aborted && p.kind === 'rpc') {
+          p.reject(new Error('Unmounted'));
+        }
+      }
       pendingMap.clear();
       try {
         w?.close();
@@ -205,86 +288,51 @@ export function useAiChatGateway() {
 
   const abortActiveRequests = useCallback(() => {
     for (const [id, p] of [...pendingRef.current.entries()]) {
-      if (!p.aborted) {
-        p.aborted = true;
+      if (p.aborted) continue;
+      p.aborted = true;
+      if (p.kind === 'rpc') {
+        p.reject(new Error('Aborted'));
+      } else {
         p.handlers.onAborted?.();
-        pendingRef.current.delete(id);
       }
+      pendingRef.current.delete(id);
     }
   }, []);
 
-  const sendCompletion = useCallback(
-    (
-      opts: {
-        message: string;
-        think: boolean;
-        deepSearch: boolean;
-        provider?: string;
-        model?: string | null;
-      },
-      handlers: AiStreamHandlers
-    ): (() => void) => {
+  const callRpc = useCallback(
+    (method: string, params: Record<string, unknown>): Promise<unknown> => {
+      return new Promise((resolve, reject) => {
+        const rid = crypto.randomUUID();
+        pendingRef.current.set(rid, {
+          kind: 'rpc',
+          aborted: false,
+          resolve,
+          reject,
+        });
+        const payload = {
+          jsonrpc: '2.0' as const,
+          id: rid,
+          method,
+          params,
+        };
+        scheduleOrSend(wsRef, pendingRef, connect, rid, payload);
+      });
+    },
+    [connect]
+  );
+
+  const sendStreamingMethod = useCallback(
+    (method: string, params: Record<string, unknown>, handlers: AiStreamHandlers): (() => void) => {
       const rid = crypto.randomUUID();
-      const pending: Pending = { handlers, aborted: false, acc: '' };
+      const pending: StreamPending = { kind: 'stream', handlers, aborted: false, acc: '' };
       pendingRef.current.set(rid, pending);
-
-      const provider = opts.provider?.trim() || defaultProvider();
-      const model = (opts.model?.trim() || defaultModel()) ?? undefined;
-
-      const context = opts.think ? THINK_INSTRUCTION : undefined;
-
-      const params: Record<string, unknown> = {
-        message: opts.message,
-        stream: true,
-        conversation_id: getDesktopAiConversationId(),
-        use_rag: opts.deepSearch,
-      };
-      if (provider) params.provider = provider;
-      if (model) params.model = model;
-      if (context) params.context = context;
-
       const payload = {
         jsonrpc: '2.0' as const,
         id: rid,
-        method: 'chat.completions',
+        method,
         params,
       };
-
-      const trySend = () => {
-        const ws = wsRef.current;
-        const p = pendingRef.current.get(rid);
-        if (!p || p.aborted) {
-          pendingRef.current.delete(rid);
-          return;
-        }
-        if (!ws || ws.readyState !== WebSocket.OPEN) {
-          return;
-        }
-        ws.send(JSON.stringify(payload));
-      };
-
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        trySend();
-      } else {
-        connect();
-        const deadline = Date.now() + 15_000;
-        const poll = () => {
-          const p = pendingRef.current.get(rid);
-          if (!p || p.aborted) return;
-          if (wsRef.current?.readyState === WebSocket.OPEN) {
-            trySend();
-            return;
-          }
-          if (Date.now() > deadline) {
-            p.handlers.onError('Connection timeout');
-            pendingRef.current.delete(rid);
-            return;
-          }
-          setTimeout(poll, 80);
-        };
-        setTimeout(poll, 50);
-      }
-
+      scheduleOrSend(wsRef, pendingRef, connect, rid, payload);
       return () => {
         const p = pendingRef.current.get(rid);
         if (p) p.aborted = true;
@@ -294,5 +342,48 @@ export function useAiChatGateway() {
     [connect]
   );
 
-  return { sendCompletion, abortActiveRequests };
+  const sendCompletion = useCallback(
+    (
+      opts: {
+        message: string;
+        think: boolean;
+        deepSearch: boolean;
+        useRag?: boolean;
+        context?: string | null;
+        provider?: string;
+        model?: string | null;
+        conversationId?: string | null;
+      },
+      handlers: AiStreamHandlers
+    ): (() => void) => {
+      const provider = opts.provider?.trim() || defaultProvider();
+      const model = (opts.model?.trim() || defaultModel()) ?? undefined;
+
+      const thinkPart = opts.think ? THINK_INSTRUCTION : '';
+      const userCtx = typeof opts.context === 'string' ? opts.context.trim() : '';
+      const contextMerged = [thinkPart, userCtx].filter(Boolean).join('\n\n') || undefined;
+
+      const convId =
+        typeof opts.conversationId === 'string' && opts.conversationId.trim().length > 0
+          ? opts.conversationId.trim()
+          : getDesktopAiConversationId();
+
+      const useRag = opts.useRag ?? opts.deepSearch;
+
+      const params: Record<string, unknown> = {
+        message: opts.message,
+        stream: true,
+        conversation_id: convId,
+        use_rag: useRag,
+      };
+      if (provider) params.provider = provider;
+      if (model) params.model = model;
+      if (contextMerged) params.context = contextMerged;
+
+      return sendStreamingMethod('chat.completions', params, handlers);
+    },
+    [sendStreamingMethod]
+  );
+
+  return { sendCompletion, sendStreamingMethod, callRpc, abortActiveRequests };
 }

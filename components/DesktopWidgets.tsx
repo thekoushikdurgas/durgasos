@@ -28,7 +28,6 @@ export function DesktopWidgets() {
               return (
                 <WidgetShell
                   key={w.id}
-                  title="Clock"
                   onRemove={() => removeWidget(w.id)}
                   onConfigure={() => setEnabled(w.id, false)}
                 >
@@ -42,9 +41,6 @@ export function DesktopWidgets() {
                           })
                         : '00:00'}
                     </div>
-                    <div className="-mt-1 text-lg font-medium uppercase tracking-widest text-blue-400 drop-shadow-md">
-                      Durgasos Interface
-                    </div>
                   </div>
                 </WidgetShell>
               );
@@ -53,7 +49,6 @@ export function DesktopWidgets() {
               return (
                 <WidgetShell
                   key={w.id}
-                  title="Weather"
                   onRemove={() => removeWidget(w.id)}
                   onConfigure={() => setEnabled(w.id, false)}
                 >

@@ -38,14 +38,7 @@ export function Progress({
         {...props}
       >
         <svg width={circularSize} height={circularSize} className="-rotate-90">
-          <circle
-            cx={c}
-            cy={c}
-            r={r}
-            fill="none"
-            stroke="rgba(255,255,255,0.12)"
-            strokeWidth="4"
-          />
+          <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
           <circle
             cx={c}
             cy={c}

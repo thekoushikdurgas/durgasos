@@ -1,7 +1,11 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMutation } from '@apollo/client/react';
 import { Input } from '@/components/ui/input';
+import { useWindowLaunch } from '@/components/window-launch-context';
+import { STORAGE_GET_URL } from '@/lib/graphql-modules';
+import { fetchStorageText } from '@/lib/storage-signed-url';
 import { cn } from '@/lib/utils';
 
 const COLS = 26;
@@ -24,17 +28,83 @@ function parseAddr(s: string): { r: number; c: number } | null {
   return { r, c };
 }
 
+function csvTsvToGrid(text: string): Record<string, string> {
+  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  const out: Record<string, string> = {};
+  if (lines.length === 0) return out;
+  const delim = lines[0]!.includes('\t') ? '\t' : ',';
+  const rows = lines.map((l) => {
+    const parts: string[] = [];
+    let cur = '';
+    let inQ = false;
+    for (let i = 0; i < l.length; i++) {
+      const ch = l[i]!;
+      if (ch === '"') {
+        inQ = !inQ;
+      } else if ((ch === delim && !inQ) || (delim === '\t' && ch === '\t' && !inQ)) {
+        parts.push(cur.trim());
+        cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    parts.push(cur.trim());
+    return parts.map((c) => c.replace(/^"|"$/g, ''));
+  });
+  const maxCols = Math.min(COLS, Math.max(1, ...rows.map((r) => r.length)));
+  const maxRows = Math.min(ROWS, rows.length);
+  for (let r = 0; r < maxRows; r++) {
+    for (let c = 0; c < maxCols; c++) {
+      out[addr(r, c)] = rows[r]?.[c] ?? '';
+    }
+  }
+  return out;
+}
+
+const DEFAULT_GRID: Record<string, string> = {
+  A1: 'Segment',
+  B1: 'Country',
+  C1: '100',
+  C2: '200',
+  C3: '50',
+};
+
 export function SheetsApp() {
-  const [data, setData] = useState<Record<string, string>>(() => ({
-    A1: 'Segment',
-    B1: 'Country',
-    C1: '100',
-    C2: '200',
-    C3: '50',
-  }));
+  const launch = useWindowLaunch();
+  const [getUrl] = useMutation(STORAGE_GET_URL);
+  const loadedRef = useRef(false);
+
+  const [data, setData] = useState<Record<string, string>>(() => ({ ...DEFAULT_GRID }));
   const [active, setActive] = useState('A1');
   const [formula, setFormula] = useState('');
   const [sheetTabs] = useState(['Sheet1']);
+
+  useEffect(() => {
+    const s = launch?.storage;
+    const fn = launch?.fileName ?? '';
+    if (!s?.file_path || loadedRef.current) return;
+    if (!/\.(csv|tsv)$/i.test(fn)) return;
+    loadedRef.current = true;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const text = await fetchStorageText(getUrl, {
+          bucket_type: s.bucket_type,
+          file_path: s.file_path,
+        });
+        if (!text || cancelled) return;
+        const grid = csvTsvToGrid(text);
+        if (Object.keys(grid).length > 0) {
+          setData((prev) => ({ ...prev, ...grid }));
+        }
+      } catch {
+        loadedRef.current = false;
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [launch?.fileName, launch?.storage, getUrl]);
 
   const cell = useCallback(
     (r: number, c: number) => {

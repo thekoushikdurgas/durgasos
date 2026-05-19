@@ -277,9 +277,10 @@ export function DesktopMenuBar({
       <LiquidGlassSurface
         variant="liquid"
         withLiquidShell={false}
-        className={cn('rounded-none border-b border-white/10', className)}
+        className={cn('min-w-0 w-full rounded-none border-b border-white/10', className)}
+        contentClassName="w-full min-w-0 min-h-8"
       >
-        <div className="flex h-8 w-full items-center justify-between px-4 text-[13px] font-medium text-slate-200">
+        <div className="flex h-8 w-full min-w-0 items-center justify-between px-4 text-[13px] font-medium text-slate-200">
           <div ref={menubarRef} className="flex min-w-0 flex-1 items-center gap-1" role="menubar">
             <button
               ref={logoButtonRef}

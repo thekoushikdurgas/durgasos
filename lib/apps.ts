@@ -6,6 +6,9 @@ import {
   Globe,
   Image as ImageIcon,
   Mail,
+  CalendarDays,
+  FolderOpen,
+  Inbox,
   Gem,
   HardDrive,
   Loader,
@@ -19,8 +22,14 @@ import {
   Server,
   FileText,
   Table2,
+  Users,
   ArrowLeftRight,
   GitBranch,
+  Database,
+  Briefcase,
+  Code,
+  FileSearch,
+  ListTodo,
 } from 'lucide-react';
 
 export type AppCategory = 'core' | 'workflows' | 'data' | 'system';
@@ -46,7 +55,16 @@ export type AppId =
   | 'docs'
   | 'sheets'
   | 'transfer'
-  | 'workflow';
+  | 'workflow'
+  | 'vectordb'
+  | 'resume'
+  | 'void-ide'
+  | 'viewer'
+  | 'gmail'
+  | 'calendar'
+  | 'contacts'
+  | 'drive'
+  | 'todo';
 
 export interface AppDefinition {
   id: AppId;
@@ -105,6 +123,27 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Gem,
     color: 'text-emerald-400',
     category: 'workflows',
+  },
+  vectordb: {
+    id: 'vectordb',
+    name: 'Vector DB',
+    icon: Database,
+    color: 'text-cyan-400',
+    category: 'data',
+  },
+  'void-ide': {
+    id: 'void-ide',
+    name: 'Void IDE',
+    icon: Code,
+    color: 'text-violet-300',
+    category: 'core',
+  },
+  viewer: {
+    id: 'viewer',
+    name: 'Viewer',
+    icon: FileSearch,
+    color: 'text-slate-300',
+    category: 'core',
   },
   storage: {
     id: 'storage',
@@ -204,6 +243,48 @@ export const APPS: Record<AppId, AppDefinition> = {
     color: 'text-orange-300',
     category: 'data',
   },
+  resume: {
+    id: 'resume',
+    name: 'Resume',
+    icon: Briefcase,
+    color: 'text-indigo-400',
+    category: 'workflows',
+  },
+  gmail: {
+    id: 'gmail',
+    name: 'Gmail',
+    icon: Inbox,
+    color: 'text-sky-300',
+    category: 'core',
+  },
+  calendar: {
+    id: 'calendar',
+    name: 'Calendar',
+    icon: CalendarDays,
+    color: 'text-violet-300',
+    category: 'core',
+  },
+  contacts: {
+    id: 'contacts',
+    name: 'Contacts',
+    icon: Users,
+    color: 'text-teal-300',
+    category: 'core',
+  },
+  drive: {
+    id: 'drive',
+    name: 'Drive',
+    icon: FolderOpen,
+    color: 'text-amber-300',
+    category: 'data',
+  },
+  todo: {
+    id: 'todo',
+    name: 'Todo',
+    icon: ListTodo,
+    color: 'text-violet-300',
+    category: 'core',
+  },
 };
 
 export const APP_CATEGORY_LABELS: Record<AppCategory, string> = {
@@ -211,4 +292,38 @@ export const APP_CATEGORY_LABELS: Record<AppCategory, string> = {
   workflows: 'Workflows',
   data: 'Data',
   system: 'System',
+};
+
+/** Short blurbs for Apps Manager and tooltips (single source with APPS). */
+export const APP_DESCRIPTIONS: Record<AppId, string> = {
+  explorer: 'Browse and open files in the workspace.',
+  settings: 'Desktop preferences, AI providers, and connectivity.',
+  terminal: 'Command-line shell for quick tasks.',
+  browser: 'Embedded web browsing.',
+  gallery: 'Browse images and videos from workspace storage.',
+  chat: 'AI chat against the configured gateway.',
+  rag: 'Retrieval-augmented generation over your documents.',
+  vectordb: 'Inspect vector collections and RAG indices.',
+  'void-ide': 'Monaco workspace and inline AI for code.',
+  storage: 'Object storage buckets and uploads.',
+  metrics: 'Usage metrics and model telemetry.',
+  vision: 'Image analysis and vision APIs.',
+  multimodal: 'Cross-modal AI tools.',
+  council: 'Multi-agent council workflows.',
+  workflow: 'Define and run automation workflows.',
+  'apps-manager': 'Install or remove desktop applications.',
+  volumes: 'Disk and volume overview.',
+  archiver: 'Compress and extract archives.',
+  player: 'Audio and video playback.',
+  remote: 'Remote connections and servers.',
+  docs: 'Rich-text documents.',
+  sheets: 'Spreadsheet-style grids.',
+  transfer: 'Move and sync data between locations.',
+  resume: 'Résumé parsing and job matching helpers.',
+  viewer: 'Preview unknown or binary files from storage or the demo filesystem.',
+  gmail: 'Read-only Gmail inbox and messages.',
+  calendar: 'Read-only Google Calendar events.',
+  contacts: 'Read-only Google Contacts.',
+  drive: 'Read-only Google Drive file listing.',
+  todo: 'Kanban tasks synced with Google Tasks.',
 };

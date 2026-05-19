@@ -12,8 +12,12 @@ import {
   VolumeX,
   Maximize2,
 } from 'lucide-react';
+import { useMutation } from '@apollo/client/react';
 import { useWindowLaunch } from '@/components/window-launch-context';
 import { cn } from '@/lib/utils';
+import { STORAGE_GET_URL } from '@/lib/graphql-modules';
+
+type StorageUrlPayload = { success?: boolean; url?: string };
 
 const DEMO_VIDEO =
   'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
@@ -35,13 +39,39 @@ export function PlayerApp() {
   const [vol, setVol] = useState(1);
   const [muted, setMuted] = useState(false);
   const [status, setStatus] = useState<'Paused' | 'Playing' | 'Ended'>('Paused');
+  const [getUrl] = useMutation(STORAGE_GET_URL);
 
   useEffect(() => {
-    if (!launch?.fileName?.match(/\.(mp4|webm|mp3)$/i)) return;
-    queueMicrotask(() => {
-      setSrc(DEMO_VIDEO);
-    });
-  }, [launch?.fileName]);
+    const s = launch?.storage;
+    const name = launch?.fileName ?? '';
+    if (
+      !s?.file_path &&
+      !name.match(
+        /\.(mp4|webm|mp3|wav|ogg|m4a|mov|flac|aac|m4v|mkv|avi|wmv|flv|mpe?g|opus|wma|3gp|amr)$/i
+      )
+    )
+      return;
+    let cancelled = false;
+    void (async () => {
+      if (s?.file_path) {
+        try {
+          const { data } = await getUrl({
+            variables: { params: { bucket_type: s.bucket_type, file_path: s.file_path } },
+          });
+          const json = data?.storageGetUrl as StorageUrlPayload | undefined;
+          const url = json?.success && json.url ? json.url : null;
+          if (url && !cancelled) setSrc(url);
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+      if (!cancelled) setSrc(DEMO_VIDEO);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [launch?.fileName, launch?.storage, getUrl]);
 
   useEffect(() => {
     const v = videoRef.current;

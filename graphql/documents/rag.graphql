@@ -2,10 +2,26 @@ query RagList($collectionName: String, $limit: Int, $offset: Int) {
   ragList(collectionName: $collectionName, limit: $limit, offset: $offset)
 }
 
+query RagDocuments($collectionName: String, $limit: Int, $offset: Int) {
+  ragDocuments(collectionName: $collectionName, limit: $limit, offset: $offset)
+}
+
 query RagQuery($query: String!, $k: Int, $collectionName: String) {
   ragQuery(query: $query, k: $k, collectionName: $collectionName)
 }
 
+query RagStats($collectionName: String) {
+  ragStats(collectionName: $collectionName)
+}
+
 mutation RagIngest($params: JSON!) {
   ragIngest(params: $params)
+}
+
+mutation RagDelete($documentId: String!) {
+  ragDelete(documentId: $documentId)
+}
+
+mutation RagUpload($params: JSON!) {
+  ragUpload(params: $params)
 }

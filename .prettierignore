@@ -5,3 +5,7 @@ reports
 coverage
 out
 *.tsbuildinfo
+
+# Native shells: Capacitor copies built PWA assets here; do not Prettier-format generated bundles.
+android
+ios

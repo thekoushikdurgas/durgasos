@@ -53,9 +53,9 @@ function formatDayLabel(dateStr: string): string {
 function WeatherStrip({ hourly }: { hourly: WeatherHourly[] }) {
   if (!hourly.length) return null;
   return (
-    <div className="w-fit max-w-[min(100vw-2rem,320px)] overflow-x-auto rounded-2xl border border-white/10 shadow-lg [scrollbar-width:thin]">
-      <LiquidGlassSurface variant="frost" className="bg-white/5 px-3 py-3 text-white">
-        <div className="grid grid-cols-6 grid-rows-1 gap-[10px] px-1">
+    <div className="w-full min-w-0 max-w-[min(100vw-2rem,320px)] overflow-x-auto rounded-2xl border border-white/10 shadow-lg [scrollbar-width:thin]">
+      <LiquidGlassSurface variant="frost" className="w-full bg-white/5 px-3 py-3 text-white">
+        <div className="grid w-fit grid-cols-4 grid-rows-2 gap-x-[44px] gap-y-[10px] px-[5px]">
           {hourly.map((h) => {
             const t = h.tempF != null ? `${Math.round(h.tempF)}°` : '—';
             return (
@@ -100,10 +100,10 @@ function CurrentCard({ data }: { data: WeatherForecastPayload }) {
   const unit = current.tempF != null && Number.isFinite(current.tempF) ? '°F' : '°C';
 
   return (
-    <div className="w-full max-w-[min(100vw-2rem,320px)] rounded-2xl border border-white/10 shadow-lg">
+    <div className="h-full w-full min-w-0 max-w-[min(100vw-2rem,320px)] rounded-2xl border border-white/10 shadow-lg">
       <LiquidGlassSurface
         variant="liquid"
-        className="bg-white/8 p-4 text-white"
+        className="h-full bg-white/8 p-4 text-white"
         contentClassName="space-y-2"
       >
         <div className="flex items-start justify-between gap-3">
@@ -145,8 +145,8 @@ function DailyCard({ daily }: { daily: WeatherDaily[] }) {
   const rows = daily.slice(0, 5);
   if (!rows.length) return null;
   return (
-    <div className="w-full max-w-[min(100vw-2rem,320px)] rounded-2xl border border-white/10 shadow-lg">
-      <LiquidGlassSurface variant="frost" className="bg-white/6 p-4 text-white">
+    <div className="h-full w-full min-w-0 max-w-[min(100vw-2rem,320px)] rounded-2xl border border-white/10 shadow-lg">
+      <LiquidGlassSurface variant="frost" className="h-full bg-white/6 p-4 text-white">
         <div className="flex flex-col gap-3">
           {rows.map((d) => {
             const span =
@@ -192,7 +192,7 @@ export function DesktopWeatherPanel() {
 
   return (
     <motion.div
-      className={cn('pointer-events-auto flex flex-col items-end gap-3')}
+      className={cn('pointer-events-auto flex h-full min-h-0 flex-row items-end gap-3')}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}

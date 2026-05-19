@@ -1,7 +1,5 @@
 'use client';
 
-import '@/app/auth-glass.css';
-
 import { ArrowRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useRef } from 'react';

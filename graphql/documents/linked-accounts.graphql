@@ -1,0 +1,29 @@
+query LinkedGoogleAccounts {
+  linkedGoogleAccounts
+}
+
+query GetLinkedGoogleAccountToken($googleUserId: String!) {
+  getLinkedGoogleAccountToken(googleUserId: $googleUserId)
+}
+
+mutation AddLinkedGoogleAccount($params: JSON!) {
+  addLinkedGoogleAccount(params: $params)
+}
+
+mutation RemoveLinkedGoogleAccount($googleUserId: String!) {
+  removeLinkedGoogleAccount(googleUserId: $googleUserId)
+}
+
+mutation RefreshLinkedGoogleAccountToken(
+  $googleUserId: String!
+  $accessToken: String!
+  $expiresAt: Float!
+  $scopesGranted: String
+) {
+  refreshLinkedGoogleAccountToken(
+    googleUserId: $googleUserId
+    accessToken: $accessToken
+    expiresAt: $expiresAt
+    scopesGranted: $scopesGranted
+  )
+}

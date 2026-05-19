@@ -1,0 +1,15 @@
+query GmailListMessages($params: JSON) {
+  gmailListMessages(params: $params)
+}
+
+query GmailGetMessage($params: JSON) {
+  gmailGetMessage(params: $params)
+}
+
+query GmailListThreads($params: JSON) {
+  gmailListThreads(params: $params)
+}
+
+query GmailGetThread($params: JSON) {
+  gmailGetThread(params: $params)
+}

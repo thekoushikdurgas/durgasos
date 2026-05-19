@@ -1,0 +1,48 @@
+query TodoWorkspaces($googleUserId: String!) {
+  todoWorkspaces(googleUserId: $googleUserId) {
+    id
+    name
+    storage
+    googleUserId
+    backlogListId
+    todoListId
+    doingListId
+    doneListId
+    createdAt
+    updatedAt
+  }
+}
+
+mutation CreateTodoWorkspace($googleUserId: String!, $name: String!, $params: JSON) {
+  createTodoWorkspace(googleUserId: $googleUserId, name: $name, params: $params) {
+    id
+    name
+    storage
+    googleUserId
+    backlogListId
+    todoListId
+    doingListId
+    doneListId
+    createdAt
+    updatedAt
+  }
+}
+
+mutation RenameTodoWorkspace($workspaceId: String!, $name: String!) {
+  renameTodoWorkspace(workspaceId: $workspaceId, name: $name) {
+    id
+    name
+    storage
+    googleUserId
+    backlogListId
+    todoListId
+    doingListId
+    doneListId
+    createdAt
+    updatedAt
+  }
+}
+
+mutation DeleteTodoWorkspace($workspaceId: String!) {
+  deleteTodoWorkspace(workspaceId: $workspaceId)
+}

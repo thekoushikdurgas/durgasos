@@ -13,9 +13,14 @@ import {
   Star,
   X,
 } from 'lucide-react';
+import { useMutation } from '@apollo/client/react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useWindowLaunch } from '@/components/window-launch-context';
+import { STORAGE_GET_URL } from '@/lib/graphql-modules';
+import { rewriteStorageHtmlAssets } from '@/lib/storage-html-asset-rewrite';
+
+type StorageUrlPayload = { success?: boolean; url?: string };
 
 const BOOKMARKS_KEY = 'durgasos.browser.bookmarks.v1';
 
@@ -39,9 +44,53 @@ function isHttpUrl(s: string): boolean {
   }
 }
 
+function urlProtocol(s: string): string {
+  try {
+    return new URL(s).protocol;
+  } catch {
+    return '(invalid)';
+  }
+}
+
+function isBlobUrl(s: string): boolean {
+  return urlProtocol(s) === 'blob:';
+}
+
 function defaultSearchUrl(query: string): string {
   const q = encodeURIComponent(query.trim());
   return `https://duckduckgo.com/?q=${q}`;
+}
+
+/**
+ * Many sites refuse to render inside cross-origin iframes (X-Frame-Options / CSP
+ * frame-ancestors). The iframe still "loads" but appears blank/black — `onError`
+ * does not fire. We show a fallback instead of an empty viewport.
+ *
+ * Verified (HTTP HEAD, 2026-05-16): duckduckgo.com and bing.com send
+ * `X-Frame-Options: SAMEORIGIN`; google.com uses strict frame-ancestors.
+ */
+function isLikelyFrameBlocked(url: string): boolean {
+  let host: string;
+  try {
+    host = new URL(url).hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+  if (host === 'google.com' || host.endsWith('.google.com')) return true;
+  if (host === 'duckduckgo.com' || host.endsWith('.duckduckgo.com')) return true;
+  if (host === 'bing.com' || host.endsWith('.bing.com')) return true;
+  const blocked = [
+    'facebook.com',
+    'instagram.com',
+    'twitter.com',
+    'x.com',
+    'linkedin.com',
+    'netflix.com',
+  ];
+  for (const d of blocked) {
+    if (host === d || host.endsWith(`.${d}`)) return true;
+  }
+  return false;
 }
 
 export function BrowserApp() {
@@ -54,6 +103,7 @@ export function BrowserApp() {
   const [address, setAddress] = useState('');
   const [searchBox, setSearchBox] = useState('');
   const [iframeError, setIframeError] = useState<string | null>(null);
+  const [iframeNonce, setIframeNonce] = useState(0);
   const [bookmarks, setBookmarks] = useState<string[]>(() => {
     if (typeof window === 'undefined') return [];
     try {
@@ -70,15 +120,53 @@ export function BrowserApp() {
     localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(next));
   }, []);
 
+  const activeIsStart = active.url === 'about:start';
+  const activeIsHttp = isHttpUrl(active.url);
+  const frameBlocked = activeIsHttp && !activeIsStart && isLikelyFrameBlocked(active.url);
+  /** `blob:` (e.g. storage HTML/PDF) must use the iframe path; `isHttpUrl` is false for blob URLs. */
+  const canEmbedPage = !activeIsStart && (activeIsHttp || isBlobUrl(active.url));
+
+  // #region agent log
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const proto = urlProtocol(active.url);
+    const branch = activeIsStart
+      ? 'start'
+      : canEmbedPage && frameBlocked
+        ? 'frameBlocked'
+        : canEmbedPage
+          ? 'iframe'
+          : 'unsupported-other';
+    fetch('http://127.0.0.1:7531/ingest/632941fc-04f7-4b75-9df5-2d52b029d540', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'af5693' },
+      body: JSON.stringify({
+        sessionId: 'af5693',
+        runId: 'post-fix',
+        hypothesisId: 'H1',
+        location: 'BrowserApp.tsx:active-branch',
+        message: 'browser active tab render branch probe',
+        data: {
+          proto,
+          activeIsHttp,
+          canEmbedPage,
+          frameBlocked,
+          branch,
+          urlSample: active.url.slice(0, 120),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [active.url, activeIsStart, activeIsHttp, canEmbedPage, frameBlocked]);
+  // #endregion
+
   useEffect(() => {
     queueMicrotask(() => {
       setAddress(active.url === 'about:start' ? '' : active.url);
       setIframeError(null);
+      setIframeNonce((n) => n + 1);
     });
   }, [active.id, active.url]);
-
-  const activeIsStart = active.url === 'about:start';
-  const activeIsHttp = isHttpUrl(active.url);
 
   const go = useCallback(
     (raw: string) => {
@@ -101,6 +189,7 @@ export function BrowserApp() {
 
   const launch = useWindowLaunch();
   const launchAppliedRef = useRef(false);
+  const [getUrl] = useMutation(STORAGE_GET_URL);
 
   useEffect(() => {
     if (launchAppliedRef.current || !launch) return;
@@ -110,6 +199,111 @@ export function BrowserApp() {
       queueMicrotask(() => {
         go(url);
       });
+      return;
+    }
+    const s = launch.storage;
+    if (s?.file_path && launch.fileName?.match(/\.pdf$/i)) {
+      launchAppliedRef.current = true;
+      const id = activeId;
+      const title = launch.fileName ?? 'PDF';
+      void (async () => {
+        try {
+          const { data } = await getUrl({
+            variables: { params: { bucket_type: s.bucket_type, file_path: s.file_path } },
+          });
+          const json = data?.storageGetUrl as StorageUrlPayload | undefined;
+          const signed = json?.success && json.url ? json.url : null;
+          if (!signed) return;
+          const res = await fetch(signed);
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          queueMicrotask(() => {
+            setTabs((prev) => prev.map((x) => (x.id === id ? { ...x, url: blobUrl, title } : x)));
+          });
+        } catch {
+          /* ignore */
+        }
+      })();
+      return;
+    }
+    if (s?.file_path && launch.fileName?.match(/\.html?$/i)) {
+      launchAppliedRef.current = true;
+      const id = activeId;
+      const title = launch.fileName ?? 'HTML';
+      void (async () => {
+        try {
+          const { data } = await getUrl({
+            variables: { params: { bucket_type: s.bucket_type, file_path: s.file_path } },
+          });
+          const json = data?.storageGetUrl as StorageUrlPayload | undefined;
+          const signed = json?.success && json.url ? json.url : null;
+          if (!signed) return;
+          const res = await fetch(signed);
+          const htmlText = await res.text();
+          const getSignedUrlForPath = async (filePath: string) => {
+            const { data } = await getUrl({
+              variables: { params: { bucket_type: s.bucket_type, file_path: filePath } },
+            });
+            const j = data?.storageGetUrl as StorageUrlPayload | undefined;
+            return j?.success && j.url ? j.url : null;
+          };
+          const { html, stats } = await rewriteStorageHtmlAssets({
+            htmlText,
+            htmlStoragePath: s.file_path,
+            getSignedUrlForPath,
+          });
+          const displayBlob = new Blob([html], { type: 'text/html; charset=utf-8' });
+          const blobUrl = URL.createObjectURL(displayBlob);
+          // #region agent log
+          fetch('http://127.0.0.1:7531/ingest/632941fc-04f7-4b75-9df5-2d52b029d540', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'af5693' },
+            body: JSON.stringify({
+              sessionId: 'af5693',
+              runId: 'post-fix',
+              hypothesisId: 'H3',
+              location: 'BrowserApp.tsx:html-storage-rewrite',
+              message: 'HTML storage asset rewrite',
+              data: {
+                htmlPathSample: s.file_path.slice(-80),
+                storagePaths: stats.storagePaths,
+                signedOk: stats.signedOk,
+                attributesUpdated: stats.attributesUpdated,
+                styleBlocksUpdated: stats.styleBlocksUpdated,
+                stylesheetsInlined: stats.stylesheetsInlined,
+                scriptsMaterialized: stats.scriptsMaterialized,
+                blobUrlProto: urlProtocol(blobUrl),
+              },
+              timestamp: Date.now(),
+            }),
+          }).catch(() => {});
+          // #endregion
+          queueMicrotask(() => {
+            setTabs((prev) => prev.map((x) => (x.id === id ? { ...x, url: blobUrl, title } : x)));
+          });
+        } catch {
+          // #region agent log
+          fetch('http://127.0.0.1:7531/ingest/632941fc-04f7-4b75-9df5-2d52b029d540', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'af5693' },
+            body: JSON.stringify({
+              sessionId: 'af5693',
+              runId: 'post-fix',
+              hypothesisId: 'H4',
+              location: 'BrowserApp.tsx:html-storage-catch',
+              message: 'HTML storage load failed',
+              data: {},
+              timestamp: Date.now(),
+            }),
+          }).catch(() => {});
+          // #endregion
+          queueMicrotask(() => {
+            setTabs((prev) =>
+              prev.map((x) => (x.id === id ? { ...x, url: 'https://example.com', title } : x))
+            );
+          });
+        }
+      })();
       return;
     }
     if (launch.fileName?.match(/\.html?$/i)) {
@@ -122,7 +316,7 @@ export function BrowserApp() {
         );
       });
     }
-  }, [launch, go, activeId]);
+  }, [launch, go, activeId, getUrl]);
 
   const newTab = useCallback(() => {
     const id = tabId();
@@ -288,7 +482,10 @@ export function BrowserApp() {
           type="button"
           title="Reload"
           className="rounded p-1.5 text-white/60 hover:bg-white/10"
-          onClick={() => setIframeError(null)}
+          onClick={() => {
+            setIframeError(null);
+            setIframeNonce((n) => n + 1);
+          }}
         >
           <RotateCw className="h-4 w-4" />
         </button>
@@ -332,20 +529,57 @@ export function BrowserApp() {
       <div className="relative min-h-0 flex-1 bg-black/40">
         {activeIsStart ? (
           startBody
-        ) : activeIsHttp ? (
-          <>
-            <iframe
-              title={active.title}
-              src={active.url}
-              className="h-full w-full border-0"
-              onError={() => setIframeError('Could not load page (blocked or network).')}
-            />
-            {iframeError ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-4 text-center text-sm text-amber-200">
-                {iframeError}
+        ) : canEmbedPage ? (
+          frameBlocked ? (
+            <div className="flex h-full flex-col items-center justify-center gap-4 bg-black/50 p-6 text-center">
+              <Globe className="h-10 w-10 text-white/30" strokeWidth={1.25} />
+              <div className="max-w-md space-y-2 text-sm text-white/80">
+                <p className="font-medium text-white">
+                  This site cannot be shown inside the in-app browser
+                </p>
+                <p className="text-xs text-white/55">
+                  Major sites (Google, DuckDuckGo, Bing, many social networks) send{' '}
+                  <code className="rounded bg-white/10 px-1">X-Frame-Options: SAMEORIGIN</code> or{' '}
+                  <code className="rounded bg-white/10 px-1">
+                    Content-Security-Policy: frame-ancestors
+                  </code>{' '}
+                  so they cannot render inside the embedded iframe here. The area looks empty or
+                  black — that is expected, not a broken network connection.
+                </p>
               </div>
-            ) : null}
-          </>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-500"
+                  onClick={() => window.open(active.url, '_blank', 'noopener,noreferrer')}
+                >
+                  Open in new tab
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/90 hover:bg-white/10"
+                  onClick={() => go(defaultSearchUrl(new URL(active.url).hostname))}
+                >
+                  Search this host on DuckDuckGo
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <iframe
+                key={`${active.url}-${iframeNonce}`}
+                title={active.title}
+                src={active.url}
+                className="h-full w-full border-0"
+                onError={() => setIframeError('Could not load page (blocked or network).')}
+              />
+              {iframeError ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-4 text-center text-sm text-amber-200">
+                  {iframeError}
+                </div>
+              ) : null}
+            </>
+          )
         ) : (
           <div className="flex h-full items-center justify-center text-white/50">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />

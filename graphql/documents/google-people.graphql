@@ -1,0 +1,3 @@
+query GooglePeopleListContacts($params: JSON) {
+  googlePeopleListContacts(params: $params)
+}

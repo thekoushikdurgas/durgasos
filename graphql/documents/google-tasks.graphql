@@ -1,0 +1,27 @@
+query GoogleTasksListTasklists($params: JSON) {
+  googleTasksListTasklists(params: $params)
+}
+
+query GoogleTasksEnsureKanbanLists($params: JSON) {
+  googleTasksEnsureKanbanLists(params: $params)
+}
+
+query GoogleTasksListTasks($params: JSON) {
+  googleTasksListTasks(params: $params)
+}
+
+mutation GoogleTasksInsertTask($params: JSON) {
+  googleTasksInsertTask(params: $params)
+}
+
+mutation GoogleTasksUpdateTask($params: JSON) {
+  googleTasksUpdateTask(params: $params)
+}
+
+mutation GoogleTasksDeleteTask($params: JSON) {
+  googleTasksDeleteTask(params: $params)
+}
+
+mutation GoogleTasksMoveTask($params: JSON) {
+  googleTasksMoveTask(params: $params)
+}

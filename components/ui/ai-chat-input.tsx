@@ -18,6 +18,13 @@ const PLACEHOLDERS = [
 
 const EXPANDED_PLACEHOLDER = 'Type your message here…';
 
+/** Ollama CPU chat models (see docs/ai/ollama). */
+const OLLAMA_MODELS = [
+  { id: 'steamdj/llama3.1-cpu-only', label: 'Llama 3.1' },
+  { id: 'steamdj/mistral-cpu-only', label: 'Mistral' },
+  { id: 'Raiff1982/codette-ultimate-rc-xi-cpu', label: 'Codette' },
+] as const;
+
 /** Max textarea height in px (matches ~max-h-60). */
 const TEXTAREA_MAX_HEIGHT_PX = 240;
 
@@ -35,6 +42,8 @@ export type AIChatSubmitPayload = {
   text: string;
   think: boolean;
   deepSearch: boolean;
+  /** Ollama model id passed to chat.completions */
+  model: string;
 };
 
 export type AIChatInputProps = {
@@ -61,6 +70,7 @@ export function AIChatInput({
   const [isActive, setIsActive] = useState(false);
   const [thinkActive, setThinkActive] = useState(false);
   const [deepSearchActive, setDeepSearchActive] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<string>(OLLAMA_MODELS[0].id);
   const [inputValue, setInputValue] = useState('');
   const wrapperRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -156,6 +166,7 @@ export function AIChatInput({
         text,
         think: thinkActive,
         deepSearch: deepSearchActive,
+        model: selectedModel,
       });
       setInputValue('');
       setIsActive(false);
@@ -202,123 +213,123 @@ export function AIChatInput({
               >
                 <LiquidGlassSurface
                   variant={idleGlassVariant}
-                className={cn(
-                  'rounded-full border border-white/45 text-slate-900 shadow-[0_2px_14px_rgba(0,0,0,0.1)]',
-                  idleGlassVariant === 'frost' &&
-                    '!border-white/40 !bg-white/50 text-slate-900 backdrop-blur-xl'
-                )}
-                contentClassName="rounded-full"
-                liquidFrostStyle={
-                  idleGlassVariant === 'liquid'
-                    ? { background: 'var(--color-ai-chat-idle-liquid-frost)' }
-                    : undefined
-                }
-              >
-                <div className="flex items-center gap-1 px-1.5 py-1.5 sm:px-2">
-                  <button
-                    className={iconBtnIdle}
-                    type="button"
-                    tabIndex={-1}
-                    disabled
-                    aria-disabled
-                    title="Attach files (coming soon)"
-                    aria-label="Attach files — coming soon"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Paperclip size={20} strokeWidth={1.75} aria-hidden />
-                  </button>
-
-                  <div className="relative min-h-[40px] min-w-0 flex-1">
-                    <input
-                      type="text"
-                      value={inputValue}
-                      disabled={disabled}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onFocus={handleActivate}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          void submit();
-                        }
-                      }}
-                      aria-label="AI assistant message"
-                      title="Enter to send"
-                      className={cn(
-                        'relative z-[1] h-10 w-full rounded-md border-0 bg-transparent py-2 pr-2 pl-1',
-                        'text-base font-normal text-slate-900 outline-none placeholder:text-transparent disabled:opacity-50'
-                      )}
-                    />
-                    <div className="pointer-events-none absolute inset-y-0 left-1 flex items-center">
-                      <AnimatePresence mode="wait">
-                        {showPlaceholder && !inputValue && (
-                          <motion.span
-                            key={placeholderIndex}
-                            className="z-0 max-w-full select-none truncate text-slate-500"
-                            variants={placeholderContainerVariants}
-                            initial="initial"
-                            animate="animate"
-                            exit="exit"
-                          >
-                            {PLACEHOLDERS[placeholderIndex].split('').map((char, i) => (
-                              <motion.span
-                                key={i}
-                                variants={letterVariants}
-                                style={{ display: 'inline-block' }}
-                              >
-                                {char === ' ' ? '\u00A0' : char}
-                              </motion.span>
-                            ))}
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </div>
-
-                  <button
-                    className={iconBtnIdle}
-                    type="button"
-                    tabIndex={-1}
-                    disabled
-                    aria-disabled
-                    title="Voice input (coming soon)"
-                    aria-label="Voice input — coming soon"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Mic size={20} strokeWidth={1.75} aria-hidden />
-                  </button>
-
-                  {streaming && onStop ? (
-                    <button
-                      className="flex shrink-0 items-center justify-center rounded-full bg-amber-500 p-2.5 text-white transition hover:bg-amber-400"
-                      type="button"
-                      tabIndex={-1}
-                      title="Stop generation"
-                      aria-label="Stop generation"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onStop();
-                      }}
-                    >
-                      <Square size={18} className="fill-current" aria-hidden />
-                    </button>
-                  ) : (
-                    <button
-                      className="flex shrink-0 items-center justify-center rounded-full bg-zinc-900 p-2.5 text-white transition hover:bg-zinc-800 disabled:opacity-35"
-                      type="button"
-                      tabIndex={-1}
-                      disabled={disabled || streaming || !inputValue.trim()}
-                      title="Send message (Enter)"
-                      aria-label="Send message"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        void submit();
-                      }}
-                    >
-                      <Send size={18} aria-hidden />
-                    </button>
+                  className={cn(
+                    'w-full rounded-full border border-white/45 text-slate-900 shadow-[0_2px_14px_rgba(0,0,0,0.1)]',
+                    idleGlassVariant === 'frost' &&
+                      '!border-white/40 !bg-white/50 text-slate-900 backdrop-blur-xl'
                   )}
-                </div>
-              </LiquidGlassSurface>
+                  contentClassName="w-full rounded-full"
+                  liquidFrostStyle={
+                    idleGlassVariant === 'liquid'
+                      ? { background: 'var(--color-ai-chat-idle-liquid-frost)' }
+                      : undefined
+                  }
+                >
+                  <div className="flex items-center gap-1 px-1.5 py-1.5 sm:px-2">
+                    <button
+                      className={iconBtnIdle}
+                      type="button"
+                      tabIndex={-1}
+                      disabled
+                      aria-disabled
+                      title="Attach files (coming soon)"
+                      aria-label="Attach files — coming soon"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Paperclip size={20} strokeWidth={1.75} aria-hidden />
+                    </button>
+
+                    <div className="relative min-h-[40px] min-w-0 flex-1">
+                      <input
+                        type="text"
+                        value={inputValue}
+                        disabled={disabled}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onFocus={handleActivate}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            void submit();
+                          }
+                        }}
+                        aria-label="AI assistant message"
+                        title="Enter to send"
+                        className={cn(
+                          'relative z-[1] h-10 w-full rounded-md border-0 bg-transparent py-2 pr-2 pl-1',
+                          'text-base font-normal text-slate-900 outline-none placeholder:text-transparent disabled:opacity-50'
+                        )}
+                      />
+                      <div className="pointer-events-none absolute inset-y-0 left-1 flex items-center">
+                        <AnimatePresence mode="wait">
+                          {showPlaceholder && !inputValue && (
+                            <motion.span
+                              key={placeholderIndex}
+                              className="z-0 max-w-full select-none truncate text-slate-500"
+                              variants={placeholderContainerVariants}
+                              initial="initial"
+                              animate="animate"
+                              exit="exit"
+                            >
+                              {PLACEHOLDERS[placeholderIndex].split('').map((char, i) => (
+                                <motion.span
+                                  key={i}
+                                  variants={letterVariants}
+                                  style={{ display: 'inline-block' }}
+                                >
+                                  {char === ' ' ? '\u00A0' : char}
+                                </motion.span>
+                              ))}
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+
+                    <button
+                      className={iconBtnIdle}
+                      type="button"
+                      tabIndex={-1}
+                      disabled
+                      aria-disabled
+                      title="Voice input (coming soon)"
+                      aria-label="Voice input — coming soon"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Mic size={20} strokeWidth={1.75} aria-hidden />
+                    </button>
+
+                    {streaming && onStop ? (
+                      <button
+                        className="flex shrink-0 items-center justify-center rounded-full bg-amber-500 p-2.5 text-white transition hover:bg-amber-400"
+                        type="button"
+                        tabIndex={-1}
+                        title="Stop generation"
+                        aria-label="Stop generation"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onStop();
+                        }}
+                      >
+                        <Square size={18} className="fill-current" aria-hidden />
+                      </button>
+                    ) : (
+                      <button
+                        className="flex shrink-0 items-center justify-center rounded-full bg-zinc-900 p-2.5 text-white transition hover:bg-zinc-800 disabled:opacity-35"
+                        type="button"
+                        tabIndex={-1}
+                        disabled={disabled || streaming || !inputValue.trim()}
+                        title="Send message (Enter)"
+                        aria-label="Send message"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void submit();
+                        }}
+                      >
+                        <Send size={18} aria-hidden />
+                      </button>
+                    )}
+                  </div>
+                </LiquidGlassSurface>
               </motion.div>
             ) : (
               <motion.div
@@ -329,148 +340,174 @@ export function AIChatInput({
               >
                 <LiquidGlassSurface
                   variant={expandedGlassVariant}
-                className={cn(
-                  'rounded-3xl border border-white/12 text-slate-100',
-                  expandedGlassVariant === 'frost' &&
-                    '!border-white/12 !bg-slate-950/75 backdrop-blur-xl'
-                )}
-                contentClassName="rounded-3xl"
-                liquidFrostStyle={
-                  expandedGlassVariant === 'liquid'
-                    ? { background: 'var(--color-ai-chat-expanded-liquid-frost)' }
-                    : undefined
-                }
-              >
-                <div
-                  className="flex flex-col gap-0 p-2"
-                  onClick={(e) => e.stopPropagation()}
+                  className={cn(
+                    'w-full min-w-0 rounded-3xl border border-white/12 text-slate-100',
+                    expandedGlassVariant === 'frost' &&
+                      '!border-white/12 !bg-slate-950/75 backdrop-blur-xl'
+                  )}
+                  contentClassName="w-full min-w-0 rounded-3xl"
+                  liquidFrostStyle={
+                    expandedGlassVariant === 'liquid'
+                      ? { background: 'var(--color-ai-chat-expanded-liquid-frost)' }
+                      : undefined
+                  }
                 >
-                  <textarea
-                    ref={textareaRef}
-                    rows={1}
-                    value={inputValue}
-                    disabled={disabled}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        void submit();
-                      }
-                    }}
-                    placeholder={EXPANDED_PLACEHOLDER}
-                    aria-label="AI assistant message"
-                    title="Enter to send · Shift+Enter for new line"
-                    className={cn(
-                      'max-h-[240px] min-h-[52px] w-full resize-none rounded-xl border-0 bg-transparent px-3 py-2.5',
-                      'text-base leading-snug font-normal text-slate-100 outline-none placeholder:text-slate-500',
-                      'disabled:opacity-50',
-                      '[scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.45)_transparent]'
-                    )}
-                    onFocus={handleActivate}
-                  />
-
-                  <div className="flex items-center justify-between gap-2 border-t border-white/10 px-1 pt-1.5">
-                    <div className="flex min-w-0 flex-1 items-center gap-0.5 sm:gap-1">
-                      <button
-                        className={toolbarIconBtn}
-                        type="button"
-                        tabIndex={-1}
-                        disabled
-                        aria-disabled
-                        title="Attach files (coming soon)"
-                        aria-label="Attach files — coming soon"
-                      >
-                        <Paperclip size={18} aria-hidden />
-                      </button>
-                      <button
-                        className={cn(toolbarIconBtn, deepSearchActive && toolbarIconActive)}
-                        type="button"
-                        tabIndex={-1}
-                        title="Use RAG / deep retrieval when available"
-                        aria-label="Deep search — retrieval augmented generation"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeepSearchActive((a) => !a);
-                        }}
-                      >
-                        <Globe size={18} aria-hidden />
-                      </button>
-                      <span className="mx-0.5 h-6 w-px shrink-0 bg-white/15" aria-hidden />
-                      <button
-                        className={cn(toolbarIconBtn, thinkActive && toolbarIconActive)}
-                        type="button"
-                        tabIndex={-1}
-                        title="Reason step by step before answering (adds context for the model)"
-                        aria-label="Think — step-by-step reasoning hint"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setThinkActive((a) => !a);
-                        }}
-                      >
-                        <BrainCog size={18} aria-hidden />
-                      </button>
-                      <span className="mx-0.5 h-6 w-px shrink-0 bg-white/15" aria-hidden />
-                      <button
-                        className={cn(toolbarIconBtn, deepSearchActive && toolbarIconActive)}
-                        type="button"
-                        tabIndex={-1}
-                        title="Project / code context — uses deep retrieval (RAG)"
-                        aria-label="Project / code context — deep retrieval"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeepSearchActive((a) => !a);
-                        }}
-                      >
-                        <FolderCode size={18} aria-hidden />
-                      </button>
-                    </div>
-
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      <button
-                        className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-zinc-900 transition hover:bg-white/90 disabled:opacity-40"
-                        type="button"
-                        tabIndex={-1}
-                        disabled
-                        aria-disabled
-                        title="Voice input (coming soon)"
-                        aria-label="Voice input — coming soon"
-                      >
-                        <Mic size={20} strokeWidth={1.75} aria-hidden />
-                      </button>
-                      {streaming && onStop ? (
-                        <button
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-600 text-white transition hover:bg-amber-500"
-                          type="button"
-                          tabIndex={-1}
-                          title="Stop generation"
-                          aria-label="Stop generation"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onStop();
-                          }}
-                        >
-                          <Square size={16} className="fill-current" aria-hidden />
-                        </button>
-                      ) : (
-                        <button
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-900 transition hover:bg-white disabled:opacity-40"
-                          type="button"
-                          tabIndex={-1}
-                          disabled={disabled || streaming || !inputValue.trim()}
-                          title="Send message (Enter)"
-                          aria-label="Send message"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            void submit();
-                          }}
-                        >
-                          <Send size={17} aria-hidden />
-                        </button>
+                  <div className="flex flex-col gap-0 p-2" onClick={(e) => e.stopPropagation()}>
+                    <textarea
+                      ref={textareaRef}
+                      rows={1}
+                      value={inputValue}
+                      disabled={disabled}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          void submit();
+                        }
+                      }}
+                      placeholder={EXPANDED_PLACEHOLDER}
+                      aria-label="AI assistant message"
+                      title="Enter to send · Shift+Enter for new line"
+                      className={cn(
+                        'max-h-[240px] min-h-[52px] w-full resize-none rounded-xl border-0 bg-transparent px-3 py-2.5',
+                        'text-base leading-snug font-normal text-slate-100 outline-none placeholder:text-slate-500',
+                        'disabled:opacity-50',
+                        '[scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.45)_transparent]'
                       )}
+                      onFocus={handleActivate}
+                    />
+
+                    <div className="flex items-center justify-between gap-2 border-t border-white/10 px-1 pt-1.5">
+                      <div className="flex min-w-0 flex-1 items-center gap-0.5 sm:gap-1">
+                        <button
+                          className={toolbarIconBtn}
+                          type="button"
+                          tabIndex={-1}
+                          disabled
+                          aria-disabled
+                          title="Attach files (coming soon)"
+                          aria-label="Attach files — coming soon"
+                        >
+                          <Paperclip size={18} aria-hidden />
+                        </button>
+                        <button
+                          className={cn(toolbarIconBtn, deepSearchActive && toolbarIconActive)}
+                          type="button"
+                          tabIndex={-1}
+                          title="Use RAG / deep retrieval when available"
+                          aria-label="Deep search — retrieval augmented generation"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeepSearchActive((a) => !a);
+                          }}
+                        >
+                          <Globe size={18} aria-hidden />
+                        </button>
+                        <span className="mx-0.5 h-6 w-px shrink-0 bg-white/15" aria-hidden />
+                        <button
+                          className={cn(toolbarIconBtn, thinkActive && toolbarIconActive)}
+                          type="button"
+                          tabIndex={-1}
+                          title="Reason step by step before answering (adds context for the model)"
+                          aria-label="Think — step-by-step reasoning hint"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setThinkActive((a) => !a);
+                          }}
+                        >
+                          <BrainCog size={18} aria-hidden />
+                        </button>
+                        <span className="mx-0.5 h-6 w-px shrink-0 bg-white/15" aria-hidden />
+                        <button
+                          className={cn(toolbarIconBtn, deepSearchActive && toolbarIconActive)}
+                          type="button"
+                          tabIndex={-1}
+                          title="Project / code context — uses deep retrieval (RAG)"
+                          aria-label="Project / code context — deep retrieval"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeepSearchActive((a) => !a);
+                          }}
+                        >
+                          <FolderCode size={18} aria-hidden />
+                        </button>
+                        <span className="mx-0.5 h-6 w-px shrink-0 bg-white/15" aria-hidden />
+                        <div
+                          className="flex min-w-0 max-w-[11rem] flex-1 gap-1 overflow-x-auto sm:max-w-none"
+                          role="group"
+                          aria-label="Ollama chat model"
+                        >
+                          {OLLAMA_MODELS.map((m) => (
+                            <button
+                              key={m.id}
+                              type="button"
+                              tabIndex={-1}
+                              title={`Use model ${m.id}`}
+                              aria-pressed={selectedModel === m.id}
+                              aria-label={`Model ${m.label}`}
+                              className={cn(
+                                'shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium transition',
+                                selectedModel === m.id
+                                  ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-100 outline outline-cyan-400/35'
+                                  : 'border-white/15 text-slate-400 hover:border-white/25 hover:text-slate-200'
+                              )}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedModel(m.id);
+                              }}
+                            >
+                              {m.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <button
+                          className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-zinc-900 transition hover:bg-white/90 disabled:opacity-40"
+                          type="button"
+                          tabIndex={-1}
+                          disabled
+                          aria-disabled
+                          title="Voice input (coming soon)"
+                          aria-label="Voice input — coming soon"
+                        >
+                          <Mic size={20} strokeWidth={1.75} aria-hidden />
+                        </button>
+                        {streaming && onStop ? (
+                          <button
+                            className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-600 text-white transition hover:bg-amber-500"
+                            type="button"
+                            tabIndex={-1}
+                            title="Stop generation"
+                            aria-label="Stop generation"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onStop();
+                            }}
+                          >
+                            <Square size={16} className="fill-current" aria-hidden />
+                          </button>
+                        ) : (
+                          <button
+                            className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-900 transition hover:bg-white disabled:opacity-40"
+                            type="button"
+                            tabIndex={-1}
+                            disabled={disabled || streaming || !inputValue.trim()}
+                            title="Send message (Enter)"
+                            aria-label="Send message"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void submit();
+                            }}
+                          >
+                            <Send size={17} aria-hidden />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </LiquidGlassSurface>
+                </LiquidGlassSurface>
               </motion.div>
             )}
           </AnimatePresence>

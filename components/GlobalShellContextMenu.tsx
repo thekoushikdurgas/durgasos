@@ -11,7 +11,9 @@ export function GlobalShellContextMenu({ children }: GlobalShellContextMenuProps
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <section className="flex min-h-0 w-full flex-1 flex-col outline-none">{children}</section>
+        <section className="flex h-full min-h-0 w-full flex-1 flex-col outline-none">
+          {children}
+        </section>
       </ContextMenuTrigger>
       <ContextMenuContent className="z-[var(--z-popover)] w-60" collisionPadding={12}>
         <GlobalUserContextMenuContent />

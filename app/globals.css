@@ -184,6 +184,15 @@
   --border: 217 33% 17%;
   --input: 217 33% 17%;
   --ring: 217 91% 60%;
+
+  /** Dark Fluent app window title bar (Win11-style layout tokens) */
+  --window-titlebar-bg-active: rgba(255, 255, 255, 0.09);
+  --window-titlebar-bg-inactive: rgba(15, 23, 42, 0.55);
+  --window-titlebar-border: rgba(255, 255, 255, 0.12);
+  --window-titlebar-fg: rgba(248, 250, 252, 0.95);
+  --window-titlebar-fg-muted: rgba(226, 232, 240, 0.75);
+  --window-caption-hover: rgba(255, 255, 255, 0.12);
+  --window-close-hover: rgba(239, 68, 68, 0.28);
 }
 
 body {
@@ -261,6 +270,60 @@ body {
   [data-ai-chat-surface='idle'] {
     -webkit-font-smoothing: antialiased;
   }
+
+  /** App window title bar: dark Fluent strip (icon + title left; caption buttons use .window-caption-btn). */
+  .window-titlebar {
+    display: flex;
+    height: 2.5rem;
+    flex-shrink: 0;
+    align-items: stretch;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--window-titlebar-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition:
+      background 150ms ease,
+      border-color 150ms ease,
+      opacity 150ms ease;
+  }
+
+  .window-titlebar--active {
+    background: var(--window-titlebar-bg-active);
+  }
+
+  .window-titlebar--inactive {
+    background: var(--window-titlebar-bg-inactive);
+    opacity: 0.9;
+  }
+
+  .window-caption-btn {
+    display: inline-flex;
+    width: 2.75rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--window-titlebar-fg);
+    background: transparent;
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+
+  .window-caption-btn:hover {
+    background: var(--window-caption-hover);
+  }
+
+  .window-caption-btn--close:hover {
+    background: var(--window-close-hover);
+    color: rgb(254 226 226);
+  }
+
+  .window-caption-btn:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: -2px;
+  }
 }
 
 @keyframes window-open {
@@ -283,6 +346,31 @@ body {
     opacity: 0;
     transform: scale(0.95) translateY(8px);
   }
+}
+
+/* Gallery app: mobile portfolio strip (two halves, loop at -50%) */
+@keyframes gallery-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: gallery-marquee var(--duration, 35s) linear infinite;
+}
+
+/* Calendar app (CLNDR-style flip cards) */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
 }
 
 /* Custom scrollbars for a sleek OS feel */

@@ -6,6 +6,10 @@ query ChatConversations($limit: Int) {
   chatConversations(limit: $limit)
 }
 
+query ChatConversation($conversationId: String!) {
+  chatConversation(conversationId: $conversationId)
+}
+
 mutation ChatCompletion($params: JSON!) {
   chatCompletion(params: $params)
 }

@@ -1,28 +1,49 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import { useOS } from '@/components/os-context';
+import { useInstalledApps } from '@/hooks/use-installed-apps';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import {
   DEFAULT_MESSAGE_DOCK_CHARACTERS,
   MessageDock,
   type Character,
 } from '@/components/ui/message-dock';
 import { MagnifiedDockStrip, type MagnifiedDockItem } from '@/components/ui/magnified-dock-strip';
-import { APPS } from '@/lib/apps';
+import { APPS, type AppId } from '@/lib/apps';
 import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
-import { SystemStatusIcons } from '@/components/SystemStatusIcons';
 import { cn } from '@/lib/utils';
 
+/** Pixels to translate dock down so it clears the viewport (tall pills + bottom-4 + wrap). */
+const DOCK_RECESS_PX = 200;
+
 export function Dock() {
+  const isMobile = useIsMobile();
   const { windows, openApp, activeWindow, focusWindow, minimizeWindow, toggleLauncher } = useOS();
+  const { installedIds } = useInstalledApps();
   const [lastSentPreview, setLastSentPreview] = useState<string | null>(null);
+  const reduceMotion = useReducedMotion();
+
+  const recessDock = useMemo(() => {
+    const w = windows.find((x) => x.id === activeWindow && !x.isMinimized);
+    return Boolean(w?.isMaximized);
+  }, [windows, activeWindow]);
 
   const handleMessageSend = useCallback((message: string, character: Character, _index: number) => {
     void _index;
     setLastSentPreview(`${character.name}: ${message}`);
   }, []);
 
-  const pinnedAppIds = ['explorer', 'browser', 'workflow', 'settings'];
+  const defaultDockPins: AppId[] = [
+    'explorer',
+    'void-ide',
+    'browser',
+    'workflow',
+    'resume',
+    'settings',
+  ];
+  const pinnedAppIds = defaultDockPins.filter((id) => installedIds.has(id));
   const openAppIds = windows.map((w) => w.appId);
   const dockApps = Array.from(new Set([...pinnedAppIds, ...openAppIds]));
 
@@ -57,74 +78,90 @@ export function Dock() {
     return [item];
   });
 
+  const dockMotionTransition = reduceMotion
+    ? { duration: 0.12, ease: 'linear' as const }
+    : { duration: 0.55, ease: [0.175, 0.885, 0.32, 1.05] as const };
+
+  if (isMobile) return null;
+
   return (
     <nav
       aria-label="Application dock and quick messages"
-      className="pointer-events-none absolute bottom-4 left-0 right-0 z-50 flex flex-wrap items-end justify-center gap-3 px-2"
+      className="pointer-events-none absolute bottom-4 left-0 right-0 z-[95] flex justify-center overflow-visible"
     >
-      <div className="pointer-events-auto z-[55] flex max-w-[min(100%,28rem)] flex-col items-center gap-1">
-        {lastSentPreview ? (
-          <p
-            className="max-w-full truncate rounded-md border border-white/10 bg-black/45 px-2 py-1 text-center text-[10px] leading-tight text-slate-300 shadow-sm backdrop-blur-md"
-            role="status"
-            aria-live="polite"
-          >
-            Sent — {lastSentPreview}
-          </p>
-        ) : null}
-        <MessageDock
-          characters={DEFAULT_MESSAGE_DOCK_CHARACTERS}
-          theme="dark"
-          dockLayout="inline"
-          onMessageSend={handleMessageSend}
-          className="shrink-0"
-        />
-      </div>
-
-      <LiquidGlassSurface
-        variant="liquid"
-        contentClassName="flex flex-row items-center justify-center gap-[5px] py-[5px]"
-        className={cn(
-          'pointer-events-auto h-fit w-fit shrink-0 rounded-[50px] border border-white/20 px-[10px]'
-        )}
+      <motion.div
+        className="flex flex-wrap items-end justify-center gap-3 px-2"
+        initial={false}
+        animate={{
+          y: recessDock ? DOCK_RECESS_PX : 0,
+          opacity: reduceMotion && recessDock ? 0 : 1,
+        }}
+        transition={dockMotionTransition}
       >
-        <button
-          type="button"
-          aria-label="Open app launcher"
-          onClick={toggleLauncher}
-          className={cn(
-            'flex h-12 w-12 shrink-0 items-center justify-center rounded-[50px] shadow-lg outline-none',
-            'bg-gradient-to-tr from-cyan-400 to-blue-600 transition-transform',
-            'hover:scale-105 active:scale-95',
-            'motion-reduce:transition-none motion-reduce:hover:scale-100',
-            'focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900/80'
-          )}
-          style={{ transitionDuration: 'var(--duration-dock-bounce, 300ms)' }}
-        >
-          <span className="pointer-events-none grid grid-cols-2 gap-0.5" aria-hidden>
-            <span className="h-2 w-2 rounded-sm bg-white/90" />
-            <span className="h-2 w-2 rounded-sm bg-white/90" />
-            <span className="h-2 w-2 rounded-sm bg-white/90" />
-            <span className="h-2 w-2 rounded-sm bg-white/90" />
-          </span>
-        </button>
-
-        <div className="h-10 w-px shrink-0 bg-white/10" aria-hidden />
-
         <div
-          role="toolbar"
-          aria-label="Pinned and open applications"
-          className="flex min-h-0 flex-1 items-center justify-center"
+          className={cn(
+            'z-[55] flex max-w-[min(100%,28rem)] flex-col items-center gap-1',
+            recessDock ? 'pointer-events-none' : 'pointer-events-auto'
+          )}
         >
-          <MagnifiedDockStrip items={items} className="h-full shrink-0 self-stretch" />
+          {lastSentPreview ? (
+            <p
+              className="max-w-full truncate rounded-md border border-white/10 bg-black/45 px-2 py-1 text-center text-[10px] leading-tight text-slate-300 shadow-sm backdrop-blur-md"
+              role="status"
+              aria-live="polite"
+            >
+              Sent — {lastSentPreview}
+            </p>
+          ) : null}
+          <MessageDock
+            characters={DEFAULT_MESSAGE_DOCK_CHARACTERS}
+            theme="dark"
+            dockLayout="inline"
+            onMessageSend={handleMessageSend}
+            className="shrink-0"
+          />
         </div>
 
-        <div className="hidden h-10 w-px shrink-0 bg-white/10 sm:block" aria-hidden />
+        <LiquidGlassSurface
+          variant="liquid"
+          contentClassName="flex flex-row items-center justify-center gap-[5px] py-[5px]"
+          className={cn(
+            'h-fit w-fit shrink-0 rounded-[50px] border border-white/20 px-[10px]',
+            recessDock ? 'pointer-events-none' : 'pointer-events-auto'
+          )}
+        >
+          <button
+            type="button"
+            aria-label="Open app launcher"
+            onClick={toggleLauncher}
+            className={cn(
+              'flex h-12 w-12 shrink-0 items-center justify-center rounded-[50px] shadow-lg outline-none',
+              'bg-gradient-to-tr from-cyan-400 to-blue-600 transition-transform',
+              'hover:scale-105 active:scale-95',
+              'motion-reduce:transition-none motion-reduce:hover:scale-100',
+              'focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900/80'
+            )}
+            style={{ transitionDuration: 'var(--duration-dock-bounce, 300ms)' }}
+          >
+            <span className="pointer-events-none grid grid-cols-2 gap-0.5" aria-hidden>
+              <span className="h-2 w-2 rounded-sm bg-white/90" />
+              <span className="h-2 w-2 rounded-sm bg-white/90" />
+              <span className="h-2 w-2 rounded-sm bg-white/90" />
+              <span className="h-2 w-2 rounded-sm bg-white/90" />
+            </span>
+          </button>
 
-        <div className="hidden sm:flex" aria-label="Connection status">
-          <SystemStatusIcons compact />
-        </div>
-      </LiquidGlassSurface>
+          <div className="h-10 w-px shrink-0 bg-white/10" aria-hidden />
+
+          <div
+            role="toolbar"
+            aria-label="Pinned and open applications"
+            className="flex min-h-0 flex-1 items-center justify-center"
+          >
+            <MagnifiedDockStrip items={items} className="h-full shrink-0 self-stretch" />
+          </div>
+        </LiquidGlassSurface>
+      </motion.div>
     </nav>
   );
 }

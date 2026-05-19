@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion, type Variants } from 'motion/react';
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 
 export interface Character {
@@ -74,6 +74,38 @@ const getGradientColors = (character: Character) => {
   return character.gradientColors || '#06b6d4, #1e3a8a';
 };
 
+/** Stable references so Framer Motion does not re-run the entrance spring on unrelated parent re-renders. */
+const MESSAGE_DOCK_CONTAINER_VARIANTS_FULL: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 24,
+    scale: 0.96,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 30,
+      mass: 0.8,
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const MESSAGE_DOCK_CONTAINER_VARIANTS_REDUCED: Variants = {
+  hidden: { opacity: 0, y: 0, scale: 1 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0 },
+  },
+};
+
 export function MessageDock({
   characters = DEFAULT_MESSAGE_DOCK_CHARACTERS,
   onMessageSend,
@@ -143,26 +175,9 @@ export function MessageDock({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [closeOnClickOutside, collapse, expandedCharacter]);
 
-  const containerVariants = {
-    hidden: {
-      opacity: 0,
-      y: shouldReduceMotion ? 0 : 24,
-      scale: shouldReduceMotion ? 1 : 0.96,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        type: 'spring' as const,
-        stiffness: 300,
-        damping: 30,
-        mass: 0.8,
-        staggerChildren: 0.08,
-        delayChildren: 0.1,
-      },
-    },
-  };
+  const containerVariants = shouldReduceMotion
+    ? MESSAGE_DOCK_CONTAINER_VARIANTS_REDUCED
+    : MESSAGE_DOCK_CONTAINER_VARIANTS_FULL;
 
   const hoverAnimation = shouldReduceMotion
     ? { scale: 1.02 }

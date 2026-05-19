@@ -37,6 +37,7 @@ export function DesktopAiSearchBar() {
             message: payload.text,
             think: payload.think,
             deepSearch: payload.deepSearch,
+            model: payload.model,
           },
           {
             onChunk: (_d, full) => {
@@ -88,7 +89,6 @@ export function DesktopAiSearchBar() {
           onSubmit={handleSubmit}
         />
         <p className="sr-only">Enter to send. Shift+Enter for a new line.</p>
-        <p className="text-center text-[10px] text-slate-500/70">Enter to send · Shift+Enter newline</p>
         {(reply || error || stoppedByUser) && (
           <div
             className={cn(

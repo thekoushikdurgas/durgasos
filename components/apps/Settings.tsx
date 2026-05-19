@@ -3,17 +3,19 @@
 import { useDesktopBackground } from '@/components/desktop-background/DesktopBackgroundProvider';
 import {
   Settings,
-  Wifi,
-  Bluetooth,
-  Monitor,
-  Battery,
-  Lock,
-  Bell,
   Palette,
   Cpu,
   Activity,
+  Server,
+  ChevronRight,
+  Monitor,
+  KeyRound,
+  FileType,
+  User,
+  Users,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@apollo/client/react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Radio } from '@/components/ui/radio';
 import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
@@ -21,10 +23,42 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useSystemHealth } from '@/hooks/use-system-health';
+import { getGraphqlHttpUrl } from '@/lib/backend-url';
+import { ME, SYSTEM_READY } from '@/lib/graphql-modules';
 import {
   DESKTOP_BACKGROUND_OPTIONS,
   type DesktopBackgroundId,
 } from '@/lib/desktop-background-storage';
+import { SettingsAiProvidersPane } from '@/components/apps/SettingsAiProvidersPane';
+import { SettingsDefaultAppsPane } from '@/components/apps/SettingsDefaultAppsPane';
+import { SettingsProfilePane } from '@/components/apps/SettingsProfilePane';
+import { SettingsAccountsPane } from '@/components/apps/SettingsAccountsPane';
+import { useWindowLaunch } from '@/components/window-launch-context';
+import { notifyFocusWelcomeAuth } from '@/lib/auth-session-events';
+
+const SETTINGS_TAB_NAMES = [
+  'Profile',
+  'Accounts',
+  'Appearance',
+  'Agents & models',
+  'AI providers',
+  'Default apps',
+  'System health',
+  'Backend & session',
+  'More (coming soon)',
+] as const;
+
+/** Sidebar tabs that have real content (not the dashed “under construction” placeholder). */
+const SETTINGS_TABS_WITH_PANES: readonly string[] = [...SETTINGS_TAB_NAMES];
+
+function SettingsConstructionFallback({ activeTab }: { activeTab: string }) {
+  return (
+    <div className="flex h-64 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/10 text-white/30">
+      <Settings className="mb-4 h-12 w-12 opacity-50" />
+      <p>Settings modules for {activeTab} are under construction.</p>
+    </div>
+  );
+}
 
 function DesktopBackgroundThumb({ id }: { id: DesktopBackgroundId }) {
   switch (id) {
@@ -80,6 +114,7 @@ function DesktopBackgroundThumb({ id }: { id: DesktopBackgroundId }) {
 }
 
 export function SettingsApp() {
+  const launch = useWindowLaunch();
   const [activeTab, setActiveTab] = useState('Appearance');
   const [transparencyOn, setTransparencyOn] = useState(true);
   const [accent, setAccent] = useState<'blue' | 'violet' | 'cyan'>('blue');
@@ -92,18 +127,48 @@ export function SettingsApp() {
     []
   );
 
+  const graphqlUrl = useMemo(() => {
+    try {
+      return getGraphqlHttpUrl();
+    } catch {
+      return '(configure NEXT_PUBLIC_GRAPHQL_URL or NEXT_PUBLIC_BACKEND_URL)';
+    }
+  }, []);
+
+  const readyQ = useQuery(SYSTEM_READY, {
+    variables: { params: {} },
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
+  });
+
+  const meQ = useQuery(ME, { fetchPolicy: 'cache-and-network' });
+  const me = meQ.data?.me;
+  const authed = Boolean(me?.id);
+  const accountTitle = me?.email?.trim() || (me?.id ? `Account ${me.id.slice(0, 8)}…` : 'Guest');
+  const accountSubtitleAuthed = 'Signed in · synced with this session';
+  const avatarLetter = (me?.email?.trim()?.[0] ?? me?.id?.[0] ?? 'U').toUpperCase();
+
   const TABS = [
-    { name: 'System', icon: Settings },
-    { name: 'Network & internet', icon: Wifi },
-    { name: 'Bluetooth & devices', icon: Bluetooth },
+    { name: 'Profile', icon: User },
+    { name: 'Accounts', icon: Users },
     { name: 'Appearance', icon: Palette },
     { name: 'Agents & models', icon: Cpu },
+    { name: 'AI providers', icon: KeyRound },
+    { name: 'Default apps', icon: FileType },
     { name: 'System health', icon: Activity },
-    { name: 'Display', icon: Monitor },
-    { name: 'Power & battery', icon: Battery },
-    { name: 'Privacy & security', icon: Lock },
-    { name: 'Notifications', icon: Bell },
+    { name: 'Backend & session', icon: Server },
+    { name: 'More (coming soon)', icon: Settings },
   ];
+
+  useEffect(() => {
+    const t = launch?.settingsTab?.trim();
+    if (!t) return;
+    if ((SETTINGS_TAB_NAMES as readonly string[]).includes(t)) {
+      queueMicrotask(() => {
+        setActiveTab(t);
+      });
+    }
+  }, [launch?.settingsTab]);
 
   return (
     <div className="absolute inset-0 flex bg-slate-900/90 text-slate-200">
@@ -113,14 +178,30 @@ export function SettingsApp() {
       >
         <div className="mb-8 mt-2 flex items-center gap-3 px-2">
           <div className="w-12 h-12 rounded-full border-2 border-white/20 overflow-hidden bg-slate-800">
-            {/* Avatar placeholder */}
-            <div className="w-full h-full flex items-center justify-center text-xl text-white/50">
-              U
+            <div className="flex h-full w-full items-center justify-center text-xl font-semibold text-white/70">
+              {avatarLetter}
             </div>
           </div>
-          <div className="flex flex-col">
-            <span className="font-semibold text-white/90">Local Account</span>
-            <span className="text-xs text-white/50">Administrator</span>
+          <div className="min-w-0 flex flex-col items-start text-left">
+            <span className="truncate font-semibold text-white/90" title={accountTitle}>
+              {accountTitle}
+            </span>
+            {authed ? (
+              <span className="truncate text-xs text-white/50">{accountSubtitleAuthed}</span>
+            ) : (
+              <p className="m-0 max-w-full truncate text-xs leading-snug text-white/50">
+                Not signed in —{' '}
+                <button
+                  type="button"
+                  className="font-medium text-blue-300 hover:text-blue-200 hover:underline"
+                  title="Scroll to sign-in on the Welcome screen"
+                  onClick={() => notifyFocusWelcomeAuth()}
+                >
+                  Welcome
+                </button>{' '}
+                to sign in
+              </p>
+            )}
           </div>
         </div>
 
@@ -147,11 +228,17 @@ export function SettingsApp() {
       <div className="flex-1 overflow-y-auto bg-slate-900/50 p-8">
         <h1 className="text-3xl font-bold text-white/90 mb-8">{activeTab}</h1>
 
+        {activeTab === 'Profile' && <SettingsProfilePane />}
+
+        {activeTab === 'Accounts' && <SettingsAccountsPane />}
+
         {activeTab === 'Appearance' && (
-          <div className="max-w-2xl space-y-8">
+          <div className="space-y-8">
             <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
               <h2 className="mb-4 text-lg font-semibold text-white/90">Accent color</h2>
-              <p className="mb-4 text-sm text-white/50">Preview-only accent selection for the shell.</p>
+              <p className="mb-4 text-sm text-white/50">
+                Preview-only accent selection for the shell.
+              </p>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {(
                   [
@@ -170,7 +257,10 @@ export function SettingsApp() {
                       onChange={() => setAccent(opt.id)}
                       aria-label={`Accent ${opt.label}`}
                     />
-                    <span className={`h-8 w-8 rounded-full border border-white/20 ${opt.className}`} aria-hidden />
+                    <span
+                      className={`h-8 w-8 rounded-full border border-white/20 ${opt.className}`}
+                      aria-hidden
+                    />
                     <span className="text-sm font-medium text-white/90">{opt.label}</span>
                   </label>
                 ))}
@@ -275,7 +365,7 @@ export function SettingsApp() {
         )}
 
         {activeTab === 'Agents & models' && (
-          <div className="max-w-2xl space-y-6">
+          <div className="space-y-6">
             <Tabs value={agentsTab} onValueChange={setAgentsTab} variant="pill" className="w-full">
               <TabsList className="w-full flex-wrap gap-1 bg-white/5 p-1">
                 <TabsTrigger value="routing">Routing</TabsTrigger>
@@ -306,8 +396,12 @@ export function SettingsApp() {
           </div>
         )}
 
+        {activeTab === 'AI providers' && <SettingsAiProvidersPane />}
+
+        {activeTab === 'Default apps' && <SettingsDefaultAppsPane />}
+
         {activeTab === 'System health' && (
-          <div className="max-w-2xl space-y-6">
+          <div className="space-y-6">
             <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold text-white/90">API health</h2>
@@ -323,7 +417,9 @@ export function SettingsApp() {
                 </span>
               </div>
               {error ? (
-                <p className="text-sm text-red-300">Could not reach GraphQL health: {error.message}</p>
+                <p className="text-sm text-red-300">
+                  Could not reach GraphQL health: {error.message}
+                </p>
               ) : null}
               <Progress
                 variant="linear"
@@ -338,19 +434,88 @@ export function SettingsApp() {
               >
                 Refresh
               </button>
-              <pre className="max-h-64 overflow-auto rounded-lg border border-white/10 bg-black/50 p-3 text-[11px] text-slate-300">
+              <pre className="overflow-auto rounded-lg border border-white/10 bg-black/50 p-3 text-[11px] text-slate-300">
                 {JSON.stringify(raw ?? {}, null, 2)}
               </pre>
             </section>
           </div>
         )}
 
-        {/* Fallback for other tabs */}
-        {!['Appearance', 'Agents & models', 'System health'].includes(activeTab) && (
-          <div className="flex flex-col items-center justify-center h-64 text-white/30 border-2 border-dashed border-white/10 rounded-2xl">
-            <Settings className="w-12 h-12 mb-4 opacity-50" />
-            <p>Settings modules for {activeTab} are under construction.</p>
+        {activeTab === 'Backend & session' && (
+          <div className="space-y-6">
+            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+              <h2 className="mb-2 text-lg font-semibold text-white/90">GraphQL endpoint</h2>
+              <p className="mb-3 text-sm text-white/50">
+                Resolved HTTP URL for{' '}
+                <code className="rounded bg-black/40 px-1">POST /graphql</code> in this build.
+              </p>
+              <p className="break-all rounded-lg border border-white/10 bg-black/40 p-3 font-mono text-xs text-cyan-200/90">
+                {graphqlUrl}
+              </p>
+            </section>
+            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-lg font-semibold text-white/90">Readiness</h2>
+                <button
+                  type="button"
+                  className="rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-sm text-white/90 hover:bg-white/15"
+                  onClick={() => void readyQ.refetch()}
+                >
+                  Re-check systemReady
+                </button>
+              </div>
+              {readyQ.loading ? (
+                <p className="text-sm text-white/50">Loading…</p>
+              ) : readyQ.error ? (
+                <p className="text-sm text-red-300">{readyQ.error.message}</p>
+              ) : (
+                <pre className="overflow-auto rounded-lg border border-white/10 bg-black/50 p-3 text-[11px] text-slate-300">
+                  {JSON.stringify(readyQ.data?.systemReady ?? {}, null, 2)}
+                </pre>
+              )}
+            </section>
+            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+              <h2 className="mb-2 text-lg font-semibold text-white/90">Session</h2>
+              <p className="text-sm text-white/50">
+                Auth tokens for the gateway are stored locally after sign-in. Use the desktop
+                sign-in overlay to refresh the session if WebSocket calls fail with 401.
+              </p>
+            </section>
           </div>
+        )}
+
+        {activeTab === 'More (coming soon)' && (
+          <div className="space-y-4">
+            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+              <h2 className="mb-3 text-lg font-semibold text-white/90">Planned panes</h2>
+              <p className="mb-4 text-sm text-white/50">
+                The following classic settings areas are not wired yet. They stay grouped here to
+                reduce noise in the sidebar.
+              </p>
+              <ul className="space-y-2 text-sm text-white/70">
+                {[
+                  'Network & internet',
+                  'Bluetooth & devices',
+                  'Display',
+                  'Power & battery',
+                  'Privacy & security',
+                  'Notifications',
+                ].map((label) => (
+                  <li
+                    key={label}
+                    className="flex items-center gap-2 rounded-lg border border-white/5 bg-black/20 px-3 py-2"
+                  >
+                    <ChevronRight className="h-4 w-4 shrink-0 text-white/35" aria-hidden />
+                    {label}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+        )}
+
+        {!SETTINGS_TABS_WITH_PANES.includes(activeTab) && (
+          <SettingsConstructionFallback activeTab={activeTab} />
         )}
       </div>
     </div>

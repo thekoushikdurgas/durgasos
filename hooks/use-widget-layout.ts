@@ -1,6 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
+
+import { fetchBackendGraphql } from '@/lib/backend-http';
 
 export type WidgetLayoutItem = {
   id: string;
@@ -10,6 +12,7 @@ export type WidgetLayoutItem = {
 };
 
 const STORAGE_KEY = 'durgasos_widgets_layout_v1';
+const LAYOUT_CHANGED = 'durgasos:widget-layout-changed';
 
 const DEFAULT_LAYOUT: WidgetLayoutItem[] = [
   { id: 'clock-1', type: 'clock', enabled: true, column: 2 },
@@ -19,45 +22,148 @@ const DEFAULT_LAYOUT: WidgetLayoutItem[] = [
   { id: 'quick-1', type: 'quick_actions', enabled: false, column: 2 },
 ];
 
-function loadLayout(): WidgetLayoutItem[] {
-  if (typeof window === 'undefined') return DEFAULT_LAYOUT;
+let snapshotJson = '';
+let snapshotItems: WidgetLayoutItem[] = DEFAULT_LAYOUT;
+
+let serverHydrated = false;
+
+function invalidateSnapshotCache() {
+  snapshotJson = '';
+}
+
+function readLayoutFromStorage(): { json: string; items: WidgetLayoutItem[] } {
+  if (typeof window === 'undefined') {
+    return { json: '', items: DEFAULT_LAYOUT };
+  }
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_LAYOUT;
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return DEFAULT_LAYOUT;
-    return parsed as WidgetLayoutItem[];
+    const json = raw ?? JSON.stringify(DEFAULT_LAYOUT);
+    const parsed = JSON.parse(json) as unknown;
+    const items = Array.isArray(parsed) ? (parsed as WidgetLayoutItem[]) : DEFAULT_LAYOUT;
+    return { json, items };
   } catch {
-    return DEFAULT_LAYOUT;
+    return { json: JSON.stringify(DEFAULT_LAYOUT), items: DEFAULT_LAYOUT };
   }
 }
 
+function getSnapshot(): WidgetLayoutItem[] {
+  const { json, items } = readLayoutFromStorage();
+  if (json === snapshotJson) return snapshotItems;
+  snapshotJson = json;
+  snapshotItems = items;
+  return snapshotItems;
+}
+
+function getServerSnapshot(): WidgetLayoutItem[] {
+  return DEFAULT_LAYOUT;
+}
+
+function notifyLayoutChanged() {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new Event(LAYOUT_CHANGED));
+}
+
+function subscribe(onStoreChange: () => void) {
+  if (typeof window === 'undefined') return () => {};
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === null || e.key === STORAGE_KEY) {
+      invalidateSnapshotCache();
+      onStoreChange();
+    }
+  };
+  const onLocal = () => {
+    invalidateSnapshotCache();
+    onStoreChange();
+  };
+  window.addEventListener('storage', onStorage);
+  window.addEventListener(LAYOUT_CHANGED, onLocal);
+  return () => {
+    window.removeEventListener('storage', onStorage);
+    window.removeEventListener(LAYOUT_CHANGED, onLocal);
+  };
+}
+
+async function pullWidgetLayoutFromServer(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  try {
+    const r = await fetchBackendGraphql({
+      query: `
+      query WidgetLayout {
+        widgetLayout {
+          id
+          ownerId
+          layoutJson
+          updatedAt
+        }
+      }
+    `,
+    });
+    if (!r.ok) return;
+    const json = (await r.json()) as {
+      data?: { widgetLayout?: { layoutJson?: unknown } | null };
+    };
+    const layout = json.data?.widgetLayout?.layoutJson;
+    if (Array.isArray(layout) && layout.length > 0) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(layout));
+      invalidateSnapshotCache();
+      notifyLayoutChanged();
+    }
+  } catch {
+    /* offline */
+  }
+}
+
+function pushWidgetLayoutToServer(layout: WidgetLayoutItem[]): void {
+  if (typeof window === 'undefined') return;
+  void fetchBackendGraphql({
+    query: `
+      mutation SaveWidgetLayout($layoutJson: JSON!) {
+        saveWidgetLayout(layoutJson: $layoutJson) {
+          id
+          ownerId
+          layoutJson
+          updatedAt
+        }
+      }
+    `,
+    variables: { layoutJson: layout },
+  }).catch(() => {
+    /* offline */
+  });
+}
+
 export function useWidgetLayout() {
-  const [items, setItems] = useState<WidgetLayoutItem[]>(DEFAULT_LAYOUT);
+  const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   useEffect(() => {
-    setItems(loadLayout());
+    if (serverHydrated) return;
+    serverHydrated = true;
+    void pullWidgetLayoutFromServer();
   }, []);
 
   const persist = useCallback((updater: (prev: WidgetLayoutItem[]) => WidgetLayoutItem[]) => {
-    setItems((prev) => {
-      const next = updater(prev);
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        /* quota */
-      }
-      return next;
-    });
+    const prev = getSnapshot();
+    const next = updater(prev);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      /* quota */
+    }
+    invalidateSnapshotCache();
+    notifyLayoutChanged();
+    pushWidgetLayoutToServer(next);
   }, []);
 
-  const setEnabled = useCallback((id: string, enabled: boolean) => {
-    persist((prev) => prev.map((w) => (w.id === id ? { ...w, enabled } : w)));
-  }, [persist]);
+  const setEnabled = useCallback(
+    (id: string, enabled: boolean) => {
+      persist((p) => p.map((w) => (w.id === id ? { ...w, enabled } : w)));
+    },
+    [persist]
+  );
 
   const removeWidget = useCallback(
     (id: string) => {
-      persist((prev) => prev.filter((w) => w.id !== id));
+      persist((p) => p.filter((w) => w.id !== id));
     },
     [persist]
   );

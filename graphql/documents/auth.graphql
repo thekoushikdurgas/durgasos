@@ -42,5 +42,19 @@ query Me {
   me {
     id
     email
+    userMetadata
+    appMetadata
+    createdAt
+    updatedAt
+    isActive
+    isVerified
+    profile {
+      username
+      avatarUrl
+      bio
+      preferences
+      createdAt
+      updatedAt
+    }
   }
 }

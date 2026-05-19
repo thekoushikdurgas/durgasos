@@ -6,10 +6,7 @@ import { useCallback, useEffect } from 'react';
  * Registers global ⌘K / Ctrl+K to toggle the command palette.
  * Must be used under OSProvider (uses callback from parent that closes other overlays).
  */
-export function useGlobalCommandPaletteShortcut(
-  enabled: boolean,
-  onToggle: () => void
-) {
+export function useGlobalCommandPaletteShortcut(enabled: boolean, onToggle: () => void) {
   const handler = useCallback(
     (e: KeyboardEvent) => {
       if (!enabled) return;

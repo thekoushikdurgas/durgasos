@@ -17,6 +17,7 @@ import {
   subscribeDesktopBackground,
   type DesktopBackgroundId,
 } from '@/lib/desktop-background-storage';
+import { CACHE_TTL_MS, localCache } from '@/lib/local-cache';
 
 export type DesktopBackgroundContextValue = {
   backgroundId: DesktopBackgroundId;
@@ -38,6 +39,7 @@ export function DesktopBackgroundProvider({ children }: { children: ReactNode })
     } catch {
       /* quota / private mode */
     }
+    localCache.set('desktop_background', id, CACHE_TTL_MS.desktop_background);
     notifyDesktopBackgroundListeners();
   }, []);
 

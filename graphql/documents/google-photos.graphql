@@ -1,0 +1,3 @@
+query GooglePhotosList($params: JSON) {
+  googlePhotosList(params: $params)
+}

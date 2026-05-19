@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Battery, Monitor, Search, Wifi } from 'lucide-react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Battery, Menu, Monitor, Search, Wifi } from 'lucide-react';
 import { useOS } from '@/components/os-context';
 import { SystemStatusIcons } from '@/components/SystemStatusIcons';
 import {
@@ -10,8 +10,10 @@ import {
   type MenuItemOption,
 } from '@/components/ui/desktop-menu-bar';
 import VaporizeTextCycle, { Tag } from '@/components/ui/vaporize-text-cycle';
+import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { APPS } from '@/lib/apps';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 
 function getLogoMenu(): MenuItemOption[] {
   return [
@@ -111,7 +113,9 @@ export function TopBar() {
     maximizeWindow,
     toggleLauncher,
   } = useOS();
+  const isMobile = useIsMobile();
   const [time, setTime] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -132,6 +136,7 @@ export function TopBar() {
 
   const handleMenuAction = useCallback(
     (action: string) => {
+      setMobileMenuOpen(false);
       switch (action) {
         case 'about':
           window.alert('Durgasos — a playful desktop shell demo.');
@@ -188,9 +193,119 @@ export function TopBar() {
     ]
   );
 
+  const MOBILE_QUICK = useMemo(
+    () =>
+      [
+        { label: 'App Launcher', action: 'launcher' as const },
+        { label: 'Files', action: 'open-explorer' as const },
+        { label: 'Web', action: 'open-browser' as const },
+        { label: 'Terminal', action: 'open-terminal' as const },
+        { label: 'Gallery', action: 'open-gallery' as const },
+        { label: 'Settings', action: 'preferences' as const },
+        { label: 'Notifications', action: 'notifications' as const },
+      ] as const,
+    []
+  );
+
+  const mobileRootRef = useRef<HTMLDivElement | null>(null);
+  const mobileMenuId = useId();
+
+  useEffect(() => {
+    if (!isMobile || !mobileMenuOpen) return;
+    const onDown = (e: PointerEvent) => {
+      const t = e.target;
+      if (!(t instanceof Node)) return;
+      if (mobileRootRef.current?.contains(t)) return;
+      setMobileMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', onDown, true);
+    return () => document.removeEventListener('pointerdown', onDown, true);
+  }, [isMobile, mobileMenuOpen]);
+
+  if (isMobile) {
+    return (
+      <div ref={mobileRootRef} className="relative z-[60] w-full shrink-0">
+        <LiquidGlassSurface
+          variant="liquid"
+          withLiquidShell={false}
+          className="w-full rounded-none border-b border-white/10"
+          contentClassName="w-full min-h-11 px-2 py-2"
+        >
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="rounded-md p-2 text-slate-200 outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-cyan-400/40"
+              aria-label="Open menu"
+              aria-haspopup="menu"
+              aria-controls={mobileMenuOpen ? mobileMenuId : undefined}
+              aria-expanded={mobileMenuOpen ? 'true' : 'false'}
+              onClick={(e) => {
+                e.stopPropagation();
+                setMobileMenuOpen((o) => !o);
+              }}
+            >
+              <Menu className="h-5 w-5" strokeWidth={2} aria-hidden />
+            </button>
+            <div className="min-w-0 flex-1 truncate text-sm font-semibold text-white">
+              {activeApp?.name ?? 'DurgasOS'}
+            </div>
+            <button
+              type="button"
+              aria-label="Open app launcher"
+              className="rounded p-2 text-slate-300 outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-400/40"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleLauncher();
+              }}
+            >
+              <Search className="h-4 w-4" strokeWidth={2} aria-hidden />
+            </button>
+            <button
+              type="button"
+              aria-label={isNotifOpen ? 'Hide notification center' : 'Show notification center'}
+              className={cn(
+                'rounded px-2 py-1 text-xs font-semibold tabular-nums outline-none transition-colors',
+                'hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-cyan-400/40',
+                isNotifOpen ? 'text-blue-400' : 'text-slate-200 hover:text-white'
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleNotifCenter();
+              }}
+            >
+              {time}
+            </button>
+          </div>
+          {mobileMenuOpen ? (
+            <div
+              id={mobileMenuId}
+              className="absolute left-2 top-full z-[70] mt-1 max-h-[min(70vh,24rem)] w-60 overflow-auto rounded-lg border border-white/10 bg-slate-950/95 py-1 shadow-2xl backdrop-blur-md"
+              role="menu"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {MOBILE_QUICK.map((item) => (
+                <button
+                  key={item.action}
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full px-3 py-2 text-left text-sm text-slate-100 outline-none hover:bg-white/10 focus-visible:bg-white/10"
+                  onClick={() => handleMenuAction(item.action)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </LiquidGlassSurface>
+      </div>
+    );
+  }
+
   return (
+    // Menubar stays in-flow so <header> reserves height; absolute removed the header from layout
+    // and maximized windows (inset-0 in the desktop pane) drew from y=0 under the menu.
     <DesktopMenuBar
-      className="absolute top-0 left-0 z-[60] w-full"
+      className="relative z-[60] w-full shrink-0"
       logoMenuItems={logoMenuItems}
       menus={menus}
       onMenuAction={handleMenuAction}
@@ -225,7 +340,7 @@ export function TopBar() {
             className="hidden sm:inline-flex items-center"
             onClick={(e) => e.stopPropagation()}
             role="group"
-            aria-label="Backend status"
+            aria-label="Connection status"
           >
             <SystemStatusIcons />
           </div>

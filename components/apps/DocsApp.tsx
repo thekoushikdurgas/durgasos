@@ -11,12 +11,40 @@ import {
   Save,
   FileText,
 } from 'lucide-react';
+import { useMutation } from '@apollo/client/react';
 import { useWindowLaunch } from '@/components/window-launch-context';
+import { fetchStorageText } from '@/lib/storage-signed-url';
+import { STORAGE_GET_URL } from '@/lib/graphql-modules';
+
+const DEFAULT_DOC_HTML =
+  '<h1 class="mb-4 text-2xl font-bold text-blue-800">Durgas Docs</h1><p>Type here — contenteditable demo.</p>';
+
+/** Extensions we load as UTF-8 text from object storage in this app. */
+const STORAGE_TEXT_FILE = /\.(txt|md|markdown|log|rst|csv|tsv|json|xml)$/i;
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function initialDocHtml(launch: ReturnType<typeof useWindowLaunch>): string {
+  const s = launch?.storage;
+  if (s?.file_path) return '<p class="text-slate-600">Loading…</p>';
+  const fn = launch?.fileName ?? '';
+  if (fn.match(STORAGE_TEXT_FILE)) return '<p class="text-slate-600">Loading…</p>';
+  return DEFAULT_DOC_HTML;
+}
 
 export function DocsApp() {
   const launch = useWindowLaunch();
   const ref = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(100);
+  const [getUrl] = useMutation(STORAGE_GET_URL);
+  const [docHtml, setDocHtml] = useState(() => initialDocHtml(launch));
 
   const countWords = useCallback((html: string) => {
     const text = html.replace(/<[^>]+>/g, ' ').trim();
@@ -34,11 +62,73 @@ export function DocsApp() {
   }, [countWords]);
 
   useEffect(() => {
-    if (launch?.fileName?.match(/\.(txt|md)$/i) && ref.current) {
-      ref.current.textContent = `Opened from Files: ${launch.fileName}\n\n`;
-      queueMicrotask(syncStats);
+    const s = launch?.storage;
+    if (s?.file_path) {
+      let cancelled = false;
+      void (async () => {
+        try {
+          const text = await fetchStorageText(getUrl, {
+            bucket_type: s.bucket_type,
+            file_path: s.file_path,
+          });
+          if (cancelled) return;
+          if (text == null) {
+            setDocHtml(
+              '<p class="text-red-600">Could not load this file from storage (missing URL or network error).</p>'
+            );
+            queueMicrotask(syncStats);
+            return;
+          }
+          setDocHtml(
+            `<pre class="whitespace-pre-wrap font-mono text-[13px] leading-relaxed text-slate-900">${escapeHtml(text)}</pre>`
+          );
+          queueMicrotask(syncStats);
+        } catch {
+          if (!cancelled) {
+            setDocHtml('<p class="text-red-600">Failed to load file.</p>');
+            queueMicrotask(syncStats);
+          }
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
     }
-  }, [launch?.fileName, syncStats]);
+
+    const fn = launch?.fileName ?? '';
+    const hasPath = Boolean(launch?.pathSegments?.length);
+    if (hasPath && fn.match(STORAGE_TEXT_FILE)) {
+      queueMicrotask(() => {
+        setDocHtml(
+          `<p class="text-slate-700">Opened from Files: <strong>${escapeHtml(fn)}</strong></p><p class="mt-3 text-slate-500">Local folders in this demo do not provide file contents — use <strong>My Storage</strong> for real files.</p>`
+        );
+        queueMicrotask(syncStats);
+      });
+      return undefined;
+    }
+
+    if (fn.match(STORAGE_TEXT_FILE)) {
+      queueMicrotask(() => {
+        setDocHtml(
+          `<p class="text-slate-700">Opened from Files: <strong>${escapeHtml(fn)}</strong></p>`
+        );
+        queueMicrotask(syncStats);
+      });
+    }
+    return undefined;
+  }, [
+    launch?.fileName,
+    launch?.pathSegments,
+    launch?.storage,
+    launch?.storage?.bucket_type,
+    launch?.storage?.file_path,
+    getUrl,
+    syncStats,
+  ]);
+
+  useEffect(() => {
+    queueMicrotask(syncStats);
+  }, [syncStats]);
 
   return (
     <div className="absolute inset-0 flex flex-col bg-slate-900/95 text-slate-100">
@@ -90,11 +180,14 @@ export function DocsApp() {
             contentEditable
             suppressContentEditableWarning
             ref={ref}
-            onInput={syncStats}
-          >
-            <h1 className="mb-4 text-2xl font-bold text-blue-800">Durgas Docs</h1>
-            <p>Type here — contenteditable demo.</p>
-          </div>
+            onInput={() => {
+              const el = ref.current;
+              if (!el) return;
+              setDocHtml(el.innerHTML);
+              syncStats();
+            }}
+            dangerouslySetInnerHTML={{ __html: docHtml }}
+          />
         </div>
         <aside className="flex w-10 shrink-0 flex-col items-center gap-2 border-l border-white/10 py-2">
           <button

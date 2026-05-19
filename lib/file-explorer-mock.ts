@@ -16,6 +16,8 @@ export type FsIconKey =
 export interface MockFsEntry {
   id: string;
   name: string;
+  /** When set, tree navigation appends this instead of `name` (e.g. Google user id vs display name). */
+  pathSegment?: string;
   kind: FsKind;
   icon: FsIconKey;
   sizeBytes?: number;
@@ -83,6 +85,22 @@ export function parentPath(segments: PathSegments): PathSegments | null {
 const MOCK_TREE: Record<string, MockFsEntry[]> = {
   'This PC': [
     {
+      id: 'pc-my-storage',
+      name: 'My Storage',
+      kind: 'folder',
+      icon: 'drive',
+      modified: '2025-05-16T12:00:00.000Z',
+      typeLabel: 'Cloud storage',
+    },
+    {
+      id: 'pc-google-drive',
+      name: 'Google Drive',
+      kind: 'folder',
+      icon: 'drive',
+      modified: '2025-05-16T12:00:00.000Z',
+      typeLabel: 'Google Drive',
+    },
+    {
       id: 'pc-c',
       name: 'Local Disk (C:)',
       kind: 'drive',
@@ -140,34 +158,9 @@ const MOCK_TREE: Record<string, MockFsEntry[]> = {
       modified: '2025-04-20T18:45:00.000Z',
       typeLabel: 'Folder',
     },
-    {
-      id: 'pc-pdf',
-      name: 'Report_Q3.pdf',
-      kind: 'file',
-      icon: 'file',
-      sizeBytes: 245_760,
-      modified: '2025-01-22T11:15:00.000Z',
-      typeLabel: 'PDF Document',
-    },
-    {
-      id: 'pc-demo',
-      name: 'demo.zip',
-      kind: 'file',
-      icon: 'file',
-      sizeBytes: 12_288,
-      modified: '2025-05-01T14:00:00.000Z',
-      typeLabel: 'ZIP Archive',
-    },
-    {
-      id: 'pc-readme',
-      name: 'readme.html',
-      kind: 'file',
-      icon: 'file',
-      sizeBytes: 2_048,
-      modified: '2025-05-09T08:00:00.000Z',
-      typeLabel: 'HTML Document',
-    },
   ],
+  /** Listing under My Storage is cloud-backed in FileExplorer; tree stays empty here. */
+  'This PC/My Storage': [],
   'This PC/Local Disk (C:)': [
     {
       id: 'c-win',
@@ -208,47 +201,9 @@ const MOCK_TREE: Record<string, MockFsEntry[]> = {
       modified: '2025-04-10T13:00:00.000Z',
       typeLabel: 'Folder',
     },
-    {
-      id: 'doc-alpha',
-      name: 'Project_Alpha.tsx',
-      kind: 'file',
-      icon: 'file',
-      sizeBytes: 4_096,
-      modified: '2025-05-07T19:22:00.000Z',
-      typeLabel: 'TypeScript',
-    },
-    {
-      id: 'doc-notes',
-      name: 'notes.txt',
-      kind: 'file',
-      icon: 'file',
-      sizeBytes: 512,
-      modified: '2025-05-08T10:01:00.000Z',
-      typeLabel: 'Text Document',
-    },
   ],
-  'This PC/Documents/Work': [
-    {
-      id: 'w1',
-      name: 'Specs.md',
-      kind: 'file',
-      icon: 'file',
-      sizeBytes: 8_192,
-      modified: '2025-05-05T15:40:00.000Z',
-      typeLabel: 'Markdown',
-    },
-  ],
-  'This PC/Downloads': [
-    {
-      id: 'dl1',
-      name: 'installer.exe',
-      kind: 'file',
-      icon: 'file',
-      sizeBytes: 48_000_000,
-      modified: '2025-03-18T22:00:00.000Z',
-      typeLabel: 'Application',
-    },
-  ],
+  'This PC/Documents/Work': [],
+  'This PC/Downloads': [],
   'This PC/Pictures': [
     {
       id: 'pic1',
@@ -261,17 +216,7 @@ const MOCK_TREE: Record<string, MockFsEntry[]> = {
   ],
   'This PC/Pictures/Screenshots': [],
   'This PC/Music': [],
-  'This PC/Videos': [
-    {
-      id: 'v1',
-      name: 'clip.mp4',
-      kind: 'file',
-      icon: 'video',
-      sizeBytes: 12_500_000,
-      modified: '2025-04-12T20:30:00.000Z',
-      typeLabel: 'MP4 Video',
-    },
-  ],
+  'This PC/Videos': [],
   'This PC/Desktop': [],
   Network: [
     {
@@ -295,9 +240,23 @@ const MOCK_TREE: Record<string, MockFsEntry[]> = {
   ],
   'Network/localhost/Shared': [],
   'Recycle Bin': [],
+  /** Children come from linked Google accounts in FileExplorer (GraphQL). */
+  'This PC/Google Drive': [],
 };
 
+/** Cloud-backed folder under This PC — listing is driven by storage API in FileExplorer. */
+export function isUserStoragePath(segments: PathSegments): boolean {
+  return segments.length >= 2 && segments[0] === 'This PC' && segments[1] === 'My Storage';
+}
+
+/** Google Drive branch — listing is driven by Drive API in FileExplorer. */
+export function isGoogleDrivePath(segments: PathSegments): boolean {
+  return segments.length >= 2 && segments[0] === 'This PC' && segments[1] === 'Google Drive';
+}
+
 export function pathExists(segments: PathSegments): boolean {
+  if (isUserStoragePath(segments)) return true;
+  if (isGoogleDrivePath(segments)) return true;
   const key = pathKey(segments);
   return Object.prototype.hasOwnProperty.call(MOCK_TREE, key);
 }

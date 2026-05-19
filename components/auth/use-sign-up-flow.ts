@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AuthModalStatus } from '@/components/auth/AuthStatusModal';
 import { getAuthModalLoadingDurationMs } from '@/components/auth/AuthStatusModal';
 import { formatMutationFailure } from '@/components/auth/auth-mutation-helpers';
+import { notifyAuthSessionChanged } from '@/lib/auth-session-events';
 import { establishSession } from '@/lib/establish-session';
 import { EMAIL_REGISTERED, SIGN_IN, SIGN_UP } from '@/lib/graphql-auth';
 
@@ -103,6 +104,7 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
   const persistSessionAndGoHome = useCallback(
     async (accessToken: string, refreshToken: string, expiresIn?: number | null) => {
       await establishSession(accessToken, refreshToken, expiresIn ?? undefined);
+      notifyAuthSessionChanged();
       router.push('/');
       router.refresh();
     },
@@ -282,6 +284,7 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
   const fieldsetAriaBusy = busy || modalStatus === 'loading';
 
   const onContinueSuccess = useCallback(() => {
+    notifyAuthSessionChanged();
     router.push('/');
     router.refresh();
   }, [router]);

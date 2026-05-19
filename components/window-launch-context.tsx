@@ -1,20 +1,20 @@
 'use client';
 
 import { createContext, useContext, type ReactNode } from 'react';
-import type { LaunchPayload } from '@/lib/window-launch';
+import type { WindowLaunchContextValue } from '@/lib/window-launch';
 
-const WindowLaunchContext = createContext<LaunchPayload | undefined>(undefined);
+const WindowLaunchContext = createContext<WindowLaunchContextValue | undefined>(undefined);
 
 export function WindowLaunchProvider({
   value,
   children,
 }: {
-  value: LaunchPayload | undefined;
+  value: WindowLaunchContextValue;
   children: ReactNode;
 }) {
   return <WindowLaunchContext.Provider value={value}>{children}</WindowLaunchContext.Provider>;
 }
 
-export function useWindowLaunch(): LaunchPayload | undefined {
+export function useWindowLaunch(): WindowLaunchContextValue | undefined {
   return useContext(WindowLaunchContext);
 }

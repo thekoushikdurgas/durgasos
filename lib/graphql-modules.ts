@@ -1,77 +1,69 @@
 /**
- * GraphQL operations for modular backend APIs (same shapes as graphql/documents/*.graphql).
- * Run `npm run codegen` to regenerate typed hooks under graphql/generated/.
+ * GraphQL operations — source of truth: graphql/documents/*.graphql.
+ * Run `npm run codegen` to regenerate graphql/generated/.
  */
-import { gql } from '@apollo/client';
-
-export const SYSTEM_HEALTH = gql`
-  query SystemHealth($params: JSON) {
-    systemHealth(params: $params)
-  }
-`;
-
-export const SYSTEM_READY = gql`
-  query SystemReady($params: JSON) {
-    systemReady(params: $params)
-  }
-`;
-
-export const METRICS_SUMMARY = gql`
-  query MetricsSummary($params: JSON) {
-    metricsSummary(params: $params)
-  }
-`;
-
-export const CHAT_PROVIDERS = gql`
-  query ChatProviders {
-    chatProviders
-  }
-`;
-
-export const CHAT_CONVERSATIONS = gql`
-  query ChatConversations($limit: Int) {
-    chatConversations(limit: $limit)
-  }
-`;
-
-export const CHAT_COMPLETION = gql`
-  mutation ChatCompletion($params: JSON!) {
-    chatCompletion(params: $params)
-  }
-`;
-
-export const RAG_LIST = gql`
-  query RagList($collectionName: String, $limit: Int, $offset: Int) {
-    ragList(collectionName: $collectionName, limit: $limit, offset: $offset)
-  }
-`;
-
-export const STORAGE_BUCKETS = gql`
-  query StorageBuckets($params: JSON) {
-    storageBuckets(params: $params)
-  }
-`;
-
-export const ANALYZE_IMAGE = gql`
-  mutation AnalyzeImage($params: JSON!) {
-    analyzeImage(params: $params)
-  }
-`;
-
-export const TEXT_TO_IMAGE = gql`
-  mutation TextToImage($params: JSON!) {
-    textToImage(params: $params)
-  }
-`;
-
-export const RUN_COUNCIL = gql`
-  mutation RunCouncil($params: JSON!) {
-    runCouncil(params: $params)
-  }
-`;
-
-export const WEATHER_FORECAST = gql`
-  query WeatherForecast($params: JSON) {
-    weatherForecast(params: $params)
-  }
-`;
+export {
+  MeDocument as ME,
+  SystemHealthDocument as SYSTEM_HEALTH,
+  SystemReadyDocument as SYSTEM_READY,
+  MetricsSummaryDocument as METRICS_SUMMARY,
+  ChatProvidersDocument as CHAT_PROVIDERS,
+  ChatConversationsDocument as CHAT_CONVERSATIONS,
+  ChatConversationDocument as CHAT_CONVERSATION,
+  ChatCompletionDocument as CHAT_COMPLETION,
+  DeleteConversationDocument as DELETE_CONVERSATION,
+  RagListDocument as RAG_LIST,
+  RagDocumentsDocument as RAG_DOCUMENTS,
+  RagQueryDocument as RAG_QUERY,
+  RagStatsDocument as RAG_STATS,
+  RagIngestDocument as RAG_INGEST,
+  RagDeleteDocument as RAG_DELETE,
+  RagUploadDocument as RAG_UPLOAD,
+  WorkflowDefinitionsDocument as WORKFLOW_DEFINITIONS,
+  WorkflowRunsDocument as WORKFLOW_RUNS,
+  ListAgentsDocument as LIST_AGENTS,
+  CreateWorkflowDefinitionDocument as CREATE_WORKFLOW_DEFINITION,
+  StartWorkflowRunDocument as START_WORKFLOW_RUN,
+  StorageBucketsDocument as STORAGE_BUCKETS,
+  StorageListDocument as STORAGE_LIST,
+  StorageUploadDocument as STORAGE_UPLOAD,
+  StorageGetUrlDocument as STORAGE_GET_URL,
+  StorageDeleteDocument as STORAGE_DELETE,
+  StorageMoveDocument as STORAGE_MOVE,
+  StorageMkdirDocument as STORAGE_MKDIR,
+  AnalyzeImageDocument as ANALYZE_IMAGE,
+  TextToImageDocument as TEXT_TO_IMAGE,
+  RunCouncilDocument as RUN_COUNCIL,
+  WeatherForecastDocument as WEATHER_FORECAST,
+  InstalledAppsDocument as INSTALLED_APPS,
+  SaveInstalledAppsDocument as SAVE_INSTALLED_APPS,
+  SaveFileAssociationsDocument as SAVE_FILE_ASSOCIATIONS,
+  GooglePhotosListDocument as GOOGLE_PHOTOS_LIST,
+  GmailListMessagesDocument as GMAIL_LIST_MESSAGES,
+  GmailGetMessageDocument as GMAIL_GET_MESSAGE,
+  GmailListThreadsDocument as GMAIL_LIST_THREADS,
+  GmailGetThreadDocument as GMAIL_GET_THREAD,
+  GoogleCalendarListEventsDocument as GOOGLE_CALENDAR_LIST_EVENTS,
+  GooglePeopleListContactsDocument as GOOGLE_PEOPLE_LIST_CONTACTS,
+  GoogleDriveListFilesDocument as GOOGLE_DRIVE_LIST_FILES,
+  GoogleTasksListTasklistsDocument as GOOGLE_TASKS_LIST_TASKLISTS,
+  GoogleTasksEnsureKanbanListsDocument as GOOGLE_TASKS_ENSURE_KANBAN_LISTS,
+  GoogleTasksListTasksDocument as GOOGLE_TASKS_LIST_TASKS,
+  GoogleTasksInsertTaskDocument as GOOGLE_TASKS_INSERT_TASK,
+  GoogleTasksUpdateTaskDocument as GOOGLE_TASKS_UPDATE_TASK,
+  GoogleTasksDeleteTaskDocument as GOOGLE_TASKS_DELETE_TASK,
+  GoogleTasksMoveTaskDocument as GOOGLE_TASKS_MOVE_TASK,
+  TodoWorkspacesDocument as TODO_WORKSPACES,
+  CreateTodoWorkspaceDocument as CREATE_TODO_WORKSPACE,
+  RenameTodoWorkspaceDocument as RENAME_TODO_WORKSPACE,
+  DeleteTodoWorkspaceDocument as DELETE_TODO_WORKSPACE,
+  TodoTasksDocument as TODO_TASKS,
+  CreateTodoTaskDocument as CREATE_TODO_TASK,
+  MoveTodoTaskDocument as MOVE_TODO_TASK,
+  DeleteTodoTaskDocument as DELETE_TODO_TASK,
+  LinkedGoogleAccountsDocument as LINKED_GOOGLE_ACCOUNTS,
+  GetLinkedGoogleAccountTokenDocument as GET_LINKED_GOOGLE_ACCOUNT_TOKEN,
+  AddLinkedGoogleAccountDocument as ADD_LINKED_GOOGLE_ACCOUNT,
+  RemoveLinkedGoogleAccountDocument as REMOVE_LINKED_GOOGLE_ACCOUNT,
+  RefreshLinkedGoogleAccountTokenDocument as REFRESH_LINKED_GOOGLE_ACCOUNT_TOKEN,
+} from '@/graphql/generated/graphql';

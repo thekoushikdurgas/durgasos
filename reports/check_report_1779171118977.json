@@ -1,0 +1,49 @@
+{
+  "score": 100,
+  "threshold": 80,
+  "passed": 10,
+  "total": 10,
+  "checks": [
+    {
+      "name": "Next app directory exists",
+      "pass": true
+    },
+    {
+      "name": "Global stylesheet exists",
+      "pass": true
+    },
+    {
+      "name": "TypeScript config exists",
+      "pass": true
+    },
+    {
+      "name": "ESLint config exists",
+      "pass": true
+    },
+    {
+      "name": "Environment example exists",
+      "pass": true
+    },
+    {
+      "name": "Ignore file exists",
+      "pass": true
+    },
+    {
+      "name": "README exists",
+      "pass": true
+    },
+    {
+      "name": "No committed Next build output",
+      "pass": true
+    },
+    {
+      "name": "Package has CI script",
+      "pass": true
+    },
+    {
+      "name": "Package has typecheck script",
+      "pass": true
+    }
+  ],
+  "generatedAt": "2026-05-19T06:11:58.976Z"
+}

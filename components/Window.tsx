@@ -8,7 +8,8 @@ import { cn } from '@/lib/utils';
 import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { WindowLaunchProvider } from '@/components/window-launch-context';
 import type { LaunchPayload } from '@/lib/window-launch';
-import React, { useRef } from 'react';
+import React from 'react';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 
 interface WindowProps {
   id: string;
@@ -31,107 +32,166 @@ export function Window({
 }: WindowProps) {
   const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindow } = useOS();
   const dragControls = useDragControls();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const app = APPS[appId as keyof typeof APPS];
+  const AppIcon = app.icon;
   const isActive = activeWindow === id;
+  const layoutAsMaximized = isMaximized || isMobile;
+
+  /** Only the focused maximized window gets the shell stack boost; otherwise new windows stay under z≈88 and look “open in the background”. */
+  const effectiveZ = layoutAsMaximized && isActive ? Math.max(zIndex, 88) : zIndex;
 
   if (isMinimized) return null;
 
   return (
     <motion.div
-      ref={containerRef}
       className={cn(
-        'absolute flex flex-col overflow-hidden transition-all duration-200',
-        isMaximized
+        'absolute flex flex-col overflow-hidden transition-[opacity,box-shadow,border-color] duration-200',
+        layoutAsMaximized
           ? 'inset-0 rounded-none'
           : 'rounded-xl border border-white/20 w-[800px] h-[550px]',
         isActive ? 'border-white/30' : ''
       )}
       style={{
-        zIndex,
-        top: isMaximized ? 0 : '10%',
-        left: isMaximized ? 0 : '15%',
+        zIndex: effectiveZ,
+        top: layoutAsMaximized ? 0 : '10%',
+        left: layoutAsMaximized ? 0 : '15%',
         boxShadow: isActive
           ? 'var(--shadow-window-active, 0 24px 80px rgba(0,0,0,0.65))'
           : 'var(--shadow-window-inactive, 0 8px 32px rgba(0,0,0,0.3))',
       }}
-      initial={{ opacity: 0, scale: 0.95, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, y: 10 }}
-      drag={!isMaximized}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{
+        opacity: 1,
+        scale: 1,
+        ...(layoutAsMaximized ? { x: 0, y: 0 } : {}),
+      }}
+      transition={
+        layoutAsMaximized
+          ? {
+              x: { type: 'tween', duration: 0, ease: 'linear' },
+              y: { type: 'tween', duration: 0, ease: 'linear' },
+              opacity: { duration: 0.2 },
+              scale: { duration: 0.2 },
+            }
+          : { duration: 0.2 }
+      }
+      exit={{ opacity: 0, scale: 0.95 }}
+      drag={!layoutAsMaximized}
       dragControls={dragControls}
       dragListener={false}
       dragMomentum={false}
-      onPointerDown={() => focusWindow(id)}
+      onPointerDown={(e) => {
+        const fromTitle = (e.target as HTMLElement | null)?.closest?.('[data-window-titlebar]');
+        if (!fromTitle) focusWindow(id);
+      }}
     >
       <LiquidGlassSurface
         variant="liquid"
         className={cn(
           'flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[inherit]',
-          isMaximized && 'rounded-none'
+          layoutAsMaximized && 'rounded-none'
         )}
       >
-        {/* Title Bar (macOS/Windows hybrid) */}
+        {/* Title bar: Win11 layout (icon + title left; caption buttons right), dark Fluent tokens */}
         <div
+          data-window-titlebar
           className={cn(
-            'h-10 flex items-center justify-between px-3 select-none flex-shrink-0 transition-colors border-b border-white/10',
-            isActive ? 'bg-white/5' : 'bg-transparent/50'
+            'window-titlebar select-none',
+            isActive ? 'window-titlebar--active' : 'window-titlebar--inactive',
+            isMobile && 'touch-none'
           )}
           onPointerDown={(e) => {
             focusWindow(id);
-            dragControls.start(e);
+            if ((e.target as HTMLElement).closest('[data-window-caption]')) return;
+            if (!isMaximized && !isMobile) {
+              dragControls.start(e);
+            }
+            e.stopPropagation();
           }}
-          onDoubleClick={() => maximizeWindow(id)}
+          onDoubleClick={(e) => {
+            if ((e.target as HTMLElement).closest('[data-window-caption]')) return;
+            maximizeWindow(id);
+          }}
         >
-          {/* Left window controls (macOS style cue) */}
-          <div className="flex gap-2 items-center w-24">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                closeWindow(id);
-              }}
-              className="w-3 h-3 rounded-full bg-red-500/80 hover:bg-red-500 flex items-center justify-center group"
+          <div className="flex min-w-0 flex-1 items-center gap-2 px-2">
+            <AppIcon
+              className={cn('h-4 w-4 shrink-0', app.color, !isActive && 'opacity-60')}
+              strokeWidth={2}
+              aria-hidden
+            />
+            <span
+              className={cn(
+                'truncate text-sm font-medium',
+                isActive
+                  ? 'text-[color:var(--window-titlebar-fg)]'
+                  : 'text-[color:var(--window-titlebar-fg-muted)]'
+              )}
             >
-              <X className="w-2 h-2 text-red-900 opacity-0 group-hover:opacity-100" />
-            </button>
+              {app.name}
+            </span>
+          </div>
+          <div
+            className="flex shrink-0 items-stretch"
+            data-window-caption
+            role="toolbar"
+            aria-label="Window controls"
+          >
             <button
+              type="button"
+              className="window-caption-btn"
+              title="Minimize"
+              aria-label="Minimize"
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation();
+                focusWindow(id);
                 minimizeWindow(id);
               }}
-              className="w-3 h-3 rounded-full bg-yellow-500/80 hover:bg-yellow-500 flex items-center justify-center group"
             >
-              <Minus className="w-2 h-2 text-yellow-900 opacity-0 group-hover:opacity-100" />
+              <Minus className="h-4 w-4" strokeWidth={2} aria-hidden />
             </button>
             <button
+              type="button"
+              className="window-caption-btn"
+              title={layoutAsMaximized ? 'Restore' : 'Maximize'}
+              aria-label={layoutAsMaximized ? 'Restore' : 'Maximize'}
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation();
+                focusWindow(id);
                 maximizeWindow(id);
               }}
-              className="w-3 h-3 rounded-full bg-green-500/80 hover:bg-green-500 flex items-center justify-center group"
             >
-              {isMaximized ? (
-                <Copy className="w-2 h-2 text-green-900 opacity-0 group-hover:opacity-100" />
+              {layoutAsMaximized ? (
+                <Copy className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
               ) : (
-                <Square className="w-2 h-2 text-green-900 opacity-0 group-hover:opacity-100" />
+                <Square className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
               )}
             </button>
+            <button
+              type="button"
+              className="window-caption-btn window-caption-btn--close"
+              title="Close"
+              aria-label="Close"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                focusWindow(id);
+                closeWindow(id);
+              }}
+            >
+              <X className="h-4 w-4" strokeWidth={2} aria-hidden />
+            </button>
           </div>
-
-          {/* Title */}
-          {/* Plain text: avoid one particle/vapor canvas per window (CPU); menubar + welcome + module subtitles are the budget */}
-          <div className="flex-1 text-center text-xs opacity-60 font-medium tracking-wide pointer-events-none">
-            {app.name}
-          </div>
-
-          {/* Right empty spacer to keep title centered */}
-          <div className="w-24"></div>
         </div>
 
         {/* App Content */}
-        <div className="flex-1 bg-slate-950/40 relative overflow-hidden pointer-events-auto">
-          <WindowLaunchProvider value={launch}>{children}</WindowLaunchProvider>
+        <div className="flex-1 bg-slate-950 relative overflow-hidden pointer-events-auto">
+          <WindowLaunchProvider value={{ ...(launch ?? {}), windowId: id }}>
+            {children}
+          </WindowLaunchProvider>
         </div>
       </LiquidGlassSurface>
     </motion.div>

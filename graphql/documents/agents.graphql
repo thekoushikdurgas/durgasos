@@ -1,0 +1,19 @@
+query ListAgents {
+  listAgents
+}
+
+mutation AnalyzeAgent($agentType: String!, $pageData: JSON!, $query: String, $options: JSON) {
+  analyzeAgent(agentType: $agentType, pageData: $pageData, query: $query, options: $options)
+}
+
+mutation AutoAnalyze($pageData: JSON!, $query: String!) {
+  autoAnalyze(pageData: $pageData, query: $query)
+}
+
+mutation AgentsQuickSeo($params: JSON!) {
+  agentsQuickSeo(params: $params)
+}
+
+mutation AgentsSummarize($params: JSON!) {
+  agentsSummarize(params: $params)
+}

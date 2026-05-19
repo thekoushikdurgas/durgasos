@@ -1,4 +1,5 @@
 'use client';
+import { useMemo } from 'react';
 import { useOS, WindowState } from './os-context';
 import { Window } from './Window';
 import { FileExplorerApp } from './apps/FileExplorer';
@@ -21,6 +22,17 @@ import { DocsApp } from './apps/DocsApp';
 import { SheetsApp } from './apps/SheetsApp';
 import { TransferApp } from './apps/TransferApp';
 import { WorkflowApp } from './apps/WorkflowApp';
+import { VectorDbApp } from './apps/VectorDbApp';
+import { ResumeMatcherApp } from './apps/ResumeMatcherApp';
+import { VoidIdeApp } from './apps/VoidIdeApp';
+import { GalleryApp } from './apps/GalleryApp';
+import { GmailApp } from './apps/GmailApp';
+import { CalendarApp } from './apps/CalendarApp';
+import { ContactsApp } from './apps/ContactsApp';
+import { DriveApp } from './apps/DriveApp';
+import { TodoApp } from './apps/TodoApp';
+import { ViewerApp } from './apps/ViewerApp';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 
 const FallbackApp = ({ name }: { name: string }) => (
   <div className="absolute inset-0 bg-slate-900 border border-t-0 border-white/5 flex items-center justify-center flex-col gap-4 text-white/50">
@@ -32,7 +44,19 @@ const FallbackApp = ({ name }: { name: string }) => (
 );
 
 export function WindowManager() {
-  const { windows } = useOS();
+  const { windows, activeWindow } = useOS();
+  const isMobile = useIsMobile();
+
+  const windowsToRender = useMemo(() => {
+    if (!isMobile) return windows;
+    const visible = windows.filter((w) => !w.isMinimized);
+    if (!visible.length) return [];
+    const pick =
+      activeWindow && visible.some((w) => w.id === activeWindow)
+        ? visible.find((w) => w.id === activeWindow)!
+        : [...visible].sort((a, b) => b.zIndex - a.zIndex)[0];
+    return [pick];
+  }, [windows, activeWindow, isMobile]);
 
   const renderApp = (appId: string) => {
     switch (appId) {
@@ -58,6 +82,18 @@ export function WindowManager() {
         return <CouncilApp />;
       case 'browser':
         return <BrowserApp />;
+      case 'gallery':
+        return <GalleryApp />;
+      case 'gmail':
+        return <GmailApp />;
+      case 'calendar':
+        return <CalendarApp />;
+      case 'contacts':
+        return <ContactsApp />;
+      case 'drive':
+        return <DriveApp />;
+      case 'todo':
+        return <TodoApp />;
       case 'apps-manager':
         return <AppsManagerApp />;
       case 'volumes':
@@ -76,6 +112,14 @@ export function WindowManager() {
         return <TransferApp />;
       case 'workflow':
         return <WorkflowApp />;
+      case 'vectordb':
+        return <VectorDbApp />;
+      case 'void-ide':
+        return <VoidIdeApp />;
+      case 'viewer':
+        return <ViewerApp />;
+      case 'resume':
+        return <ResumeMatcherApp />;
       default:
         return <FallbackApp name={appId} />;
     }
@@ -83,7 +127,7 @@ export function WindowManager() {
 
   return (
     <>
-      {windows.map((w: WindowState) => (
+      {windowsToRender.map((w: WindowState) => (
         <Window key={w.id} {...w} launch={w.launch}>
           {renderApp(w.appId)}
         </Window>

@@ -1,12 +1,27 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css'; // Global styles
 import { AppProviders } from '@/components/AppProviders';
 import { GlassFilter } from '@/components/ui/liquid-glass';
 import { ApolloGraphQLProvider } from '@/components/ApolloGraphQLProvider';
 
 export const metadata: Metadata = {
+  applicationName: 'DurgasOS',
   title: 'DurgasOS - AI Desktop Environment',
   description: 'DurgasOS — AI desktop shell with GraphQL and WebSocket gateway integration.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    title: 'DurgasOS',
+    statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/icons/icon-192.png', sizes: '192x192' }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#020617',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

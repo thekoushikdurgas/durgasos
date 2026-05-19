@@ -1,0 +1,43 @@
+query WorkflowDefinitions {
+  workflowDefinitions {
+    id
+    name
+    ownerId
+    spec
+    createdAt
+    updatedAt
+  }
+}
+
+query WorkflowRuns($workflowId: String) {
+  workflowRuns(workflowId: $workflowId) {
+    id
+    workflowId
+    ownerId
+    status
+    createdAt
+    updatedAt
+  }
+}
+
+mutation CreateWorkflowDefinition($name: String!, $spec: JSON!) {
+  createWorkflowDefinition(name: $name, spec: $spec) {
+    id
+    name
+    ownerId
+    spec
+    createdAt
+    updatedAt
+  }
+}
+
+mutation StartWorkflowRun($workflowId: String!) {
+  startWorkflowRun(workflowId: $workflowId) {
+    id
+    workflowId
+    ownerId
+    status
+    createdAt
+    updatedAt
+  }
+}

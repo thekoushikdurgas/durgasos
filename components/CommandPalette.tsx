@@ -8,6 +8,7 @@ import { useOS } from '@/components/os-context';
 import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { useAiChatGateway } from '@/hooks/use-ai-chat-gateway';
 import { useGlobalCommandPaletteShortcut } from '@/hooks/use-command-palette';
+import { useInstalledApps } from '@/hooks/use-installed-apps';
 import { APPS, type AppId } from '@/lib/apps';
 import { cn } from '@/lib/utils';
 
@@ -39,6 +40,7 @@ function pushRecent(cmd: string) {
 
 export function CommandPalette() {
   const { isCommandPaletteOpen, toggleCommandPalette, openApp } = useOS();
+  const { isInstalled } = useInstalledApps();
   const { sendCompletion } = useAiChatGateway();
   const [query, setQuery] = useState('');
   const [askMode, setAskMode] = useState(false);
@@ -48,10 +50,16 @@ export function CommandPalette() {
   useGlobalCommandPaletteShortcut(true, toggleCommandPalette);
 
   useEffect(() => {
-    if (isCommandPaletteOpen) {
+    if (!isCommandPaletteOpen) return;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
       setRecent(loadRecent());
       setQuery('');
-    }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [isCommandPaletteOpen]);
 
   const effectiveAsk = askMode || query.trimStart().startsWith('/');
@@ -60,10 +68,11 @@ export function CommandPalette() {
   const appMatches = useMemo(() => {
     if (effectiveAsk) return [];
     return Object.values(APPS).filter((a) => {
+      if (!isInstalled(a.id)) return false;
       if (!filterText) return true;
       return a.name.toLowerCase().includes(filterText) || a.id.includes(filterText);
     });
-  }, [effectiveAsk, filterText]);
+  }, [effectiveAsk, filterText, isInstalled]);
 
   const runAsk = useCallback(async () => {
     const text = query.replace(/^\//, '').trim();

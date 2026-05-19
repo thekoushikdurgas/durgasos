@@ -37,7 +37,11 @@ async function refreshViaGraphql(refreshToken: string): Promise<{
     }),
   });
   if (!res.ok) return null;
-  const json = (await res.json()) as RefreshResponse;
+  const raw = await res.text();
+  if (!raw.trimStart().startsWith('{')) {
+    return null;
+  }
+  const json = JSON.parse(raw) as RefreshResponse;
   const payload = json.data?.refreshSession;
   const sess = payload?.session;
   if (!payload?.success || !sess?.accessToken || !sess?.refreshToken) return null;
