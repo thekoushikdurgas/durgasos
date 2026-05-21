@@ -56,7 +56,7 @@ const SETTINGS_TABS_WITH_PANES: readonly string[] = [...SETTINGS_TAB_NAMES];
 
 function SettingsConstructionFallback({ activeTab }: { activeTab: string }) {
   return (
-    <div className="flex h-64 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/10 text-white/30">
+    <div className="flex h-64 flex-col items-center justify-center mb-0 border-2 border-dashed border-white/10 text-white/30">
       <Settings className="mb-4 h-12 w-12 opacity-50" />
       <p>Settings modules for {activeTab} are under construction.</p>
     </div>
@@ -233,16 +233,14 @@ export function SettingsApp() {
       </LiquidGlassSurface>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto bg-slate-900/50 p-8">
-        <h1 className="text-3xl font-bold text-white/90 mb-8">{activeTab}</h1>
-
+      <div className="flex-1 overflow-y-auto bg-slate-900/50 px-0 py-[5px]">
         {activeTab === 'Profile' && <SettingsProfilePane />}
 
         {activeTab === 'Accounts' && <SettingsAccountsPane />}
 
         {activeTab === 'Appearance' && (
           <div className="space-y-8">
-            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+            <section className="frost-glass-surface mb-0 border border-white/10 p-6">
               <h2 className="mb-4 text-lg font-semibold text-white/90">Accent color</h2>
               <p className="mb-4 text-sm text-white/50">
                 Preview-only accent selection for the shell.
@@ -275,7 +273,7 @@ export function SettingsApp() {
               </div>
             </section>
 
-            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+            <section className="frost-glass-surface mb-0 border border-white/10 p-6">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
                 <Monitor className="h-5 w-5 text-cyan-400" />
                 Desktop background
@@ -309,7 +307,7 @@ export function SettingsApp() {
               </div>
             </section>
 
-            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+            <section className="frost-glass-surface mb-0 border border-white/10 p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <Palette className="w-5 h-5 text-blue-400" />
                 Select a theme
@@ -330,7 +328,7 @@ export function SettingsApp() {
               </div>
             </section>
 
-            <section className="frost-glass-surface rounded-2xl border border-white/10 p-2">
+            <section className="frost-glass-surface mb-0 border border-white/10 p-2">
               <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl p-4 transition-colors hover:bg-white/5">
                 <div>
                   <div className="font-medium text-white/90">Transparency effects</div>
@@ -362,7 +360,7 @@ export function SettingsApp() {
               </div>
             </section>
 
-            <section className="frost-glass-surface rounded-2xl border border-white/10 p-4">
+            <section className="frost-glass-surface mb-0 border border-white/10 p-4">
               <h3 className="mb-3 text-sm font-medium text-white/80">
                 Liquid glass intensity (preview)
               </h3>
@@ -380,7 +378,7 @@ export function SettingsApp() {
                 <TabsTrigger value="models">Models</TabsTrigger>
               </TabsList>
               <TabsContent value="routing" className="mt-4">
-                <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+                <section className="frost-glass-surface mb-0 border border-white/10 p-6">
                   <h2 className="mb-2 text-lg font-semibold text-white/90">Chat provider</h2>
                   <p className="mb-4 text-sm text-white/50">
                     Public build-time hint only. Never put API keys in{' '}
@@ -392,7 +390,7 @@ export function SettingsApp() {
                 </section>
               </TabsContent>
               <TabsContent value="models" className="mt-4">
-                <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+                <section className="frost-glass-surface mb-0 border border-white/10 p-6">
                   <h2 className="mb-2 text-lg font-semibold text-white/90">Models</h2>
                   <p className="text-sm text-white/50">
                     Model lists are loaded from the gateway when apps connect. Open Chat or Metrics
@@ -410,7 +408,7 @@ export function SettingsApp() {
 
         {activeTab === 'System health' && (
           <div className="space-y-6">
-            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+            <section className="frost-glass-surface mb-0 border border-white/10 p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold text-white/90">API health</h2>
                 <span
@@ -451,7 +449,7 @@ export function SettingsApp() {
 
         {activeTab === 'Backend & session' && (
           <div className="space-y-6">
-            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+            <section className="frost-glass-surface mb-0 border border-white/10 p-6">
               <h2 className="mb-2 text-lg font-semibold text-white/90">GraphQL endpoint</h2>
               <p className="mb-3 text-sm text-white/50">
                 Direct HTTP URL to ai.backend for{' '}
@@ -462,7 +460,7 @@ export function SettingsApp() {
                 {graphqlUrl}
               </p>
             </section>
-            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+            <section className="frost-glass-surface mb-0 border border-white/10 p-6">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-lg font-semibold text-white/90">Readiness</h2>
                 <button
@@ -483,7 +481,7 @@ export function SettingsApp() {
                 </pre>
               )}
             </section>
-            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+            <section className="frost-glass-surface mb-0 border border-white/10 p-6">
               <h2 className="mb-2 text-lg font-semibold text-white/90">Session</h2>
               <p className="mb-4 text-sm text-white/50">
                 Auth tokens for the gateway are stored in this browser after sign-in (same keys as
@@ -497,7 +495,7 @@ export function SettingsApp() {
 
         {activeTab === 'More (coming soon)' && (
           <div className="space-y-4">
-            <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+            <section className="frost-glass-surface mb-0 border border-white/10 p-6">
               <h2 className="mb-3 text-lg font-semibold text-white/90">Planned panes</h2>
               <p className="mb-4 text-sm text-white/50">
                 The following classic settings areas are not wired yet. They stay grouped here to

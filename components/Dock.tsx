@@ -33,6 +33,7 @@ export function Dock() {
     openLauncher,
     closeLauncher,
     isLauncherOpen,
+    launchingApps,
   } = useOS();
   const { installedIds } = useInstalledApps();
   const [lastSentPreview, setLastSentPreview] = useState<string | null>(null);
@@ -58,7 +59,8 @@ export function Dock() {
   ];
   const pinnedAppIds = defaultDockPins.filter((id) => installedIds.has(id));
   const openAppIds = windows.map((w) => w.appId);
-  const dockApps = Array.from(new Set([...pinnedAppIds, ...openAppIds]));
+  const launchingAppIds = Object.keys(launchingApps) as AppId[];
+  const dockApps = Array.from(new Set([...pinnedAppIds, ...openAppIds, ...launchingAppIds]));
 
   const items: MagnifiedDockItem[] = dockApps.flatMap((appId) => {
     const app = APPS[appId as keyof typeof APPS];
@@ -67,12 +69,14 @@ export function Dock() {
     const appWindows = windows.filter((w) => w.appId === appId);
     const isOpen = appWindows.length > 0;
     const isActive = appWindows.some((w) => w.id === activeWindow && !w.isMinimized);
+    const isLaunching = launchingApps[appId as keyof typeof launchingApps];
 
     const item: MagnifiedDockItem = {
       id: appId,
       label: app.name,
       indicator: isOpen,
       active: isActive,
+      isLaunching,
       node: <app.icon className={cn('h-full w-full', app.color)} aria-hidden strokeWidth={2} />,
       onClick: () => {
         if (isOpen) {

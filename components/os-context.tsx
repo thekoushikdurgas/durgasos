@@ -15,7 +15,7 @@ import { dispatchOsLog } from '@/lib/notifications';
 import { readPersistedWindows, schedulePersistWindows } from '@/lib/os-windows-persist';
 import type { LaunchPayload } from '@/lib/window-launch';
 import { useInstalledApps } from '@/hooks/use-installed-apps';
-import { clampWindowZIndex, MAX_WINDOW_Z_INDEX } from '@/lib/shell-z-index';
+import { clampWindowZIndex, MAX_WINDOW_Z_INDEX, SHELL_Z } from '@/lib/shell-z-index';
 
 export type DesktopSystemStatus = 'online' | 'degraded' | 'offline';
 
@@ -31,6 +31,7 @@ export interface WindowState {
 interface OSContextType {
   windows: WindowState[];
   activeWindow: string | null;
+  launchingApps: Record<AppId, boolean>;
   isLauncherOpen: boolean;
   isNotifOpen: boolean;
   isCommandPaletteOpen: boolean;
@@ -72,6 +73,9 @@ export function OSProvider({ children }: { children: ReactNode }) {
   const [activeWindow, setActiveWindow] = useState<string | null>(null);
   const restoredRef = useRef(false);
   const persistCancelRef = useRef<(() => void) | null>(null);
+  const [launchingApps, setLaunchingApps] = useState<Record<AppId, boolean>>(
+    {} as Record<AppId, boolean>
+  );
 
   useLayoutEffect(() => {
     if (typeof window === 'undefined' || !ready || restoredRef.current) return;
@@ -89,7 +93,7 @@ export function OSProvider({ children }: { children: ReactNode }) {
     windowIdCounter += next.length;
     // Restoring persisted windows once on mount is intentional one-time hydration.
     // eslint-disable-next-line react-hooks/set-state-in-effect -- sync restore before paint
-    setWindows(next);
+    setWindows(normalizeWindowStack(next));
     setActiveWindow(next[next.length - 1]?.id ?? null);
   }, [ready, isInstalled]);
 
@@ -101,10 +105,6 @@ export function OSProvider({ children }: { children: ReactNode }) {
       persistCancelRef.current?.();
     };
   }, [windows]);
-
-  useLayoutEffect(() => {
-    setWindows((prev) => normalizeWindowStack(prev));
-  }, []);
 
   const [isLauncherOpen, setIsLauncherOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -176,29 +176,46 @@ export function OSProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      windowIdCounter += 1;
-      const newId = `${appId}-${windowIdCounter}`;
-      const z = nextStackZ(windows);
-      setActiveWindow(newId);
-      dispatchOsLog({
-        category: 'app',
-        message: `Opened ${APPS[appId]?.name ?? appId}`,
-        level: 'info',
-        meta: { appId },
-      });
-      setWindows((prev) => [
-        ...prev,
-        {
-          id: newId,
-          appId,
-          isMinimized: false,
-          isMaximized: false,
-          zIndex: z,
-          ...(persistLaunch ? { launch: persistLaunch } : {}),
-        },
-      ]);
+      if (launchingApps[appId]) {
+        return;
+      }
+
+      setLaunchingApps((prev) => ({ ...prev, [appId]: true }));
+
+      setTimeout(() => {
+        setLaunchingApps((prev) => {
+          const next = { ...prev };
+          delete next[appId];
+          return next;
+        });
+
+        dispatchOsLog({
+          category: 'app',
+          message: `Opened ${APPS[appId]?.name ?? appId}`,
+          level: 'info',
+          meta: { appId },
+        });
+
+        setWindows((prev) => {
+          windowIdCounter += 1;
+          const newId = `${appId}-${windowIdCounter}`;
+          const z = nextStackZ(prev);
+          setActiveWindow(newId);
+          return [
+            ...prev,
+            {
+              id: newId,
+              appId,
+              isMinimized: false,
+              isMaximized: false,
+              zIndex: z,
+              ...(persistLaunch ? { launch: persistLaunch } : {}),
+            },
+          ];
+        });
+      }, 1000);
     },
-    [isInstalled, windows]
+    [isInstalled, windows, launchingApps]
   );
 
   const closeWindow = useCallback(
@@ -258,7 +275,7 @@ export function OSProvider({ children }: { children: ReactNode }) {
           message: 'Launcher opened',
           data: {
             maxWindowZ: windows.reduce((m, w) => Math.max(m, w.zIndex), 0),
-            shellPanelZ: 1860,
+            shellPanelZ: SHELL_Z.launcherPanel,
           },
           timestamp: Date.now(),
           runId: 'post-fix-v3',
@@ -344,6 +361,7 @@ export function OSProvider({ children }: { children: ReactNode }) {
       value={{
         windows,
         activeWindow,
+        launchingApps,
         isLauncherOpen,
         isNotifOpen,
         isCommandPaletteOpen,

@@ -10,6 +10,7 @@ export type MagnifiedDockItem = {
   node: React.ReactNode;
   indicator?: boolean;
   active?: boolean;
+  isLaunching?: boolean;
 };
 
 export type MagnifiedDockStripProps = {
@@ -427,7 +428,11 @@ export function MagnifiedDockStrip({
                 <span
                   className={cn(
                     'flex min-h-0 h-full w-full flex-1 flex-col items-center justify-center transition-transform duration-200 ease-out',
-                    bounceId === item.id && !reducedMotion && '-translate-y-1.5'
+                    !reducedMotion && item.isLaunching && 'animate-macos-bounce-loop',
+                    !reducedMotion &&
+                      !item.isLaunching &&
+                      bounceId === item.id &&
+                      'animate-macos-bounce-once'
                   )}
                 >
                   <span className="flex h-full w-full min-h-0 min-w-0 flex-1 items-center justify-center text-inherit [&_svg]:h-[55%] [&_svg]:w-[55%] [&_svg]:max-h-[2.25rem] [&_svg]:max-w-[2.25rem]">
@@ -436,7 +441,8 @@ export function MagnifiedDockStrip({
                   <span
                     className={cn(
                       'pointer-events-none absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-white transition-opacity',
-                      item.indicator ? 'opacity-100' : 'opacity-0'
+                      item.indicator || item.isLaunching ? 'opacity-100' : 'opacity-0',
+                      item.isLaunching && 'animate-pulse'
                     )}
                     aria-hidden
                   />

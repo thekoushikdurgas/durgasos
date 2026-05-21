@@ -108,7 +108,7 @@ export function AuthStatusModal({
           : '';
 
   return (
-    <Presence show={status !== 'closed'} presenceKey={status}>
+    <Presence show={status !== 'closed'} presenceKey={status} itemClassName="">
       <SpringBox
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
         defaultStyle={reduceMotion ? undefined : { opacity: 0 }}

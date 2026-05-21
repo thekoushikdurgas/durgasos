@@ -1,3 +1,4 @@
+import { clampWidgetZIndex } from '@/lib/shell-z-index';
 import {
   createDefaultLayout,
   getWidgetDefinition,
@@ -8,6 +9,10 @@ import {
   type WidgetPosition,
   type WidgetType,
 } from '@/lib/widget-registry';
+
+function clampLayoutZ(items: WidgetLayoutItem[]): WidgetLayoutItem[] {
+  return items.map((w) => ({ ...w, zIndex: clampWidgetZIndex(w.zIndex ?? 1) }));
+}
 
 const LEGACY_WEATHER_TYPE = 'weather';
 
@@ -263,8 +268,8 @@ export function normalizeLayoutPayload(raw: unknown): WidgetLayoutItem[] {
       }));
   } else {
     items = migrateV1Layout(raw as LegacyWidgetLayoutItem[]);
-    return items;
+    return clampLayoutZ(items);
   }
 
-  return migrateLegacyWeatherLayout(mergeLayoutWithRegistry(items));
+  return clampLayoutZ(migrateLegacyWeatherLayout(mergeLayoutWithRegistry(items)));
 }

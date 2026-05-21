@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useAuthSession } from '@/components/auth/AuthSessionContext';
+import { useStoredAuthTokens } from '@/hooks/use-stored-auth-tokens';
+import { canRunAuthedGraphqlQueries } from '@/lib/auth-graphql-ready';
+import { AUTH_SESSION_CHANGED_EVENT } from '@/lib/auth-session-events';
 import { readStoredAuthTokens } from '@/lib/auth-tokens-local';
 import { fetchBackendGraphql } from '@/lib/backend-http';
 import { cn } from '@/lib/utils';
@@ -63,7 +67,10 @@ export function SettingsAiProvidersPane() {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'ok' | 'error'>('idle');
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [operatorApiKey, setOperatorApiKey] = useState('');
-  const attemptedLoad = useRef(false);
+  const { ready: authReady } = useAuthSession();
+  const storedTokens = useStoredAuthTokens();
+  const graphqlReady = canRunAuthedGraphqlQueries();
+  const lastAuthLoadKey = useRef<string | null>(null);
 
   const authHeaders = useCallback((): HeadersInit => {
     const h: Record<string, string> = {};
@@ -77,6 +84,22 @@ export function SettingsAiProvidersPane() {
   const load = useCallback(
     async (opts?: { quiet?: boolean }) => {
       const quiet = opts?.quiet ?? false;
+      const hasBearer = Boolean(readStoredAuthTokens()?.access?.trim());
+      const hasApiKey = Boolean(operatorApiKey.trim());
+      // #region agent log
+      fetch('http://127.0.0.1:7531/ingest/632941fc-04f7-4b75-9df5-2d52b029d540', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '777e35' },
+        body: JSON.stringify({
+          sessionId: '777e35',
+          hypothesisId: 'H1',
+          location: 'SettingsAiProvidersPane.tsx:load',
+          message: 'load start',
+          data: { quiet, hasBearer, hasApiKey, authReady },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       if (!quiet) {
         setLoadState('loading');
         setLoadError(null);
@@ -117,7 +140,38 @@ export function SettingsAiProvidersPane() {
         setDraft(d);
         setInitialSnapshot(snap);
         if (!quiet) setLoadState('ok');
+        // #region agent log
+        fetch('http://127.0.0.1:7531/ingest/632941fc-04f7-4b75-9df5-2d52b029d540', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '777e35' },
+          body: JSON.stringify({
+            sessionId: '777e35',
+            hypothesisId: 'H2',
+            location: 'SettingsAiProvidersPane.tsx:load',
+            message: 'load ok',
+            data: {
+              sectionCount: (data.sections ?? []).length,
+              warningCount: Array.isArray(data.warnings) ? data.warnings.length : 0,
+            },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
       } catch (e) {
+        // #region agent log
+        fetch('http://127.0.0.1:7531/ingest/632941fc-04f7-4b75-9df5-2d52b029d540', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '777e35' },
+          body: JSON.stringify({
+            sessionId: '777e35',
+            hypothesisId: 'H3',
+            location: 'SettingsAiProvidersPane.tsx:load',
+            message: 'load error',
+            data: { quiet, err: e instanceof Error ? e.message : 'unknown' },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
         if (!quiet) {
           setLoadState('error');
           setLoadError(e instanceof Error ? e.message : 'Failed to load');
@@ -127,19 +181,40 @@ export function SettingsAiProvidersPane() {
         }
       }
     },
-    [authHeaders]
+    [authHeaders, authReady, operatorApiKey]
   );
 
-  useEffect(() => {
-    if (attemptedLoad.current) return;
-    attemptedLoad.current = true;
-    void load();
-  }, [load]);
+  const canAuth = useMemo(
+    () => Boolean(storedTokens?.access?.trim() || operatorApiKey.trim()),
+    [storedTokens?.access, operatorApiKey]
+  );
 
-  const canAuth = useMemo(() => {
-    const tok = readStoredAuthTokens();
-    return Boolean(tok?.access || operatorApiKey.trim());
-  }, [operatorApiKey]);
+  const authRequiredMessage =
+    authReady && !canAuth
+      ? 'Sign in (JWT in localStorage) or paste the server API key above.'
+      : null;
+
+  const displayLoadState = authRequiredMessage ? 'error' : loadState;
+  const displayLoadError = authRequiredMessage ?? loadError;
+
+  const authLoadKey = `${authReady}:${canAuth}:${storedTokens?.access?.length ?? 0}:${operatorApiKey.trim().length}`;
+
+  useEffect(() => {
+    if (!authReady || !canAuth) return;
+    if (lastAuthLoadKey.current === authLoadKey && loadState === 'ok') return;
+    lastAuthLoadKey.current = authLoadKey;
+    void load();
+  }, [authReady, authLoadKey, canAuth, load, loadState]);
+
+  useEffect(() => {
+    if (!authReady || !canAuth) return;
+    const onAuth = () => {
+      lastAuthLoadKey.current = null;
+      void load();
+    };
+    window.addEventListener(AUTH_SESSION_CHANGED_EVENT, onAuth);
+    return () => window.removeEventListener(AUTH_SESSION_CHANGED_EVENT, onAuth);
+  }, [authReady, canAuth, load]);
 
   const save = useCallback(async () => {
     setSaveState('saving');
@@ -193,8 +268,8 @@ export function SettingsAiProvidersPane() {
     'mt-1 w-full rounded-lg border border-white/15 bg-black/35 px-3 py-2 text-sm text-white/90 outline-none placeholder:text-white/35 focus:border-cyan-500/50';
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+    <div className="space-y-6">
+      <section className="frost-glass-surface mb-0 border border-white/10 p-6">
         <h2 className="mb-2 text-lg font-semibold text-white/90">Authentication</h2>
         <p className="mb-3 text-sm text-white/50">
           Use your session (after sign-in) or paste the server{' '}
@@ -202,6 +277,18 @@ export function SettingsAiProvidersPane() {
           requests from this screen and are not stored in{' '}
           <code className="rounded bg-black/40 px-1">NEXT_PUBLIC_*</code>.
         </p>
+        <dl className="mb-4 grid gap-2 text-sm sm:grid-cols-2">
+          <div className="flex justify-between gap-2 rounded-lg border border-white/5 bg-black/20 px-3 py-2">
+            <dt className="text-white/45">GraphQL auth (JWT)</dt>
+            <dd className="font-medium text-white/85">{graphqlReady ? 'Ready' : 'Missing'}</dd>
+          </div>
+          <div className="flex justify-between gap-2 rounded-lg border border-white/5 bg-black/20 px-3 py-2">
+            <dt className="text-white/45">Operator API key</dt>
+            <dd className="font-medium text-white/85">
+              {operatorApiKey.trim() ? 'Set (this screen)' : '—'}
+            </dd>
+          </div>
+        </dl>
         <label className="block text-sm text-white/70">
           Optional server API key
           <input
@@ -225,23 +312,20 @@ export function SettingsAiProvidersPane() {
         </section>
       ) : null}
 
-      {loadState === 'loading' ? (
+      {displayLoadState === 'loading' ? (
         <p className="text-sm text-white/50">Loading provider configuration…</p>
       ) : null}
-      {loadState === 'error' ? (
+      {displayLoadState === 'error' ? (
         <p className="text-sm text-red-300">
-          {loadError}
+          {displayLoadError}
           {!canAuth ? ' Sign in or set the server API key above, then use Refresh.' : ''}
         </p>
       ) : null}
 
-      {loadState === 'ok' ? (
+      {displayLoadState === 'ok' ? (
         <>
           {sections.map((sec) => (
-            <section
-              key={sec.id}
-              className="frost-glass-surface rounded-2xl border border-white/10 p-6"
-            >
+            <section key={sec.id} className="frost-glass-surface mb-0 border border-white/10 p-6">
               <h2 className="mb-4 text-lg font-semibold text-white/90">{sec.title}</h2>
               <div className="space-y-4">
                 {sec.fields.map((f) => {
@@ -286,7 +370,7 @@ export function SettingsAiProvidersPane() {
             </section>
           ))}
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-nowrap items-end justify-end gap-3 px-[15px] py-[10px]">
             <button
               type="button"
               className="rounded-lg border border-cyan-500/40 bg-cyan-600/25 px-4 py-2 text-sm font-medium text-cyan-50 hover:bg-cyan-600/35 disabled:opacity-40"
@@ -299,7 +383,7 @@ export function SettingsAiProvidersPane() {
               type="button"
               className="rounded-lg border border-white/15 bg-white/10 px-4 py-2 text-sm text-white/90 hover:bg-white/15"
               onClick={() => {
-                attemptedLoad.current = false;
+                lastAuthLoadKey.current = null;
                 void load();
               }}
             >

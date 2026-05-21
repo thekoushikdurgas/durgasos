@@ -5,6 +5,7 @@ import {
   type StoredUser,
   writeStoredAuthTokens,
 } from '@/lib/auth-tokens-local';
+import { userClaimsFromAccessToken } from '@/lib/jwt-user-from-access';
 import { notifyClearApolloCache } from '@/lib/apollo-cache-events';
 import { notifyAuthSessionChanged } from '@/lib/auth-session-events';
 import { dispatchOsNotification } from '@/lib/notifications';
@@ -41,13 +42,15 @@ function persistTokensAndUser(
   user?: EstablishSessionUserInput | null
 ): boolean {
   const stored = writeStoredAuthTokens(accessToken, refreshToken, expiresIn);
-  if (user?.id) {
+  const claims = user?.id ? null : userClaimsFromAccessToken(accessToken);
+  const profile = user?.id ? user : claims ? { id: claims.id, email: claims.email } : null;
+  if (profile?.id) {
     mergeStoredUser(
       {
-        id: user.id,
-        email: user.email ?? null,
-        username: user.username,
-        avatar_url: user.avatar_url,
+        id: profile.id,
+        email: profile.email ?? null,
+        username: user?.username,
+        avatar_url: user?.avatar_url,
       },
       expiresIn
     );

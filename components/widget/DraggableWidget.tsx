@@ -6,6 +6,7 @@ import { GripVertical, Move } from 'lucide-react';
 import { SpringBox } from '@/components/motion/SpringBox';
 import { usePointerDragSpring } from '@/components/motion/use-pointer-drag-spring';
 import { useOS } from '@/components/os-context';
+import { clampWidgetZIndex, MAX_DESKTOP_WIDGET_Z_INDEX } from '@/lib/shell-z-index';
 import { anchorTransform, resolveDropPosition } from '@/lib/widget-layout-utils';
 import { getWidgetDefinition, type WidgetLayoutItem } from '@/lib/widget-registry';
 import { useIsMobile } from '@/lib/use-is-mobile';
@@ -108,7 +109,9 @@ export function DraggableWidget({
         left: `${item.position.x * 100}%`,
         top: `${item.position.y * 100}%`,
         transform: `${anchorTransform(def.anchor)} translate3d(${s.x ?? 0}px, ${s.y ?? 0}px, 0)`,
-        zIndex: canDrag ? 60 : (item.zIndex ?? def.defaultZIndex),
+        zIndex: canDrag
+          ? MAX_DESKTOP_WIDGET_Z_INDEX
+          : clampWidgetZIndex(item.zIndex ?? def.defaultZIndex),
       })}
     >
       <div

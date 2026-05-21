@@ -116,7 +116,7 @@ export function CommandPalette() {
   const panelStyle = useReducedMotionStyle({ scale: 1 }, overlaySpring);
 
   return (
-    <Presence show={isCommandPaletteOpen} presenceKey="command-palette">
+    <Presence show={isCommandPaletteOpen} presenceKey="command-palette" itemClassName="">
       <SpringBox
         defaultStyle={{ opacity: 0, y: -8 }}
         style={backdropStyle}

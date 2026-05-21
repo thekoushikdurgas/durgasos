@@ -11,6 +11,7 @@ import {
   type WidgetPosition,
   type WidgetType,
 } from '@/lib/widget-registry';
+import { MAX_DESKTOP_WIDGET_Z_INDEX } from '@/lib/shell-z-index';
 import { clampPositionOnCanvas, normalizeLayoutPayload } from '@/lib/widget-layout-utils';
 
 export type { WidgetLayoutItem, WidgetType } from '@/lib/widget-registry';
@@ -220,7 +221,8 @@ export function useWidgetLayout() {
     (id: string) => {
       persist((p) => {
         const maxZ = p.reduce((m, w) => Math.max(m, w.zIndex ?? 1), 1);
-        return p.map((w) => (w.id === id ? { ...w, zIndex: maxZ + 1 } : w));
+        const nextZ = Math.min(maxZ + 1, MAX_DESKTOP_WIDGET_Z_INDEX);
+        return p.map((w) => (w.id === id ? { ...w, zIndex: nextZ } : w));
       });
     },
     [persist]

@@ -1,7 +1,8 @@
 'use client';
 
 import { readStoredAuthTokens, readStoredUser } from '@/lib/auth-tokens-local';
-import { tryEstablishSession } from '@/lib/establish-session';
+import { tryEstablishSession, type EstablishSessionUserInput } from '@/lib/establish-session';
+import { userClaimsFromAccessToken } from '@/lib/jwt-user-from-access';
 
 type RehydrateResponse = {
   ok?: boolean;
@@ -32,13 +33,15 @@ export async function rehydrateAuthTokensFromCookies(): Promise<boolean> {
     if (!json.ok || !access || !refresh) return false;
 
     const cached = readStoredUser();
-    const ok = await tryEstablishSession(
-      access,
-      refresh,
-      json.expiresIn ?? undefined,
-      cached ?? undefined,
-      { notify: false }
-    );
+    const claims = userClaimsFromAccessToken(access);
+    const user: EstablishSessionUserInput | undefined = cached?.id
+      ? cached
+      : claims
+        ? { id: claims.id, email: claims.email }
+        : undefined;
+    const ok = await tryEstablishSession(access, refresh, json.expiresIn ?? undefined, user, {
+      notify: false,
+    });
     return ok && Boolean(readStoredAuthTokens());
   } catch {
     return false;

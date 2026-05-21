@@ -74,6 +74,7 @@ export interface AppDefinition {
   icon: ComponentType<{ className?: string; strokeWidth?: number | string }>;
   color: string;
   category: AppCategory;
+  tags: readonly string[];
 }
 
 export const APPS: Record<AppId, AppDefinition> = {
@@ -83,6 +84,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Folder,
     color: 'text-blue-400',
     category: 'core',
+    tags: ['files', 'productivity'],
   },
   settings: {
     id: 'settings',
@@ -90,6 +92,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Settings,
     color: 'text-gray-400',
     category: 'system',
+    tags: ['system', 'preferences'],
   },
   terminal: {
     id: 'terminal',
@@ -97,6 +100,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Terminal,
     color: 'text-green-400',
     category: 'core',
+    tags: ['devtools', 'shell'],
   },
   browser: {
     id: 'browser',
@@ -104,6 +108,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Globe,
     color: 'text-indigo-400',
     category: 'core',
+    tags: ['web', 'productivity'],
   },
   gallery: {
     id: 'gallery',
@@ -111,6 +116,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: ImageIcon,
     color: 'text-pink-400',
     category: 'core',
+    tags: ['media', 'files'],
   },
   chat: {
     id: 'chat',
@@ -118,6 +124,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Mail,
     color: 'text-cyan-400',
     category: 'core',
+    tags: ['ai', 'communication'],
   },
   rag: {
     id: 'rag',
@@ -125,6 +132,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Gem,
     color: 'text-emerald-400',
     category: 'workflows',
+    tags: ['ai', 'data'],
   },
   vectordb: {
     id: 'vectordb',
@@ -132,6 +140,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Database,
     color: 'text-cyan-400',
     category: 'data',
+    tags: ['ai', 'data'],
   },
   'void-ide': {
     id: 'void-ide',
@@ -139,6 +148,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Code,
     color: 'text-violet-300',
     category: 'core',
+    tags: ['devtools', 'ai'],
   },
   viewer: {
     id: 'viewer',
@@ -146,6 +156,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: FileSearch,
     color: 'text-slate-300',
     category: 'core',
+    tags: ['files', 'preview'],
   },
   storage: {
     id: 'storage',
@@ -153,6 +164,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: HardDrive,
     color: 'text-orange-400',
     category: 'data',
+    tags: ['data', 'cloud'],
   },
   metrics: {
     id: 'metrics',
@@ -160,6 +172,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Loader,
     color: 'text-yellow-400',
     category: 'workflows',
+    tags: ['ai', 'analytics'],
   },
   vision: {
     id: 'vision',
@@ -167,6 +180,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Eye,
     color: 'text-violet-400',
     category: 'system',
+    tags: ['ai', 'media'],
   },
   multimodal: {
     id: 'multimodal',
@@ -174,6 +188,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: PartyPopper,
     color: 'text-fuchsia-400',
     category: 'workflows',
+    tags: ['ai', 'media'],
   },
   council: {
     id: 'council',
@@ -181,6 +196,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: ArrowRight,
     color: 'text-amber-400',
     category: 'workflows',
+    tags: ['ai', 'automation'],
   },
   workflow: {
     id: 'workflow',
@@ -188,6 +204,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: GitBranch,
     color: 'text-sky-300',
     category: 'workflows',
+    tags: ['automation', 'productivity'],
   },
   'apps-manager': {
     id: 'apps-manager',
@@ -195,6 +212,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: AppWindow,
     color: 'text-sky-400',
     category: 'system',
+    tags: ['system', 'productivity'],
   },
   volumes: {
     id: 'volumes',
@@ -202,6 +220,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Layers,
     color: 'text-slate-300',
     category: 'data',
+    tags: ['data', 'system'],
   },
   archiver: {
     id: 'archiver',
@@ -209,6 +228,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Archive,
     color: 'text-amber-300',
     category: 'data',
+    tags: ['files', 'compression'],
   },
   player: {
     id: 'player',
@@ -216,6 +236,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: PlayCircle,
     color: 'text-rose-400',
     category: 'core',
+    tags: ['media'],
   },
   remote: {
     id: 'remote',
@@ -223,6 +244,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Server,
     color: 'text-emerald-300',
     category: 'system',
+    tags: ['system', 'network'],
   },
   docs: {
     id: 'docs',
@@ -230,6 +252,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: FileText,
     color: 'text-blue-300',
     category: 'core',
+    tags: ['productivity', 'writing'],
   },
   sheets: {
     id: 'sheets',
@@ -237,6 +260,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Table2,
     color: 'text-green-300',
     category: 'core',
+    tags: ['productivity', 'data'],
   },
   transfer: {
     id: 'transfer',
@@ -244,6 +268,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: ArrowLeftRight,
     color: 'text-orange-300',
     category: 'data',
+    tags: ['data', 'sync'],
   },
   resume: {
     id: 'resume',
@@ -251,6 +276,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Briefcase,
     color: 'text-indigo-400',
     category: 'workflows',
+    tags: ['ai', 'career'],
   },
   gmail: {
     id: 'gmail',
@@ -258,6 +284,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Inbox,
     color: 'text-sky-300',
     category: 'core',
+    tags: ['google', 'communication'],
   },
   calendar: {
     id: 'calendar',
@@ -265,6 +292,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: CalendarDays,
     color: 'text-violet-300',
     category: 'core',
+    tags: ['google', 'productivity'],
   },
   contacts: {
     id: 'contacts',
@@ -272,6 +300,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: Users,
     color: 'text-teal-300',
     category: 'core',
+    tags: ['google', 'communication'],
   },
   drive: {
     id: 'drive',
@@ -279,6 +308,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: FolderOpen,
     color: 'text-amber-300',
     category: 'data',
+    tags: ['google', 'files'],
   },
   todo: {
     id: 'todo',
@@ -286,6 +316,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: ListTodo,
     color: 'text-violet-300',
     category: 'core',
+    tags: ['google', 'productivity'],
   },
   repo: {
     id: 'repo',
@@ -293,6 +324,7 @@ export const APPS: Record<AppId, AppDefinition> = {
     icon: FolderGit2,
     color: 'text-purple-400',
     category: 'core',
+    tags: ['devtools', 'github'],
   },
 };
 
@@ -337,3 +369,13 @@ export const APP_DESCRIPTIONS: Record<AppId, string> = {
   todo: 'Kanban tasks synced with Google Tasks.',
   repo: 'GitHub profile, repositories, and stars (public or linked account).',
 };
+
+/** Sorted unique tags across all apps (launcher filter dropdown). */
+export const ALL_APP_TAGS: string[] = [...new Set(Object.values(APPS).flatMap((a) => a.tags))].sort(
+  (a, b) => a.localeCompare(b)
+);
+
+/** All apps sorted by display name for the launcher grid. */
+export function getAppsForLauncher(): AppDefinition[] {
+  return Object.values(APPS).sort((a, b) => a.name.localeCompare(b.name));
+}

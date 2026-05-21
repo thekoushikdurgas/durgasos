@@ -170,21 +170,9 @@ export function MessageDock({
   const [messageInput, setMessageInput] = useState('');
   const dockRef = useRef<HTMLDivElement>(null);
   const characterButtonRefs = useRef<Record<number, HTMLButtonElement | null>>({});
-  const [collapsedWidth, setCollapsedWidth] = useState(280);
-  const [hasInitialized, setHasInitialized] = useState(false);
   const inputId = useId();
 
   const isDark = theme === 'dark' || theme === 'auto';
-
-  useEffect(() => {
-    if (dockRef.current && !hasInitialized) {
-      const width = dockRef.current.offsetWidth;
-      if (width > 0) {
-        setCollapsedWidth(width);
-        setHasInitialized(true);
-      }
-    }
-  }, [hasInitialized]);
 
   const focusCharacterTrigger = useCallback((index: number | null) => {
     if (index === null) return;
@@ -248,7 +236,7 @@ export function MessageDock({
     overlaySpring
   );
   const shellWidthStyle = useReducedMotionStyle(
-    { width: isExpanded ? expandedWidth : collapsedWidth },
+    { width: isExpanded ? expandedWidth : 0 },
     pressSpring
   );
 
@@ -289,11 +277,12 @@ export function MessageDock({
           className={cn(
             'rounded-full px-3 py-2 shadow-2xl backdrop-blur-md transition-[background] duration-200',
             shellBorder,
-            'border bg-white/10'
+            'border bg-white/10',
+            !isExpanded && 'w-fit'
           )}
           style={shellWidthStyle}
           mapStyle={(s) => ({
-            width: s.width,
+            width: isExpanded ? s.width : 'fit-content',
             background: shellBackground,
           })}
         >

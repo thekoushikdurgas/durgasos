@@ -101,7 +101,7 @@ export function SettingsDefaultAppsPane() {
 
   if (!authed) {
     return (
-      <div className="frost-glass-surface rounded-2xl border border-white/10 p-6 text-sm text-white/60">
+      <div className="frost-glass-surface mb-0 border border-white/10 p-6 text-sm text-white/60">
         Sign in to sync default apps for file types with your account.
       </div>
     );
@@ -109,7 +109,7 @@ export function SettingsDefaultAppsPane() {
 
   return (
     <div className="space-y-6">
-      <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+      <section className="frost-glass-surface mb-0 border border-white/10 p-6">
         <h2 className="mb-2 text-lg font-semibold text-white/90">Default apps by extension</h2>
         <p className="mb-4 text-sm text-white/50">
           Choose which installed app opens each file type. Only apps that declare support for an
@@ -158,7 +158,7 @@ export function SettingsDefaultAppsPane() {
           </button>
         </div>
         {savedAt ? <p className="mb-3 text-xs text-emerald-400/90">Saved successfully.</p> : null}
-        <div className="max-h-[min(28rem,55vh)] overflow-auto rounded-lg border border-white/10">
+        <div className="rounded-lg border border-white/10">
           <table className="w-full min-w-[320px] border-collapse text-left text-xs">
             <thead className="sticky top-0 z-[1] bg-slate-900/95 text-white/50">
               <tr>
@@ -200,10 +200,10 @@ export function SettingsDefaultAppsPane() {
           </table>
         </div>
       </section>
-      <p className="text-xs text-white/40">
+      {/* <p className="text-xs text-white/40">
         Tip: clearing a row uses the built-in default when you double-click in Files. Unsupported
         extensions rely on “Open with”.
-      </p>
+      </p> */}
     </div>
   );
 }

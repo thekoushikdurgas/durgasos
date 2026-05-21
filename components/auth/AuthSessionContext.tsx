@@ -14,11 +14,13 @@ import { useRouter } from 'next/navigation';
 
 import { AUTH_SESSION_CHANGED_EVENT, notifyAuthSessionChanged } from '@/lib/auth-session-events';
 import {
+  mergeStoredUser,
   readStoredAuthTokens,
   readStoredUser,
   isStoredUserSessionValid,
   type StoredUser,
 } from '@/lib/auth-tokens-local';
+import { userClaimsFromAccessToken } from '@/lib/jwt-user-from-access';
 import { rehydrateAuthTokensFromCookies } from '@/lib/rehydrate-auth-from-cookies';
 import {
   restoreAuthSessionFromLocalStorage,
@@ -100,6 +102,14 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     setAuthenticated(ok);
     setUser(ok ? readStoredUser() : null);
     setReady(true);
+    if (ok && readStoredAuthTokens() && !readStoredUser()) {
+      const access = readStoredAuthTokens()?.access;
+      const claims = access ? userClaimsFromAccessToken(access) : null;
+      if (claims) {
+        mergeStoredUser({ id: claims.id, email: claims.email });
+        setUser(readStoredUser());
+      }
+    }
   }, [maybeRehydrateTokens]);
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Copy, RefreshCw } from 'lucide-react';
 
@@ -41,17 +41,38 @@ function JsonPre({ label, value }: { label: string; value: unknown }) {
   );
 }
 
+function formatQueryError(err: unknown): string | null {
+  if (!err) return null;
+  if (err instanceof Error) return err.message;
+  return String(err);
+}
+
 export function SettingsProfilePane() {
   const { authenticated: sessionAuthed, user: sessionUser } = useAuthSession();
   const graphqlReady = canRunAuthedGraphqlQueries();
-  const meQ = useQuery(ME, { fetchPolicy: 'cache-and-network', skip: !graphqlReady });
+  const meQ = useQuery(ME, {
+    fetchPolicy: 'cache-and-network',
+    errorPolicy: 'all',
+    skip: !graphqlReady,
+  });
   const me = meQ.data?.me;
-  const profileLoadError = meQ.error
-    ? meQ.error instanceof Error
-      ? meQ.error.message
-      : String(meQ.error)
-    : null;
+  const profileLoadError =
+    formatQueryError(meQ.error) ??
+    (!meQ.loading && graphqlReady && !me
+      ? 'Server returned no profile (me is null). Stale cache was cleared — use Retry profile.'
+      : null);
   const [copied, setCopied] = useState(false);
+  const didInitialFetchRef = useRef(false);
+
+  useEffect(() => {
+    if (!graphqlReady) {
+      didInitialFetchRef.current = false;
+      return;
+    }
+    if (didInitialFetchRef.current) return;
+    didInitialFetchRef.current = true;
+    void meQ.refetch();
+  }, [graphqlReady, meQ]);
 
   const copyId = useCallback(async () => {
     if (!me?.id) return;
@@ -66,8 +87,17 @@ export function SettingsProfilePane() {
 
   if (meQ.loading && !me) {
     return (
-      <div className="frost-glass-surface rounded-2xl border border-white/10 p-8 text-sm text-white/50">
-        Loading profile…
+      <div className="space-y-4">
+        <div className="frost-glass-surface mb-0 border border-white/10 p-8 text-sm text-white/50">
+          Loading profile from server…
+          {sessionUser?.email ? (
+            <span className="mt-2 block text-white/40">Signed in as {sessionUser.email}</span>
+          ) : null}
+        </div>
+        <section className="frost-glass-surface mb-0 border border-white/10 p-6">
+          <h3 className="mb-3 text-base font-semibold text-white/90">Session (this device)</h3>
+          <SettingsSessionSummary />
+        </section>
       </div>
     );
   }
@@ -75,7 +105,7 @@ export function SettingsProfilePane() {
   if (meQ.error) {
     return (
       <div className="space-y-4">
-        <div className="frost-glass-surface rounded-2xl border border-red-500/30 bg-red-950/20 p-6 text-sm text-red-200">
+        <div className="frost-glass-surface mb-0 border border-red-500/30 bg-red-950/20 p-6 text-sm text-red-200">
           {meQ.error.message}
         </div>
         <button
@@ -93,7 +123,7 @@ export function SettingsProfilePane() {
   if (!graphqlReady) {
     return (
       <div className="space-y-4">
-        <div className="frost-glass-surface rounded-2xl border border-white/10 p-6 text-sm text-white/60">
+        <div className="frost-glass-surface mb-0 border border-white/10 p-6 text-sm text-white/60">
           <p className="mb-3">
             {sessionAuthed
               ? 'Session cookies are set but device tokens are missing. Re-open sign-in once to sync GraphQL, or wait a moment for automatic rehydration.'
@@ -107,7 +137,7 @@ export function SettingsProfilePane() {
             Open sign in
           </button>
         </div>
-        <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+        <section className="frost-glass-surface mb-0 border border-white/10 p-6">
           <h3 className="mb-3 text-base font-semibold text-white/90">Session (this device)</h3>
           <SettingsSessionSummary />
         </section>
@@ -120,7 +150,7 @@ export function SettingsProfilePane() {
     const fallbackId = sessionUser?.id;
     return (
       <div className="space-y-4">
-        <div className="frost-glass-surface rounded-2xl border border-amber-500/30 bg-amber-950/20 p-6 text-sm text-amber-100">
+        <div className="frost-glass-surface mb-0 border border-amber-500/30 bg-amber-950/20 p-6 text-sm text-amber-100">
           <p className="mb-3">
             Signed in on this device, but profile data could not be loaded from the server.
             {profileLoadError ? ` (${profileLoadError})` : ''}
@@ -135,12 +165,12 @@ export function SettingsProfilePane() {
           </button>
         </div>
         {(fallbackEmail || fallbackId) && (
-          <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+          <section className="frost-glass-surface mb-0 border border-white/10 p-6">
             <h3 className="mb-2 text-base font-semibold text-white/90">Cached session user</h3>
             <p className="text-sm text-white/70">{fallbackEmail ?? fallbackId}</p>
           </section>
         )}
-        <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+        <section className="frost-glass-surface mb-0 border border-white/10 p-6">
           <h3 className="mb-3 text-base font-semibold text-white/90">Session (this device)</h3>
           <SettingsSessionSummary />
         </section>
@@ -169,7 +199,7 @@ export function SettingsProfilePane() {
         </button>
       </div>
 
-      <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+      <section className="frost-glass-surface mb-0 rounded-none border border-white/10 p-6">
         <div className="flex flex-wrap items-start gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-white/20 bg-slate-800 text-2xl font-semibold text-white/70">
             {initial}
@@ -193,7 +223,7 @@ export function SettingsProfilePane() {
         </div>
       </section>
 
-      <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+      <section className="frost-glass-surface mb-0 border border-white/10 p-6">
         <h3 className="mb-3 text-base font-semibold text-white/90">Account</h3>
         <dl className="grid gap-2 text-sm sm:grid-cols-2">
           <div className="flex justify-between gap-2 rounded-lg border border-white/5 bg-black/20 px-3 py-2">
@@ -215,7 +245,7 @@ export function SettingsProfilePane() {
         </dl>
       </section>
 
-      <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+      <section className="frost-glass-surface mb-0 border border-white/10 p-6">
         <h3 className="mb-3 text-base font-semibold text-white/90">Profile</h3>
         {!p ? (
           <p className="text-sm text-white/45">No extended profile row yet.</p>
@@ -251,13 +281,13 @@ export function SettingsProfilePane() {
         )}
       </section>
 
-      <section className="frost-glass-surface rounded-2xl border border-white/10 p-6 space-y-3">
+      <section className="frost-glass-surface mb-0 border border-white/10 p-6 space-y-3">
         <h3 className="text-base font-semibold text-white/90">Metadata</h3>
         <JsonPre label="User metadata" value={me.userMetadata} />
         <JsonPre label="App metadata (from session)" value={me.appMetadata} />
       </section>
 
-      <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+      <section className="frost-glass-surface mb-0 border border-white/10 p-6">
         <h3 className="mb-2 text-base font-semibold text-white/90">Session (this device)</h3>
         <p className="mb-4 text-xs text-white/45">
           Stored tokens power GraphQL and the AI gateway. For connection issues, see{' '}

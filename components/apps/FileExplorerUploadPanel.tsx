@@ -170,7 +170,7 @@ export function FileExplorerUploadPanel({
   };
 
   return (
-    <Presence show={open} presenceKey="upload-panel">
+    <Presence show={open} presenceKey="upload-panel" itemClassName="">
       <>
         <SpringBox
           className="fixed inset-0 z-20 md:hidden"

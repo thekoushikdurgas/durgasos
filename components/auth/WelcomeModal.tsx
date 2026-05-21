@@ -13,12 +13,9 @@ import { cn } from '@/lib/utils';
 export function WelcomeModal() {
   const { ready, authenticated } = useAuthSession();
   const [forceOpen, setForceOpen] = useState(false);
-  const open = ready && (!authenticated || forceOpen);
+  const effectiveForceOpen = authenticated ? false : forceOpen;
+  const open = ready && (!authenticated || effectiveForceOpen);
   const mainRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (authenticated) setForceOpen(false);
-  }, [authenticated]);
 
   useEffect(() => {
     const onSessionChange = () => setForceOpen(false);

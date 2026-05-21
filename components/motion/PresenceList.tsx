@@ -22,6 +22,7 @@ type PresenceListProps<T> = {
   /** Leave to (default: zeros); return null to remove immediately. */
   getLeaveStyle?: (item: PresenceItem<T>) => PlainStyle | null;
   className?: string;
+  itemClassName?: string;
   children: (item: PresenceItem<T>, style: CSSPropertiesLike) => ReactNode;
 };
 
@@ -52,6 +53,7 @@ export function PresenceList<T>({
   getEnterStyle,
   getLeaveStyle,
   className,
+  itemClassName,
   children,
 }: PresenceListProps<T>): ReactElement {
   const reduced = usePrefersReducedMotion();
@@ -100,7 +102,10 @@ export function PresenceList<T>({
               overflow: css.maxHeight != null ? 'hidden' : undefined,
             };
             return (
-              <div key={config.key} className="motion-gpu">
+              <div
+                key={config.key}
+                className={itemClassName !== undefined ? itemClassName : 'motion-gpu'}
+              >
                 {children(item, css)}
               </div>
             );
@@ -119,6 +124,7 @@ export function Presence({
   enterStyle = { opacity: 0, scale: 0.96 },
   leaveStyle = { opacity: 0, scale: 0.96 },
   targetStyle = { opacity: 1, scale: 1 },
+  itemClassName,
 }: {
   show: boolean;
   presenceKey: string;
@@ -126,6 +132,7 @@ export function Presence({
   enterStyle?: PlainStyle;
   leaveStyle?: PlainStyle;
   targetStyle?: PlainStyle;
+  itemClassName?: string;
 }): ReactElement | null {
   const items = show ? [{ key: presenceKey }] : [];
   return (
@@ -134,6 +141,7 @@ export function Presence({
       getStyle={() => targetStyle}
       getEnterStyle={() => enterStyle}
       getLeaveStyle={() => leaveStyle}
+      itemClassName={itemClassName}
     >
       {() => children}
     </PresenceList>

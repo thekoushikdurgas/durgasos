@@ -6,6 +6,7 @@ import { setContext } from '@apollo/client/link/context';
 import { ApolloProvider } from '@apollo/client/react';
 import { useEffect, useMemo } from 'react';
 
+import { AuthProfileSync } from '@/components/auth/AuthProfileSync';
 import { AuthSessionProvider } from '@/components/auth/AuthSessionContext';
 import { WelcomeModal } from '@/components/auth/WelcomeModal';
 import { CLEAR_APOLLO_CACHE_EVENT } from '@/lib/apollo-cache-events';
@@ -83,6 +84,7 @@ export function ApolloGraphQLProvider({ children }: { children: React.ReactNode 
   return (
     <ApolloProvider client={client}>
       <AuthSessionProvider>
+        <AuthProfileSync />
         <WelcomeModal />
         {children}
       </AuthSessionProvider>
