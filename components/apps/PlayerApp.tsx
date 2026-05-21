@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useMutation } from '@apollo/client/react';
 import { useWindowLaunch } from '@/components/window-launch-context';
+import { useGoogleDriveLaunchSource } from '@/hooks/use-google-drive-launch-source';
 import { cn } from '@/lib/utils';
 import { STORAGE_GET_URL } from '@/lib/graphql-modules';
 
@@ -31,8 +32,12 @@ function fmt(t: number): string {
 
 export function PlayerApp() {
   const launch = useWindowLaunch();
+  const driveSrc = useGoogleDriveLaunchSource(launch);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [src, setSrc] = useState(DEMO_VIDEO);
+  const fetchGen = useRef(0);
+  const [userPickedSrc, setUserPickedSrc] = useState<string | null>(null);
+  const [fetchedSrc, setFetchedSrc] = useState<string | null>(null);
+  const src = driveSrc.objectUrl ?? userPickedSrc ?? fetchedSrc ?? DEMO_VIDEO;
   const [paused, setPaused] = useState(true);
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -42,15 +47,21 @@ export function PlayerApp() {
   const [getUrl] = useMutation(STORAGE_GET_URL);
 
   useEffect(() => {
+    if (driveSrc.objectUrl) {
+      return;
+    }
     const s = launch?.storage;
     const name = launch?.fileName ?? '';
     if (
       !s?.file_path &&
+      !launch?.googleDrive &&
       !name.match(
         /\.(mp4|webm|mp3|wav|ogg|m4a|mov|flac|aac|m4v|mkv|avi|wmv|flv|mpe?g|opus|wma|3gp|amr)$/i
       )
     )
       return;
+    fetchGen.current += 1;
+    const gen = fetchGen.current;
     let cancelled = false;
     void (async () => {
       if (s?.file_path) {
@@ -60,18 +71,18 @@ export function PlayerApp() {
           });
           const json = data?.storageGetUrl as StorageUrlPayload | undefined;
           const url = json?.success && json.url ? json.url : null;
-          if (url && !cancelled) setSrc(url);
+          if (url && !cancelled && gen === fetchGen.current) setFetchedSrc(url);
         } catch {
           /* ignore */
         }
         return;
       }
-      if (!cancelled) setSrc(DEMO_VIDEO);
+      if (!cancelled && gen === fetchGen.current) setFetchedSrc(null);
     })();
     return () => {
       cancelled = true;
     };
-  }, [launch?.fileName, launch?.storage, getUrl]);
+  }, [launch?.fileName, launch?.storage, launch?.googleDrive, driveSrc.objectUrl, getUrl]);
 
   useEffect(() => {
     const v = videoRef.current;
@@ -242,7 +253,7 @@ export function PlayerApp() {
           onChange={(e) => {
             const f = e.target.files?.[0];
             if (!f) return;
-            setSrc(URL.createObjectURL(f));
+            setUserPickedSrc(URL.createObjectURL(f));
           }}
         />
         <button

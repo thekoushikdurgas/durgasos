@@ -31,6 +31,7 @@ import { CalendarApp } from './apps/CalendarApp';
 import { ContactsApp } from './apps/ContactsApp';
 import { DriveApp } from './apps/DriveApp';
 import { TodoApp } from './apps/TodoApp';
+import { RepoApp } from './apps/RepoApp';
 import { ViewerApp } from './apps/ViewerApp';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 
@@ -94,6 +95,8 @@ export function WindowManager() {
         return <DriveApp />;
       case 'todo':
         return <TodoApp />;
+      case 'repo':
+        return <RepoApp />;
       case 'apps-manager':
         return <AppsManagerApp />;
       case 'volumes':

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useMutation } from '@apollo/client/react';
 import { useWindowLaunch } from '@/components/window-launch-context';
+import { useGoogleDriveLaunchSource } from '@/hooks/use-google-drive-launch-source';
 import { fetchStorageText } from '@/lib/storage-signed-url';
 import { STORAGE_GET_URL } from '@/lib/graphql-modules';
 
@@ -41,6 +42,7 @@ function initialDocHtml(launch: ReturnType<typeof useWindowLaunch>): string {
 
 export function DocsApp() {
   const launch = useWindowLaunch();
+  const driveSrc = useGoogleDriveLaunchSource(launch);
   const ref = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(100);
   const [getUrl] = useMutation(STORAGE_GET_URL);
@@ -62,6 +64,29 @@ export function DocsApp() {
   }, [countWords]);
 
   useEffect(() => {
+    const driveObjectUrl = driveSrc.objectUrl;
+    if (driveObjectUrl && launch?.fileName?.match(STORAGE_TEXT_FILE)) {
+      let cancelled = false;
+      void (async () => {
+        try {
+          const res = await fetch(driveObjectUrl);
+          const text = await res.text();
+          if (cancelled) return;
+          setDocHtml(
+            `<pre class="whitespace-pre-wrap font-mono text-sm text-slate-800">${escapeHtml(text)}</pre>`
+          );
+          queueMicrotask(syncStats);
+        } catch {
+          if (!cancelled) {
+            setDocHtml('<p class="text-red-600">Could not load this file from Google Drive.</p>');
+            queueMicrotask(syncStats);
+          }
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
     const s = launch?.storage;
     if (s?.file_path) {
       let cancelled = false;
@@ -122,6 +147,8 @@ export function DocsApp() {
     launch?.storage,
     launch?.storage?.bucket_type,
     launch?.storage?.file_path,
+    launch?.googleDrive,
+    driveSrc.objectUrl,
     getUrl,
     syncStats,
   ]);

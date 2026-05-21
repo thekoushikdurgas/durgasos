@@ -1,56 +1,11 @@
-import { print } from 'graphql';
-
 import {
   clearStoredAuthTokens,
   readStoredAuthTokens,
+  readStoredUser,
   writeStoredAuthTokens,
 } from '@/lib/auth-tokens-local';
-import { getGraphqlHttpUrl } from '@/lib/backend-url';
-import { REFRESH_SESSION } from '@/lib/graphql-auth';
+import { refreshSessionViaGraphql } from '@/lib/refresh-session-graphql';
 import { tryEstablishSession } from '@/lib/establish-session';
-
-type RefreshResponse = {
-  data?: {
-    refreshSession?: {
-      success?: boolean;
-      session?: {
-        accessToken?: string;
-        refreshToken?: string;
-        expiresIn?: number | null;
-      } | null;
-    } | null;
-  };
-};
-
-async function refreshViaGraphql(refreshToken: string): Promise<{
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number | null | undefined;
-} | null> {
-  const res = await fetch(getGraphqlHttpUrl(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({
-      query: print(REFRESH_SESSION),
-      variables: { refreshToken },
-    }),
-  });
-  if (!res.ok) return null;
-  const raw = await res.text();
-  if (!raw.trimStart().startsWith('{')) {
-    return null;
-  }
-  const json = JSON.parse(raw) as RefreshResponse;
-  const payload = json.data?.refreshSession;
-  const sess = payload?.session;
-  if (!payload?.success || !sess?.accessToken || !sess?.refreshToken) return null;
-  return {
-    accessToken: sess.accessToken,
-    refreshToken: sess.refreshToken,
-    expiresIn: sess.expiresIn,
-  };
-}
 
 /**
  * Re-applies httpOnly session cookies from localStorage (and refreshes tokens if needed).
@@ -61,24 +16,59 @@ export async function restoreAuthSessionFromLocalStorage(): Promise<boolean> {
   const pair = readStoredAuthTokens();
   if (!pair) return false;
 
-  if (await tryEstablishSession(pair.access, pair.refresh)) {
+  const cachedUser = readStoredUser();
+  if (await tryEstablishSession(pair.access, pair.refresh, undefined, cachedUser ?? undefined)) {
     return true;
   }
 
-  const rotated = await refreshViaGraphql(pair.refresh);
+  const rotated = await refreshSessionViaGraphql(pair.refresh);
   if (!rotated) {
     clearStoredAuthTokens();
     return false;
   }
-  writeStoredAuthTokens(rotated.accessToken, rotated.refreshToken);
+  writeStoredAuthTokens(rotated.accessToken, rotated.refreshToken, rotated.expiresIn);
   const ok = await tryEstablishSession(
     rotated.accessToken,
     rotated.refreshToken,
-    rotated.expiresIn ?? undefined
+    rotated.expiresIn ?? undefined,
+    readStoredUser() ?? undefined
   );
   if (!ok) {
     clearStoredAuthTokens();
     return false;
   }
   return true;
+}
+
+const PROACTIVE_REFRESH_MS = 5 * 60 * 1000;
+
+/** Rotate tokens and re-establish cookies (no-op if no refresh token). */
+export async function silentRefreshAuthSession(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  const pair = readStoredAuthTokens();
+  if (!pair?.refresh) return false;
+  const rotated = await refreshSessionViaGraphql(pair.refresh);
+  if (!rotated) {
+    clearStoredAuthTokens();
+    return false;
+  }
+  writeStoredAuthTokens(rotated.accessToken, rotated.refreshToken, rotated.expiresIn);
+  const ok = await tryEstablishSession(
+    rotated.accessToken,
+    rotated.refreshToken,
+    rotated.expiresIn ?? undefined,
+    readStoredUser() ?? undefined
+  );
+  if (!ok) {
+    clearStoredAuthTokens();
+    return false;
+  }
+  return true;
+}
+
+/** True if access token should be refreshed soon (within 5 minutes). */
+export function shouldProactivelyRefreshAuth(): boolean {
+  const u = readStoredUser();
+  if (!u) return false;
+  return u.expiresAt - Date.now() < PROACTIVE_REFRESH_MS;
 }

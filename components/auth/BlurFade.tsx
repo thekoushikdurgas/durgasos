@@ -1,14 +1,16 @@
 'use client';
 
-import { motion, useInView, useReducedMotion, type Variants } from 'motion/react';
 import { useRef, type ReactNode } from 'react';
+
+import { SpringBox } from '@/components/motion/SpringBox';
+import { useInViewOnce } from '@/lib/motion/use-in-view-once';
+import { overlaySpring } from '@/lib/motion/spring-presets';
+import { useReducedMotionStyle } from '@/lib/motion/use-reduced-motion-style';
+import { usePrefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
 
 export function BlurFade({
   children,
   className,
-  variant,
-  duration = 0.4,
-  delay = 0,
   yOffset = 6,
   inView = true,
   blur = '6px',
@@ -22,15 +24,18 @@ export function BlurFade({
   inView?: boolean;
   blur?: string;
 }) {
-  const ref = useRef(null);
-  const prefersReducedMotion = useReducedMotion();
-  const inViewResult = useInView(ref, {
-    once: true,
-    margin: '-50px',
-  } as NonNullable<Parameters<typeof useInView>[1]>);
+  const ref = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const inViewResult = useInViewOnce(ref, { rootMargin: '-50px' });
   const isInView = !inView || inViewResult;
+  const visible = isInView;
 
-  if (prefersReducedMotion === true) {
+  const style = useReducedMotionStyle(
+    visible ? { opacity: 1, y: -yOffset } : { opacity: 0, y: yOffset },
+    overlaySpring
+  );
+
+  if (prefersReducedMotion) {
     return (
       <div ref={ref} className={className}>
         {children}
@@ -38,22 +43,19 @@ export function BlurFade({
     );
   }
 
-  const defaultVariants: Variants = {
-    hidden: { y: yOffset, opacity: 0, filter: `blur(${blur})` },
-    visible: { y: -yOffset, opacity: 1, filter: 'blur(0px)' },
-  };
-  const combinedVariants = variant || defaultVariants;
   return (
-    <motion.div
-      ref={ref}
-      initial="hidden"
-      animate={isInView ? 'visible' : 'hidden'}
-      exit="hidden"
-      variants={combinedVariants}
-      transition={{ delay: 0.04 + delay, duration, ease: 'easeOut' }}
-      className={className}
-    >
-      {children}
-    </motion.div>
+    <div ref={ref} className={className}>
+      <SpringBox
+        style={style}
+        mapStyle={(s) => ({
+          opacity: s.opacity,
+          transform: `translate3d(0, ${s.y ?? 0}px, 0)`,
+          filter: visible ? 'blur(0px)' : `blur(${blur})`,
+          transition: 'filter 0.4s ease-out',
+        })}
+      >
+        {children}
+      </SpringBox>
+    </div>
   );
 }

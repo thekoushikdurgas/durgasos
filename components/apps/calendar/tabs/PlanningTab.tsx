@@ -2,6 +2,15 @@
 
 import { useMemo } from 'react';
 
+import {
+  calControlGroup,
+  calError,
+  calGhostBtn,
+  calHeadingLg,
+  calMonthLabel,
+  calPanel,
+  calWeekdayHeader,
+} from '@/components/apps/calendar/calendar-theme';
 import type { CalendarEventView } from '@/lib/calendar-format';
 import { eventsPerDayKeys, localDateKey } from '@/lib/calendar-format';
 
@@ -48,22 +57,20 @@ export function PlanningTab({
   return (
     <div className="mx-auto flex h-full max-w-6xl flex-col gap-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Planning</h1>
-        <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2 py-1 shadow-sm">
+        <h1 className={calHeadingLg}>Planning</h1>
+        <div className={calControlGroup}>
           <button
             type="button"
-            className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-50"
+            className={calGhostBtn}
             aria-label="Previous month"
             onClick={onPrevMonth}
           >
             ‹
           </button>
-          <span className="min-w-[8rem] text-center text-sm font-bold text-slate-700">
-            {monthLabel}
-          </span>
+          <span className={calMonthLabel}>{monthLabel}</span>
           <button
             type="button"
-            className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-50"
+            className={calGhostBtn}
             aria-label="Next month"
             onClick={onNextMonth}
           >
@@ -73,12 +80,12 @@ export function PlanningTab({
       </div>
 
       {loading ? (
-        <p className="text-sm text-slate-400">Loading…</p>
+        <p className="text-sm text-white/40">Loading…</p>
       ) : errorMessage ? (
-        <p className="text-sm text-red-600">{errorMessage}</p>
+        <p className={calError}>{errorMessage}</p>
       ) : (
-        <div className="rounded-[2rem] border border-slate-100 bg-white p-4 shadow-sm sm:p-6">
-          <div className="mb-3 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wide text-slate-400">
+        <div className={`p-4 sm:p-6 ${calPanel}`}>
+          <div className={calWeekdayHeader}>
             {WEEKDAYS.map((w) => (
               <div key={w}>{w}</div>
             ))}
@@ -92,12 +99,12 @@ export function PlanningTab({
                   key={c.key}
                   type="button"
                   onClick={() => onPickDay(new Date(year, month, c.day!))}
-                  className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-slate-100 bg-slate-50/80 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:bg-indigo-50/60"
+                  className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-sm font-bold text-white/90 outline-none transition hover:border-violet-500/40 hover:bg-violet-500/10 focus-visible:ring-2 focus-visible:ring-violet-500/50"
                 >
                   <span>{c.day}</span>
                   {c.count > 0 ? (
                     <span
-                      className="mt-1 h-1.5 w-1.5 rounded-full bg-indigo-500"
+                      className="mt-1 h-1.5 w-1.5 rounded-full bg-violet-400"
                       title={`${c.count} events`}
                     />
                   ) : null}

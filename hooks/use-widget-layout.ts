@@ -3,29 +3,29 @@
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
 
 import { fetchBackendGraphql } from '@/lib/backend-http';
+import {
+  createDefaultLayout,
+  getWidgetDefinition,
+  nextWidgetId,
+  type WidgetLayoutItem,
+  type WidgetPosition,
+  type WidgetType,
+} from '@/lib/widget-registry';
+import { clampPositionOnCanvas, normalizeLayoutPayload } from '@/lib/widget-layout-utils';
 
-export type WidgetLayoutItem = {
-  id: string;
-  type: 'clock' | 'weather' | 'agent_status' | 'system_feed' | 'quick_actions';
-  enabled: boolean;
-  column?: number;
-};
+export type { WidgetLayoutItem, WidgetType } from '@/lib/widget-registry';
 
-const STORAGE_KEY = 'durgasos_widgets_layout_v1';
+const STORAGE_KEY_V2 = 'durgasos_widgets_layout_v2';
+const STORAGE_KEY_V1 = 'durgasos_widgets_layout_v1';
 const LAYOUT_CHANGED = 'durgasos:widget-layout-changed';
 
-const DEFAULT_LAYOUT: WidgetLayoutItem[] = [
-  { id: 'clock-1', type: 'clock', enabled: true, column: 2 },
-  { id: 'weather-1', type: 'weather', enabled: true, column: 2 },
-  { id: 'agent-1', type: 'agent_status', enabled: false, column: 2 },
-  { id: 'feed-1', type: 'system_feed', enabled: false, column: 2 },
-  { id: 'quick-1', type: 'quick_actions', enabled: false, column: 2 },
-];
+/** Stable reference for useSyncExternalStore server snapshot (must not allocate per call). */
+const SERVER_SNAPSHOT: WidgetLayoutItem[] = createDefaultLayout();
 
 let snapshotJson = '';
-let snapshotItems: WidgetLayoutItem[] = DEFAULT_LAYOUT;
-
+let snapshotItems: WidgetLayoutItem[] = SERVER_SNAPSHOT;
 let serverHydrated = false;
+let pushCancel: (() => void) | null = null;
 
 function invalidateSnapshotCache() {
   snapshotJson = '';
@@ -33,16 +33,25 @@ function invalidateSnapshotCache() {
 
 function readLayoutFromStorage(): { json: string; items: WidgetLayoutItem[] } {
   if (typeof window === 'undefined') {
-    return { json: '', items: DEFAULT_LAYOUT };
+    return { json: '', items: createDefaultLayout() };
   }
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    const json = raw ?? JSON.stringify(DEFAULT_LAYOUT);
+    let raw = window.localStorage.getItem(STORAGE_KEY_V2);
+    if (!raw) {
+      const v1 = window.localStorage.getItem(STORAGE_KEY_V1);
+      if (v1) {
+        const migrated = normalizeLayoutPayload(JSON.parse(v1) as unknown);
+        const json = JSON.stringify(migrated);
+        window.localStorage.setItem(STORAGE_KEY_V2, json);
+        raw = json;
+      }
+    }
+    const json = raw ?? JSON.stringify(createDefaultLayout());
     const parsed = JSON.parse(json) as unknown;
-    const items = Array.isArray(parsed) ? (parsed as WidgetLayoutItem[]) : DEFAULT_LAYOUT;
+    const items = normalizeLayoutPayload(parsed);
     return { json, items };
   } catch {
-    return { json: JSON.stringify(DEFAULT_LAYOUT), items: DEFAULT_LAYOUT };
+    return { json: JSON.stringify(createDefaultLayout()), items: createDefaultLayout() };
   }
 }
 
@@ -55,7 +64,7 @@ function getSnapshot(): WidgetLayoutItem[] {
 }
 
 function getServerSnapshot(): WidgetLayoutItem[] {
-  return DEFAULT_LAYOUT;
+  return SERVER_SNAPSHOT;
 }
 
 function notifyLayoutChanged() {
@@ -66,7 +75,7 @@ function notifyLayoutChanged() {
 function subscribe(onStoreChange: () => void) {
   if (typeof window === 'undefined') return () => {};
   const onStorage = (e: StorageEvent) => {
-    if (e.key === null || e.key === STORAGE_KEY) {
+    if (e.key === null || e.key === STORAGE_KEY_V2 || e.key === STORAGE_KEY_V1) {
       invalidateSnapshotCache();
       onStoreChange();
     }
@@ -104,7 +113,8 @@ async function pullWidgetLayoutFromServer(): Promise<void> {
     };
     const layout = json.data?.widgetLayout?.layoutJson;
     if (Array.isArray(layout) && layout.length > 0) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(layout));
+      const normalized = normalizeLayoutPayload(layout);
+      window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(normalized));
       invalidateSnapshotCache();
       notifyLayoutChanged();
     }
@@ -132,6 +142,20 @@ function pushWidgetLayoutToServer(layout: WidgetLayoutItem[]): void {
   });
 }
 
+function schedulePushToServer(layout: WidgetLayoutItem[], delayMs = 300): void {
+  pushCancel?.();
+  pushCancel = () => {
+    if (typeof window !== 'undefined') window.clearTimeout(t);
+  };
+  if (typeof window === 'undefined') return;
+  const t = window.setTimeout(() => pushWidgetLayoutToServer(layout), delayMs);
+  const prevCancel = pushCancel;
+  pushCancel = () => {
+    prevCancel();
+    window.clearTimeout(t);
+  };
+}
+
 export function useWidgetLayout() {
   const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
@@ -143,16 +167,39 @@ export function useWidgetLayout() {
 
   const persist = useCallback((updater: (prev: WidgetLayoutItem[]) => WidgetLayoutItem[]) => {
     const prev = getSnapshot();
-    const next = updater(prev);
+    const next = normalizeLayoutPayload(updater(prev));
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(next));
     } catch {
       /* quota */
     }
     invalidateSnapshotCache();
     notifyLayoutChanged();
-    pushWidgetLayoutToServer(next);
+    schedulePushToServer(next);
   }, []);
+
+  const setEnabledByType = useCallback(
+    (type: WidgetType, enabled: boolean) => {
+      persist((prev) => {
+        const idx = prev.findIndex((w) => w.type === type);
+        if (idx >= 0) {
+          return prev.map((w, i) => (i === idx ? { ...w, enabled } : w));
+        }
+        const def = getWidgetDefinition(type);
+        return [
+          ...prev,
+          {
+            id: nextWidgetId(type),
+            type,
+            enabled,
+            position: { ...def.defaultPosition },
+            zIndex: def.defaultZIndex,
+          },
+        ];
+      });
+    },
+    [persist]
+  );
 
   const setEnabled = useCallback(
     (id: string, enabled: boolean) => {
@@ -161,16 +208,46 @@ export function useWidgetLayout() {
     [persist]
   );
 
+  const updatePosition = useCallback(
+    (id: string, position: WidgetPosition) => {
+      const clamped = clampPositionOnCanvas(position);
+      persist((p) => p.map((w) => (w.id === id ? { ...w, position: clamped } : w)));
+    },
+    [persist]
+  );
+
+  const bringToFront = useCallback(
+    (id: string) => {
+      persist((p) => {
+        const maxZ = p.reduce((m, w) => Math.max(m, w.zIndex ?? 1), 1);
+        return p.map((w) => (w.id === id ? { ...w, zIndex: maxZ + 1 } : w));
+      });
+    },
+    [persist]
+  );
+
   const removeWidget = useCallback(
     (id: string) => {
-      persist((p) => p.filter((w) => w.id !== id));
+      persist((p) => p.map((w) => (w.id === id ? { ...w, enabled: false } : w)));
     },
     [persist]
   );
 
   const resetLayout = useCallback(() => {
-    persist(() => [...DEFAULT_LAYOUT]);
+    persist(() => createDefaultLayout());
   }, [persist]);
 
-  return { items, setItems: persist, setEnabled, removeWidget, resetLayout };
+  const enabledCount = items.filter((w) => w.enabled).length;
+
+  return {
+    items,
+    enabledCount,
+    setItems: persist,
+    setEnabled,
+    setEnabledByType,
+    updatePosition,
+    bringToFront,
+    removeWidget,
+    resetLayout,
+  };
 }

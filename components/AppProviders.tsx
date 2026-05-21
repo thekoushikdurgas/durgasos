@@ -1,5 +1,6 @@
 'use client';
 
+import { BackgroundSyncHost } from '@/components/BackgroundSyncHost';
 import { DesktopBackgroundLayer } from '@/components/desktop-background/DesktopBackgroundLayer';
 import { DesktopBackgroundProvider } from '@/components/desktop-background/DesktopBackgroundProvider';
 import { ThemePreferencesProvider } from '@/components/ThemePreferences';
@@ -10,6 +11,7 @@ import type { ReactNode } from 'react';
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ThemePreferencesProvider>
+      <BackgroundSyncHost />
       <NativePlatformBridge />
       <DesktopBackgroundProvider>
         <DesktopBackgroundLayer />

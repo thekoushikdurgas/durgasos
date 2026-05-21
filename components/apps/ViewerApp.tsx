@@ -9,6 +9,7 @@ import { extensionFromFileName } from '@/lib/app-file-associations';
 import { formatPathDisplay, listDirectory, type PathSegments } from '@/lib/file-explorer-mock';
 import { STORAGE_GET_URL } from '@/lib/graphql-modules';
 import { getStorageSignedUrl } from '@/lib/storage-signed-url';
+import { useGoogleDriveLaunchSource } from '@/hooks/use-google-drive-launch-source';
 
 const MAX_BYTES = 2 * 1024 * 1024;
 
@@ -45,6 +46,7 @@ type ViewState =
 
 export function ViewerApp() {
   const launch = useWindowLaunch();
+  const driveSrc = useGoogleDriveLaunchSource(launch);
   const [getUrl] = useMutation(STORAGE_GET_URL);
   const [state, setState] = useState<ViewState>({ kind: 'loading' });
 
@@ -59,6 +61,49 @@ export function ViewerApp() {
       const fileName = launch?.fileName ?? 'file';
       const ext = extensionFromFileName(fileName);
       const seg = launch?.pathSegments;
+
+      if (driveSrc.objectUrl) {
+        try {
+          const res = await fetch(driveSrc.objectUrl);
+          if (cancelled) return;
+          if (!res.ok) {
+            setState({ kind: 'error', message: `Download failed (${res.status}).` });
+            return;
+          }
+          const buf = await res.arrayBuffer();
+          if (cancelled) return;
+          if (buf.byteLength > MAX_BYTES) {
+            setState({
+              kind: 'blob',
+              title: fileName,
+              ext,
+              downloadUrl: driveSrc.objectUrl,
+              sizeBytes: buf.byteLength,
+            });
+            return;
+          }
+          const text = tryDecodeUtf8(buf);
+          if (text != null) {
+            setState({ kind: 'text', title: fileName, body: text });
+          } else {
+            setState({
+              kind: 'blob',
+              title: fileName,
+              ext,
+              downloadUrl: driveSrc.objectUrl,
+              sizeBytes: buf.byteLength,
+            });
+          }
+        } catch {
+          if (!cancelled) {
+            setState({
+              kind: 'error',
+              message: driveSrc.error ?? 'Could not load Google Drive file.',
+            });
+          }
+        }
+        return;
+      }
 
       if (s?.file_path && s.bucket_type) {
         try {
@@ -166,7 +211,15 @@ export function ViewerApp() {
     return () => {
       cancelled = true;
     };
-  }, [getUrl, launch?.fileName, launch?.pathSegments, launch?.storage]);
+  }, [
+    getUrl,
+    launch?.fileName,
+    launch?.pathSegments,
+    launch?.storage,
+    launch?.googleDrive,
+    driveSrc.objectUrl,
+    driveSrc.error,
+  ]);
 
   return (
     <ModuleAppShell title="Viewer" subtitle="Catch-all file preview">

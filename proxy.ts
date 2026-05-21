@@ -30,11 +30,6 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  /** GraphQL is proxied to ai.backend; must not require a session cookie on the POST body. */
-  if (pathname === '/graphql') {
-    return NextResponse.next();
-  }
-
   /** Signed storage reads (rewritten to ai.backend); auth is `?token=`, not the session cookie. */
   if (pathname.startsWith('/files/')) {
     return NextResponse.next();

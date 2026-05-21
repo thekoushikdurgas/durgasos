@@ -1,9 +1,11 @@
 'use client';
 
 import { ArrowRight } from 'lucide-react';
-import { motion } from 'motion/react';
 import { useState } from 'react';
 
+import { SpringBox } from '@/components/motion/SpringBox';
+import { overlaySpring } from '@/lib/motion/spring-presets';
+import { useReducedMotionStyle } from '@/lib/motion/use-reduced-motion-style';
 import { cn } from '@/lib/utils';
 
 export type PortfolioImage = {
@@ -46,6 +48,76 @@ const FALLBACK_IMAGES: PortfolioImage[] = [
     alt: 'Packaging Design',
   },
 ];
+
+function PortfolioStackImage({
+  image,
+  index,
+  totalImages,
+  maxHeight,
+  isHovered,
+  isOtherHovered,
+  onHoverStart,
+  onHoverEnd,
+  onImageClick,
+}: {
+  image: PortfolioImage;
+  index: number;
+  totalImages: number;
+  maxHeight: number;
+  isHovered: boolean;
+  isOtherHovered: boolean;
+  onHoverStart: () => void;
+  onHoverEnd: () => void;
+  onImageClick?: (index: number) => void;
+}) {
+  const middle = Math.floor(totalImages / 2);
+  const distanceFromMiddle = Math.abs(index - middle);
+  const staggerOffset = maxHeight - distanceFromMiddle * 20;
+  const zIndex = totalImages - index;
+  const yOffset = isHovered ? -120 : isOtherHovered ? 0 : -staggerOffset;
+
+  const style = useReducedMotionStyle({ opacity: 1, y: yOffset }, overlaySpring);
+
+  return (
+    <SpringBox
+      className="group flex-shrink-0 cursor-pointer"
+      defaultStyle={{ opacity: 0, y: 200 }}
+      style={style}
+      mapStyle={(s) => ({
+        zIndex,
+        opacity: s.opacity,
+        transform: `perspective(5000px) rotateY(-45deg) translateY(${s.y ?? 0}px)`,
+      })}
+    >
+      <div
+        onMouseEnter={onHoverStart}
+        onMouseLeave={onHoverEnd}
+        onClick={() => onImageClick?.(index)}
+      >
+        <div
+          className="relative aspect-video w-56 overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105 md:w-80 lg:w-96"
+          style={{
+            boxShadow: `
+                        rgba(0, 0, 0, 0.01) 0.796192px 0px 0.796192px 0px,
+                        rgba(0, 0, 0, 0.03) 2.41451px 0px 2.41451px 0px,
+                        rgba(0, 0, 0, 0.08) 6.38265px 0px 6.38265px 0px,
+                        rgba(0, 0, 0, 0.25) 20px 0px 20px 0px
+                      `,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={image.src || '/placeholder.svg'}
+            alt={image.alt}
+            className="h-full w-full object-cover object-left-top"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+      </div>
+    </SpringBox>
+  );
+}
 
 export interface PortfolioGalleryProps {
   title?: string;
@@ -98,61 +170,20 @@ export function PortfolioGallery({
 
         <div className="relative hidden h-[320px] overflow-hidden md:block md:h-[400px] md:-mb-[200px]">
           <div className={cn('flex items-end justify-center pb-6 pt-28 md:pt-40', spacing)}>
-            {images.map((image, index) => {
-              const totalImages = images.length;
-              const middle = Math.floor(totalImages / 2);
-              const distanceFromMiddle = Math.abs(index - middle);
-              const staggerOffset = maxHeight - distanceFromMiddle * 20;
-              const zIndex = totalImages - index;
-              const isHovered = hoveredIndex === index;
-              const isOtherHovered = hoveredIndex !== null && hoveredIndex !== index;
-              const yOffset = isHovered ? -120 : isOtherHovered ? 0 : -staggerOffset;
-
-              return (
-                <motion.div
-                  key={`${image.src}-${index}`}
-                  className="group flex-shrink-0 cursor-pointer"
-                  style={{ zIndex }}
-                  initial={{
-                    transform: 'perspective(5000px) rotateY(-45deg) translateY(200px)',
-                    opacity: 0,
-                  }}
-                  animate={{
-                    transform: `perspective(5000px) rotateY(-45deg) translateY(${yOffset}px)`,
-                    opacity: 1,
-                  }}
-                  transition={{
-                    duration: 0.2,
-                    delay: index * 0.05,
-                    ease: [0.25, 0.1, 0.25, 1],
-                  }}
-                  onHoverStart={() => setHoveredIndex(index)}
-                  onHoverEnd={() => setHoveredIndex(null)}
-                  onClick={() => onImageClick?.(index)}
-                >
-                  <div
-                    className="relative aspect-video w-56 overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105 md:w-80 lg:w-96"
-                    style={{
-                      boxShadow: `
-                        rgba(0, 0, 0, 0.01) 0.796192px 0px 0.796192px 0px,
-                        rgba(0, 0, 0, 0.03) 2.41451px 0px 2.41451px 0px,
-                        rgba(0, 0, 0, 0.08) 6.38265px 0px 6.38265px 0px,
-                        rgba(0, 0, 0, 0.25) 20px 0px 20px 0px
-                      `,
-                    }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={image.src || '/placeholder.svg'}
-                      alt={image.alt}
-                      className="h-full w-full object-cover object-left-top"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </div>
-                </motion.div>
-              );
-            })}
+            {images.map((image, index) => (
+              <PortfolioStackImage
+                key={`${image.src}-${index}`}
+                image={image}
+                index={index}
+                totalImages={images.length}
+                maxHeight={maxHeight}
+                isHovered={hoveredIndex === index}
+                isOtherHovered={hoveredIndex !== null && hoveredIndex !== index}
+                onHoverStart={() => setHoveredIndex(index)}
+                onHoverEnd={() => setHoveredIndex(null)}
+                onImageClick={onImageClick}
+              />
+            ))}
           </div>
         </div>
 

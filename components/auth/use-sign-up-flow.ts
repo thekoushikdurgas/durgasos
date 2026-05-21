@@ -1,7 +1,7 @@
 'use client';
 
 import { useApolloClient, useMutation } from '@apollo/client/react';
-import { useReducedMotion } from 'motion/react';
+import { usePrefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -9,7 +9,7 @@ import type { AuthModalStatus } from '@/components/auth/AuthStatusModal';
 import { getAuthModalLoadingDurationMs } from '@/components/auth/AuthStatusModal';
 import { formatMutationFailure } from '@/components/auth/auth-mutation-helpers';
 import { notifyAuthSessionChanged } from '@/lib/auth-session-events';
-import { establishSession } from '@/lib/establish-session';
+import { establishSession, type EstablishSessionUserInput } from '@/lib/establish-session';
 import { EMAIL_REGISTERED, SIGN_IN, SIGN_UP } from '@/lib/graphql-auth';
 
 import type { RefObject } from 'react';
@@ -22,11 +22,17 @@ type AuthSessionGql = {
   expiresIn?: number | null;
 };
 
+type GqlUserPayload = {
+  id: string;
+  email?: string | null;
+  profile?: { username?: string | null; avatarUrl?: string | null } | null;
+};
+
 type SignUpMutationData = {
   signUp: {
     success: boolean;
     requiresConfirmation: boolean;
-    user?: { id: string; email?: string | null } | null;
+    user?: GqlUserPayload | null;
     session?: AuthSessionGql | null;
   };
 };
@@ -35,7 +41,7 @@ type SignInMutationData = {
   signIn: {
     success: boolean;
     requiresConfirmation: boolean;
-    user?: { id: string; email?: string | null } | null;
+    user?: GqlUserPayload | null;
     session?: AuthSessionGql | null;
   };
 };
@@ -47,7 +53,7 @@ type EmailRegisteredQueryData = {
 export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
   const router = useRouter();
   const client = useApolloClient();
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const reduceMotion = prefersReducedMotion === true;
 
   const mountedRef = useRef(true);
@@ -102,8 +108,21 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
   }, [reduceMotion, confettiRef]);
 
   const persistSessionAndGoHome = useCallback(
-    async (accessToken: string, refreshToken: string, expiresIn?: number | null) => {
-      await establishSession(accessToken, refreshToken, expiresIn ?? undefined);
+    async (
+      accessToken: string,
+      refreshToken: string,
+      expiresIn?: number | null,
+      gqlUser?: GqlUserPayload | null
+    ) => {
+      const user: EstablishSessionUserInput | undefined = gqlUser?.id
+        ? {
+            id: gqlUser.id,
+            email: gqlUser.email ?? null,
+            username: gqlUser.profile?.username ?? undefined,
+            avatar_url: gqlUser.profile?.avatarUrl ?? undefined,
+          }
+        : undefined;
+      await establishSession(accessToken, refreshToken, expiresIn ?? undefined, user);
       notifyAuthSessionChanged();
       router.push('/');
       router.refresh();
@@ -127,9 +146,16 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
       if (!payload?.success || !sess?.accessToken || !sess.refreshToken) {
         throw new Error('Invalid email or password');
       }
-      await persistSessionAndGoHome(sess.accessToken, sess.refreshToken, sess.expiresIn);
+      await persistSessionAndGoHome(
+        sess.accessToken,
+        sess.refreshToken,
+        sess.expiresIn,
+        payload?.user
+      );
+      setModalStatus('closed');
     } catch (err) {
-      setModalErrorMessage(err instanceof Error ? err.message : 'Sign in failed');
+      const msg = err instanceof Error ? err.message : 'Sign in failed';
+      setModalErrorMessage(msg);
       setModalStatus('error');
     }
   }, [
@@ -180,7 +206,12 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
         if (!mountedRef.current) return;
         fireSideCanons();
         try {
-          await persistSessionAndGoHome(sess.accessToken, sess.refreshToken, sess.expiresIn);
+          await persistSessionAndGoHome(
+            sess.accessToken,
+            sess.refreshToken,
+            sess.expiresIn,
+            payload?.user
+          );
         } catch (err) {
           setModalErrorMessage(err instanceof Error ? err.message : 'Session error');
           setModalStatus('error');
@@ -212,7 +243,8 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
         setIsExistingAccount(data.emailRegistered);
         setAuthStep('password');
       } catch (err) {
-        setModalErrorMessage(err instanceof Error ? err.message : 'Could not verify email');
+        const msg = err instanceof Error ? err.message : 'Could not verify email';
+        setModalErrorMessage(msg);
         setModalStatus('error');
       } finally {
         setCheckingEmail(false);

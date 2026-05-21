@@ -192,6 +192,7 @@ export const APP_SUPPORTED_EXTENSIONS: Record<AppId, readonly string[]> = {
   contacts: [],
   drive: [],
   todo: [],
+  repo: [],
   viewer: [],
 };
 

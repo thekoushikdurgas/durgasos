@@ -66,4 +66,12 @@ export {
   AddLinkedGoogleAccountDocument as ADD_LINKED_GOOGLE_ACCOUNT,
   RemoveLinkedGoogleAccountDocument as REMOVE_LINKED_GOOGLE_ACCOUNT,
   RefreshLinkedGoogleAccountTokenDocument as REFRESH_LINKED_GOOGLE_ACCOUNT_TOKEN,
+  LinkedGithubAccountsDocument as LINKED_GITHUB_ACCOUNTS,
+  GithubUserDocument as GITHUB_USER,
+  GithubReposDocument as GITHUB_REPOS,
+  GithubStarredDocument as GITHUB_STARRED,
+  GithubReadmeDocument as GITHUB_README,
+  AddLinkedGithubAccountDocument as ADD_LINKED_GITHUB_ACCOUNT,
+  RemoveLinkedGithubAccountDocument as REMOVE_LINKED_GITHUB_ACCOUNT,
+  JobStatusDocument as JOB_STATUS,
 } from '@/graphql/generated/graphql';

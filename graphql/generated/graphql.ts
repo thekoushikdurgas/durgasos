@@ -142,6 +142,51 @@ export type RunCouncilMutationVariables = Exact<{
 
 export type RunCouncilMutation = { runCouncil: unknown };
 
+export type LinkedGithubAccountsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type LinkedGithubAccountsQuery = { linkedGithubAccounts: unknown };
+
+export type GithubUserQueryVariables = Exact<{
+  username: string;
+  githubUserId?: string | null | undefined;
+}>;
+
+export type GithubUserQuery = { githubUser: unknown };
+
+export type GithubReposQueryVariables = Exact<{
+  username: string;
+  sort?: string | null | undefined;
+  githubUserId?: string | null | undefined;
+}>;
+
+export type GithubReposQuery = { githubRepos: unknown };
+
+export type GithubStarredQueryVariables = Exact<{
+  username: string;
+  githubUserId?: string | null | undefined;
+}>;
+
+export type GithubStarredQuery = { githubStarred: unknown };
+
+export type GithubReadmeQueryVariables = Exact<{
+  username: string;
+  githubUserId?: string | null | undefined;
+}>;
+
+export type GithubReadmeQuery = { githubReadme: unknown };
+
+export type AddLinkedGithubAccountMutationVariables = Exact<{
+  params: unknown;
+}>;
+
+export type AddLinkedGithubAccountMutation = { addLinkedGithubAccount: unknown };
+
+export type RemoveLinkedGithubAccountMutationVariables = Exact<{
+  githubUserId: string;
+}>;
+
+export type RemoveLinkedGithubAccountMutation = { removeLinkedGithubAccount: unknown };
+
 export type GmailListMessagesQueryVariables = Exact<{
   params?: unknown;
 }>;
@@ -288,6 +333,20 @@ export type SaveFileAssociationsMutation = {
     fileAssociations: unknown;
     updatedAt: string;
   };
+};
+
+export type JobStatusQueryVariables = Exact<{
+  jobId: string;
+}>;
+
+export type JobStatusQuery = {
+  jobStatus: {
+    jobId: string;
+    status: string;
+    result: unknown;
+    error: string | null;
+    updatedAt: number;
+  } | null;
 };
 
 export type LinkedGoogleAccountsQueryVariables = Exact<{ [key: string]: never }>;
@@ -552,6 +611,20 @@ export type WeatherForecastQueryVariables = Exact<{
 }>;
 
 export type WeatherForecastQuery = { weatherForecast: unknown };
+
+export type WidgetLayoutQueryVariables = Exact<{ [key: string]: never }>;
+
+export type WidgetLayoutQuery = {
+  widgetLayout: { id: string; ownerId: string; layoutJson: unknown; updatedAt: string } | null;
+};
+
+export type SaveWidgetLayoutMutationVariables = Exact<{
+  layoutJson: unknown;
+}>;
+
+export type SaveWidgetLayoutMutation = {
+  saveWidgetLayout: { id: string; ownerId: string; layoutJson: unknown; updatedAt: string };
+};
 
 export type WorkflowDefinitionsQueryVariables = Exact<{ [key: string]: never }>;
 
@@ -1262,6 +1335,292 @@ export const RunCouncilDocument = {
     },
   ],
 } as unknown as DocumentNode<RunCouncilMutation, RunCouncilMutationVariables>;
+export const LinkedGithubAccountsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'LinkedGithubAccounts' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [{ kind: 'Field', name: { kind: 'Name', value: 'linkedGithubAccounts' } }],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LinkedGithubAccountsQuery, LinkedGithubAccountsQueryVariables>;
+export const GithubUserDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GithubUser' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'username' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'githubUserId' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'githubUser' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'username' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'username' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'githubUserId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'githubUserId' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GithubUserQuery, GithubUserQueryVariables>;
+export const GithubReposDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GithubRepos' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'username' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'sort' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'githubUserId' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'githubRepos' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'username' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'username' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'sort' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'sort' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'githubUserId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'githubUserId' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GithubReposQuery, GithubReposQueryVariables>;
+export const GithubStarredDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GithubStarred' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'username' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'githubUserId' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'githubStarred' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'username' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'username' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'githubUserId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'githubUserId' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GithubStarredQuery, GithubStarredQueryVariables>;
+export const GithubReadmeDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GithubReadme' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'username' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'githubUserId' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'githubReadme' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'username' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'username' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'githubUserId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'githubUserId' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GithubReadmeQuery, GithubReadmeQueryVariables>;
+export const AddLinkedGithubAccountDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'AddLinkedGithubAccount' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'params' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'JSON' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addLinkedGithubAccount' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'params' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'params' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AddLinkedGithubAccountMutation,
+  AddLinkedGithubAccountMutationVariables
+>;
+export const RemoveLinkedGithubAccountDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RemoveLinkedGithubAccount' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'githubUserId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeLinkedGithubAccount' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'githubUserId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'githubUserId' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RemoveLinkedGithubAccountMutation,
+  RemoveLinkedGithubAccountMutationVariables
+>;
 export const GmailListMessagesDocument = {
   kind: 'Document',
   definitions: [
@@ -1986,6 +2345,52 @@ export const SaveFileAssociationsDocument = {
     },
   ],
 } as unknown as DocumentNode<SaveFileAssociationsMutation, SaveFileAssociationsMutationVariables>;
+export const JobStatusDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'JobStatus' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'jobId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'jobStatus' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'jobId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'jobId' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'result' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<JobStatusQuery, JobStatusQueryVariables>;
 export const LinkedGoogleAccountsDocument = {
   kind: 'Document',
   definitions: [
@@ -3300,6 +3705,79 @@ export const WeatherForecastDocument = {
     },
   ],
 } as unknown as DocumentNode<WeatherForecastQuery, WeatherForecastQueryVariables>;
+export const WidgetLayoutDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'WidgetLayout' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'widgetLayout' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'ownerId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'layoutJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<WidgetLayoutQuery, WidgetLayoutQueryVariables>;
+export const SaveWidgetLayoutDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'SaveWidgetLayout' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'layoutJson' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'JSON' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'saveWidgetLayout' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'layoutJson' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'layoutJson' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'ownerId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'layoutJson' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SaveWidgetLayoutMutation, SaveWidgetLayoutMutationVariables>;
 export const WorkflowDefinitionsDocument = {
   kind: 'Document',
   definitions: [

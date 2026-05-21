@@ -50,15 +50,12 @@ const nextConfig: NextConfig = {
       if (process.env.NODE_ENV === 'development') return 'http://localhost:8000';
       return '';
     })();
-    const graphqlDest = backendOrigin ? `${backendOrigin}/graphql` : '';
-    const sessionDest = backendOrigin ? `${backendOrigin}/api/auth/session` : '';
+    /** GraphQL: browser calls ai.backend directly (`getGraphqlHttpUrl`). Session cookies: `app/api/auth/session/route.ts`. */
     const filesDest = backendOrigin ? `${backendOrigin}/files/:path*` : '';
     return [
       fav,
-      ...(graphqlDest && sessionDest && filesDest
+      ...(filesDest
         ? [
-            { source: '/graphql', destination: graphqlDest },
-            { source: '/api/auth/session', destination: sessionDest },
             /** Same-origin signed URLs (`storageSignedHttpUrl`); ai.backend serves bytes under STORAGE_URL_PREFIX (default `/files`). */
             { source: '/files/:path*', destination: filesDest },
           ]
@@ -98,7 +95,7 @@ const nextConfig: NextConfig = {
     ],
   },
   output: 'standalone',
-  transpilePackages: ['motion'],
+  transpilePackages: ['react-motion'],
   /** Next 16 defaults to Turbopack; empty config acknowledges intent alongside `webpack` (e.g. PWA / dev HMR hooks). */
   turbopack: {},
   webpack: (config, { dev }) => {

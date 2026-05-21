@@ -20,3 +20,13 @@ export function readGoogleTokenPayload(raw: unknown): {
   }
   return { accessToken, expiresAt };
 }
+
+/** True when expiresAt is in the past (supports seconds or ms since epoch). */
+export function isGoogleAccessTokenExpired(
+  expiresAt: number | null,
+  nowMs: number = Date.now()
+): boolean {
+  if (expiresAt == null || !Number.isFinite(expiresAt)) return false;
+  const expMs = expiresAt > 1e12 ? expiresAt : expiresAt * 1000;
+  return nowMs >= expMs - 60_000;
+}

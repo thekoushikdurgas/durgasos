@@ -1,15 +1,21 @@
 'use client';
 
-import { useOS } from '@/components/os-context';
-import { motion, useDragControls } from 'motion/react';
+import React from 'react';
 import { X, Minus, Square, Copy } from 'lucide-react';
+
+import { SpringBox } from '@/components/motion/SpringBox';
+import { usePointerDragSpring } from '@/components/motion/use-pointer-drag-spring';
+import { useOS } from '@/components/os-context';
+import { overlaySpring } from '@/lib/motion/spring-presets';
+import { useReducedMotionStyle } from '@/lib/motion/use-reduced-motion-style';
+import { usePrefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
 import { APPS } from '@/lib/apps';
 import { cn } from '@/lib/utils';
 import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { WindowLaunchProvider } from '@/components/window-launch-context';
 import type { LaunchPayload } from '@/lib/window-launch';
-import React from 'react';
 import { useIsMobile } from '@/hooks/use-is-mobile';
+import { clampWindowZIndex, MAX_WINDOW_Z_INDEX } from '@/lib/shell-z-index';
 
 interface WindowProps {
   id: string;
@@ -31,61 +37,67 @@ export function Window({
   children,
 }: WindowProps) {
   const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindow } = useOS();
-  const dragControls = useDragControls();
   const isMobile = useIsMobile();
+  const reduced = usePrefersReducedMotion();
+  const { style: dragStyle, dragHandlers } = usePointerDragSpring({ x: 0, y: 0 });
 
   const app = APPS[appId as keyof typeof APPS];
   const AppIcon = app.icon;
   const isActive = activeWindow === id;
   const layoutAsMaximized = isMaximized || isMobile;
 
-  /** Only the focused maximized window gets the shell stack boost; otherwise new windows stay under z≈88 and look “open in the background”. */
-  const effectiveZ = layoutAsMaximized && isActive ? Math.max(zIndex, 88) : zIndex;
+  const stackZ = clampWindowZIndex(zIndex);
+  const effectiveZ =
+    layoutAsMaximized && isActive ? Math.min(Math.max(stackZ, 50), MAX_WINDOW_Z_INDEX) : stackZ;
+
+  const enterStyle = useReducedMotionStyle(
+    {
+      opacity: 1,
+      scale: 1,
+      x: layoutAsMaximized ? 0 : (dragStyle.x as number),
+      y: layoutAsMaximized ? 0 : (dragStyle.y as number),
+    },
+    overlaySpring
+  );
 
   if (isMinimized) return null;
 
+  const canDrag = !layoutAsMaximized && !isMobile;
+
   return (
-    <motion.div
+    <SpringBox
+      data-os-window
       className={cn(
-        'absolute flex flex-col overflow-hidden transition-[opacity,box-shadow,border-color] duration-200',
+        'absolute flex flex-col overflow-hidden transition-[opacity,box-shadow,border-color] duration-200 motion-gpu',
         layoutAsMaximized
           ? 'inset-0 rounded-none'
           : 'rounded-xl border border-white/20 w-[800px] h-[550px]',
         isActive ? 'border-white/30' : ''
       )}
-      style={{
+      defaultStyle={{ opacity: 0, scale: 0.95, x: 0, y: 0 }}
+      style={
+        reduced
+          ? { opacity: 1, scale: 1, x: 0, y: 0 }
+          : {
+              opacity: enterStyle.opacity,
+              scale: enterStyle.scale,
+              x: canDrag ? dragStyle.x : 0,
+              y: canDrag ? dragStyle.y : 0,
+            }
+      }
+      mapStyle={(s) => ({
         zIndex: effectiveZ,
         top: layoutAsMaximized ? 0 : '10%',
         left: layoutAsMaximized ? 0 : '15%',
+        opacity: s.opacity,
+        transform: `translate3d(${s.x ?? 0}px, ${s.y ?? 0}px, 0) scale(${s.scale ?? 1})`,
         boxShadow: isActive
           ? 'var(--shadow-window-active, 0 24px 80px rgba(0,0,0,0.65))'
           : 'var(--shadow-window-inactive, 0 8px 32px rgba(0,0,0,0.3))',
-      }}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{
-        opacity: 1,
-        scale: 1,
-        ...(layoutAsMaximized ? { x: 0, y: 0 } : {}),
-      }}
-      transition={
-        layoutAsMaximized
-          ? {
-              x: { type: 'tween', duration: 0, ease: 'linear' },
-              y: { type: 'tween', duration: 0, ease: 'linear' },
-              opacity: { duration: 0.2 },
-              scale: { duration: 0.2 },
-            }
-          : { duration: 0.2 }
-      }
-      exit={{ opacity: 0, scale: 0.95 }}
-      drag={!layoutAsMaximized}
-      dragControls={dragControls}
-      dragListener={false}
-      dragMomentum={false}
-      onPointerDown={(e) => {
-        const fromTitle = (e.target as HTMLElement | null)?.closest?.('[data-window-titlebar]');
-        if (!fromTitle) focusWindow(id);
-      }}
+        position: 'absolute',
+        display: 'flex',
+        flexDirection: 'column',
+      })}
     >
       <LiquidGlassSurface
         variant="liquid"
@@ -94,7 +106,6 @@ export function Window({
           layoutAsMaximized && 'rounded-none'
         )}
       >
-        {/* Title bar: Win11 layout (icon + title left; caption buttons right), dark Fluent tokens */}
         <div
           data-window-titlebar
           className={cn(
@@ -102,12 +113,11 @@ export function Window({
             isActive ? 'window-titlebar--active' : 'window-titlebar--inactive',
             isMobile && 'touch-none'
           )}
+          {...(canDrag ? dragHandlers : {})}
           onPointerDown={(e) => {
             focusWindow(id);
             if ((e.target as HTMLElement).closest('[data-window-caption]')) return;
-            if (!isMaximized && !isMobile) {
-              dragControls.start(e);
-            }
+            dragHandlers.onPointerDown(e);
             e.stopPropagation();
           }}
           onDoubleClick={(e) => {
@@ -187,13 +197,15 @@ export function Window({
           </div>
         </div>
 
-        {/* App Content */}
-        <div className="flex-1 bg-slate-950 relative overflow-hidden pointer-events-auto">
+        <div
+          className="relative flex-1 overflow-hidden bg-slate-950 pointer-events-auto"
+          onPointerDown={() => focusWindow(id)}
+        >
           <WindowLaunchProvider value={{ ...(launch ?? {}), windowId: id }}>
             {children}
           </WindowLaunchProvider>
         </div>
       </LiquidGlassSurface>
-    </motion.div>
+    </SpringBox>
   );
 }

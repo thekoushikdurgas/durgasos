@@ -1,9 +1,10 @@
 'use client';
 
-import { useQuery } from '@apollo/client/react';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useOS } from '@/components/os-context';
+import { useCachedQuery } from '@/hooks/use-cached-query';
 import {
   GET_LINKED_GOOGLE_ACCOUNT_TOKEN,
   GOOGLE_PEOPLE_LIST_CONTACTS,
@@ -11,6 +12,7 @@ import {
   ME,
 } from '@/lib/graphql-modules';
 import { parseLinkedGoogleAccounts } from '@/lib/linked-google-accounts';
+import { CACHE_TTL_MS } from '@/lib/local-cache';
 import { readGoogleTokenPayload } from '@/lib/read-google-token-payload';
 
 type PeoplePayload = {
@@ -23,6 +25,8 @@ export function ContactsApp() {
   const { openApp } = useOS();
   const meQ = useQuery(ME);
   const authed = Boolean(meQ.data?.me?.id);
+  const meId = meQ.data?.me?.id ?? '';
+  const client = useApolloClient();
 
   const linkedQ = useQuery(LINKED_GOOGLE_ACCOUNTS, {
     skip: !authed,
@@ -60,22 +64,34 @@ export function ContactsApp() {
 
   const [q, setQ] = useState('');
 
-  const peopleQ = useQuery(GOOGLE_PEOPLE_LIST_CONTACTS, {
-    skip: !accessToken,
-    variables: {
-      params: {
-        access_token: accessToken,
-        page_size: 200,
-      },
+  const peopleCacheKey =
+    accessToken && googleUserId && meId ? `contacts:${meId}:${googleUserId}` : 'contacts:__idle__';
+
+  const peopleCached = useCachedQuery<PeoplePayload | null>(
+    peopleCacheKey,
+    async () => {
+      if (!accessToken || !googleUserId || !meId) return null;
+      const { data } = await client.query({
+        query: GOOGLE_PEOPLE_LIST_CONTACTS,
+        variables: {
+          params: {
+            access_token: accessToken,
+            page_size: 200,
+          },
+        },
+        fetchPolicy: 'network-only',
+      });
+      return (data?.googlePeopleListContacts as PeoplePayload | undefined) ?? null;
     },
-    fetchPolicy: 'cache-and-network',
-  });
+    CACHE_TTL_MS.contacts,
+    { backgroundRefreshMs: 120_000 }
+  );
 
   const connections = useMemo(() => {
-    const p = peopleQ.data?.googlePeopleListContacts as PeoplePayload | undefined;
+    const p = peopleCached.data;
     if (!p?.success || !Array.isArray(p.connections)) return [];
     return p.connections;
-  }, [peopleQ.data?.googlePeopleListContacts]);
+  }, [peopleCached.data]);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -150,10 +166,10 @@ export function ContactsApp() {
           <p className="text-xs text-white/40">Loading token…</p>
         ) : !accessToken ? (
           <p className="text-xs text-amber-200/90">No access token. Re-link in Settings.</p>
-        ) : peopleQ.loading ? (
+        ) : peopleCached.loading ? (
           <p className="text-xs text-white/40">Loading contacts…</p>
-        ) : peopleQ.error ? (
-          <p className="text-xs text-red-300/90">{peopleQ.error.message}</p>
+        ) : peopleCached.error ? (
+          <p className="text-xs text-red-300/90">{peopleCached.error.message}</p>
         ) : (
           <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((c, i) => {

@@ -1,0 +1,17 @@
+query WidgetLayout {
+  widgetLayout {
+    id
+    ownerId
+    layoutJson
+    updatedAt
+  }
+}
+
+mutation SaveWidgetLayout($layoutJson: JSON!) {
+  saveWidgetLayout(layoutJson: $layoutJson) {
+    id
+    ownerId
+    layoutJson
+    updatedAt
+  }
+}

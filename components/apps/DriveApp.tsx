@@ -1,9 +1,10 @@
 'use client';
 
-import { useQuery } from '@apollo/client/react';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useOS } from '@/components/os-context';
+import { useCachedQuery } from '@/hooks/use-cached-query';
 import {
   GET_LINKED_GOOGLE_ACCOUNT_TOKEN,
   GOOGLE_DRIVE_LIST_FILES,
@@ -11,6 +12,7 @@ import {
   ME,
 } from '@/lib/graphql-modules';
 import { parseLinkedGoogleAccounts } from '@/lib/linked-google-accounts';
+import { CACHE_TTL_MS } from '@/lib/local-cache';
 import { readGoogleTokenPayload } from '@/lib/read-google-token-payload';
 
 type DrivePayload = {
@@ -32,6 +34,8 @@ export function DriveApp() {
   const { openApp } = useOS();
   const meQ = useQuery(ME);
   const authed = Boolean(meQ.data?.me?.id);
+  const meId = meQ.data?.me?.id ?? '';
+  const client = useApolloClient();
 
   const linkedQ = useQuery(LINKED_GOOGLE_ACCOUNTS, {
     skip: !authed,
@@ -67,23 +71,37 @@ export function DriveApp() {
     return readGoogleTokenPayload(raw).accessToken;
   }, [tokenQ.data?.getLinkedGoogleAccountToken]);
 
-  const driveQ = useQuery(GOOGLE_DRIVE_LIST_FILES, {
-    skip: !accessToken,
-    variables: {
-      params: {
-        access_token: accessToken,
-        page_size: 50,
-        q: 'trashed = false',
-      },
+  const driveCacheKey =
+    accessToken && googleUserId && meId
+      ? `drive_files:${meId}:${googleUserId}:root`
+      : 'drive_files:__idle__';
+
+  const driveCached = useCachedQuery<DrivePayload | null>(
+    driveCacheKey,
+    async () => {
+      if (!accessToken || !googleUserId || !meId) return null;
+      const { data } = await client.query({
+        query: GOOGLE_DRIVE_LIST_FILES,
+        variables: {
+          params: {
+            access_token: accessToken,
+            page_size: 50,
+            q: 'trashed = false',
+          },
+        },
+        fetchPolicy: 'network-only',
+      });
+      return (data?.googleDriveListFiles as DrivePayload | undefined) ?? null;
     },
-    fetchPolicy: 'cache-and-network',
-  });
+    CACHE_TTL_MS.drive_files,
+    { backgroundRefreshMs: 45_000 }
+  );
 
   const files = useMemo(() => {
-    const p = driveQ.data?.googleDriveListFiles as DrivePayload | undefined;
+    const p = driveCached.data;
     if (!p?.success || !Array.isArray(p.files)) return [];
     return p.files;
-  }, [driveQ.data?.googleDriveListFiles]);
+  }, [driveCached.data]);
 
   if (!authed) {
     return (
@@ -132,10 +150,10 @@ export function DriveApp() {
           <p className="p-3 text-xs text-white/40">Loading token…</p>
         ) : !accessToken ? (
           <p className="p-3 text-xs text-amber-200/90">No access token. Re-link in Settings.</p>
-        ) : driveQ.loading ? (
+        ) : driveCached.loading ? (
           <p className="p-3 text-xs text-white/40">Loading files…</p>
-        ) : driveQ.error ? (
-          <p className="p-3 text-xs text-red-300/90">{driveQ.error.message}</p>
+        ) : driveCached.error ? (
+          <p className="p-3 text-xs text-red-300/90">{driveCached.error.message}</p>
         ) : (
           <table className="w-full min-w-[20rem] border-collapse text-left text-xs">
             <thead>

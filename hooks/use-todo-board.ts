@@ -19,6 +19,7 @@ import {
   type TodoCard,
   type TodoColumn,
   TODO_COLUMNS,
+  sortCardsForKanban,
 } from '@/lib/todo-format';
 
 function notice(message: string) {
@@ -26,7 +27,20 @@ function notice(message: string) {
   window.dispatchEvent(new CustomEvent('durgasos-notice', { detail: { message } }));
 }
 
-export function useTodoBoard(accessToken: string | null, workspaceId: string | null) {
+function isGoogleAuthGraphQlError(e: unknown): boolean {
+  if (!e || typeof e !== 'object') return false;
+  const err = e as { graphQLErrors?: { message?: string }[]; message?: string };
+  const text = [err.message, ...(err.graphQLErrors?.map((g) => g.message) ?? [])]
+    .filter(Boolean)
+    .join(' ');
+  return /401|UNAUTHENTICATED|invalid authentication credentials/i.test(text);
+}
+
+export function useTodoBoard(
+  accessToken: string | null,
+  workspaceId: string | null,
+  onAuthError?: () => void
+) {
   const client = useApolloClient();
   const [listIds, setListIds] = useState<KanbanListIds | null>(null);
   const [cards, setCards] = useState<TodoCard[]>([]);
@@ -79,12 +93,14 @@ export function useTodoBoard(accessToken: string | null, workspaceId: string | n
         })
       );
       setCards(chunks.flat());
-    } catch {
+    } catch (e) {
+      const authFail = isGoogleAuthGraphQlError(e);
+      if (authFail) onAuthError?.();
       notice('Failed to load tasks.');
     } finally {
       setBusy(false);
     }
-  }, [accessToken, workspaceId, client]);
+  }, [accessToken, workspaceId, client, onAuthError]);
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -95,13 +111,17 @@ export function useTodoBoard(accessToken: string | null, workspaceId: string | n
 
   const onCardsChange = useCallback(
     async (next: TodoCard[], movedCardId: string) => {
+      const orderedNext = sortCardsForKanban(next);
       let prev: TodoCard[] = [];
       setCards((current) => {
         prev = current;
-        return next;
+        return orderedNext;
       });
-      const diff = buildMoveCommit(prev, next, movedCardId);
-      if (!diff || !accessToken) return;
+      const diff = buildMoveCommit(prev, orderedNext, movedCardId);
+      if (!diff || !accessToken) {
+        if (!diff) setCards(prev);
+        return;
+      }
       try {
         const params: Record<string, unknown> = {
           access_token: accessToken,
@@ -114,30 +134,6 @@ export function useTodoBoard(accessToken: string | null, workspaceId: string | n
         if (diff.previousId) {
           params.previous = diff.previousId;
         }
-        // #region agent log
-        fetch('http://127.0.0.1:7531/ingest/632941fc-04f7-4b75-9df5-2d52b029d540', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Debug-Session-Id': '2cdf97',
-          },
-          body: JSON.stringify({
-            sessionId: '2cdf97',
-            runId: 'pre-fix',
-            hypothesisId: 'A',
-            location: 'use-todo-board.ts:onCardsChange',
-            message: 'google_move_params',
-            data: {
-              taskId: diff.taskId,
-              sourceListId: diff.sourceListId,
-              targetListId: diff.targetListId,
-              previousId: diff.previousId,
-              crossList: diff.sourceListId !== diff.targetListId,
-            },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
         await client.mutate({
           mutation: GOOGLE_TASKS_MOVE_TASK,
           variables: { params },

@@ -17,6 +17,7 @@ import { useMutation } from '@apollo/client/react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useWindowLaunch } from '@/components/window-launch-context';
+import { useGoogleDriveLaunchSource } from '@/hooks/use-google-drive-launch-source';
 import { STORAGE_GET_URL } from '@/lib/graphql-modules';
 import { rewriteStorageHtmlAssets } from '@/lib/storage-html-asset-rewrite';
 
@@ -188,11 +189,23 @@ export function BrowserApp() {
   );
 
   const launch = useWindowLaunch();
+  const driveSrc = useGoogleDriveLaunchSource(launch);
   const launchAppliedRef = useRef(false);
   const [getUrl] = useMutation(STORAGE_GET_URL);
 
   useEffect(() => {
     if (launchAppliedRef.current || !launch) return;
+    if (driveSrc.objectUrl && launch.fileName?.match(/\.pdf$/i)) {
+      launchAppliedRef.current = true;
+      const id = activeId;
+      const title = launch.fileName ?? 'PDF';
+      queueMicrotask(() => {
+        setTabs((prev) =>
+          prev.map((x) => (x.id === id ? { ...x, url: driveSrc.objectUrl!, title } : x))
+        );
+      });
+      return;
+    }
     if (launch.initialUrl) {
       launchAppliedRef.current = true;
       const url = launch.initialUrl;
@@ -316,7 +329,7 @@ export function BrowserApp() {
         );
       });
     }
-  }, [launch, go, activeId, getUrl]);
+  }, [launch, go, activeId, getUrl, driveSrc.objectUrl]);
 
   const newTab = useCallback(() => {
     const id = tabId();

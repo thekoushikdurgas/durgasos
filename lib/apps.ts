@@ -30,6 +30,7 @@ import {
   Code,
   FileSearch,
   ListTodo,
+  FolderGit2,
 } from 'lucide-react';
 
 export type AppCategory = 'core' | 'workflows' | 'data' | 'system';
@@ -64,7 +65,8 @@ export type AppId =
   | 'calendar'
   | 'contacts'
   | 'drive'
-  | 'todo';
+  | 'todo'
+  | 'repo';
 
 export interface AppDefinition {
   id: AppId;
@@ -285,6 +287,13 @@ export const APPS: Record<AppId, AppDefinition> = {
     color: 'text-violet-300',
     category: 'core',
   },
+  repo: {
+    id: 'repo',
+    name: 'Repo',
+    icon: FolderGit2,
+    color: 'text-purple-400',
+    category: 'core',
+  },
 };
 
 export const APP_CATEGORY_LABELS: Record<AppCategory, string> = {
@@ -326,4 +335,5 @@ export const APP_DESCRIPTIONS: Record<AppId, string> = {
   contacts: 'Read-only Google Contacts.',
   drive: 'Read-only Google Drive file listing.',
   todo: 'Kanban tasks synced with Google Tasks.',
+  repo: 'GitHub profile, repositories, and stars (public or linked account).',
 };

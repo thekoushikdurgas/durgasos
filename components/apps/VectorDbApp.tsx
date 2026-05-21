@@ -1,13 +1,14 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
+import { useLazyQuery, useMutation, useQuery, useApolloClient } from '@apollo/client/react';
 import { Database, RefreshCw, Search, Trash2, Upload } from 'lucide-react';
 
 import { JsonBlock } from '@/components/apps/ModuleAppShell';
 import { Input } from '@/components/ui/input';
 import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getJobIdFromEnvelope, isAsyncJobResponse, waitForGraphqlJob } from '@/hooks/use-async-job';
 import {
   RAG_DELETE,
   RAG_DOCUMENTS,
@@ -24,6 +25,7 @@ function asRecord(x: unknown): Record<string, unknown> | null {
 }
 
 export function VectorDbApp() {
+  const client = useApolloClient();
   const [collectionInput, setCollectionInput] = useState('');
   const collectionName = collectionInput.trim() || undefined;
 
@@ -99,14 +101,20 @@ export function VectorDbApp() {
     if (collectionName) params.collection_name = collectionName;
     try {
       const { data } = await ingestMut({ variables: { params } });
-      setIngestResult(data?.ragIngest);
+      const raw = data?.ragIngest;
+      if (isAsyncJobResponse(raw)) {
+        const result = await waitForGraphqlJob(client, getJobIdFromEnvelope(raw));
+        setIngestResult(result);
+      } else {
+        setIngestResult(raw);
+      }
       void listQ.refetch();
       void docsQ.refetch();
       void statsQ.refetch();
     } catch (e) {
       setIngestResult({ error: e instanceof Error ? e.message : String(e) });
     }
-  }, [ingestMut, ingestText, ingestId, collectionName, listQ, docsQ, statsQ]);
+  }, [ingestMut, ingestText, ingestId, collectionName, listQ, docsQ, statsQ, client]);
 
   const doUpload = useCallback(async () => {
     setIngestResult(null);

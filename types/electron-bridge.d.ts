@@ -2,6 +2,10 @@
 export interface ElectronBridge {
   platform: NodeJS.Platform;
   openExternal: (url: string) => Promise<void>;
+  minimize: () => void;
+  maximize: () => void;
+  close: () => void;
+  isMaximized: () => Promise<boolean>;
 }
 
 declare global {

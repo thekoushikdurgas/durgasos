@@ -1,58 +1,83 @@
-import { clearStoredAuthTokens, writeStoredAuthTokens } from '@/lib/auth-tokens-local';
+import {
+  clearStoredAuthTokens,
+  mergeStoredUser,
+  readStoredAuthTokens,
+  type StoredUser,
+  writeStoredAuthTokens,
+} from '@/lib/auth-tokens-local';
+import { notifyClearApolloCache } from '@/lib/apollo-cache-events';
 import { notifyAuthSessionChanged } from '@/lib/auth-session-events';
-import { fetchBackendGraphql } from '@/lib/backend-http';
+import { dispatchOsNotification } from '@/lib/notifications';
 
-const ESTABLISH_SESSION = `mutation EstablishSession($accessToken: String!, $refreshToken: String!, $expiresIn: Int) {
-  establishSession(accessToken: $accessToken, refreshToken: $refreshToken, expiresIn: $expiresIn) {
-    ok
-    error
-  }
-}`;
-
-const CLEAR_SESSION = `mutation ClearSession {
-  clearSession {
-    ok
-    error
-  }
-}`;
+export type EstablishSessionUserInput = Pick<StoredUser, 'id' | 'email'> &
+  Partial<Pick<StoredUser, 'username' | 'avatar_url'>>;
 
 async function postSession(
   accessToken: string,
   refreshToken: string,
   expiresIn?: number | null
 ): Promise<Response> {
-  return fetchBackendGraphql({
-    query: ESTABLISH_SESSION,
-    variables: {
+  return fetch('/api/auth/session', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
       accessToken,
       refreshToken,
       expiresIn: expiresIn ?? null,
-    },
+    }),
   });
 }
 
 function sessionMutationOk(json: unknown): boolean {
   if (!json || typeof json !== 'object') return false;
-  const data = (json as { data?: { establishSession?: { ok?: boolean } } }).data;
-  return Boolean(data?.establishSession?.ok);
+  return Boolean((json as { ok?: boolean }).ok);
+}
+
+function persistTokensAndUser(
+  accessToken: string,
+  refreshToken: string,
+  expiresIn?: number | null,
+  user?: EstablishSessionUserInput | null
+): boolean {
+  const stored = writeStoredAuthTokens(accessToken, refreshToken, expiresIn);
+  if (user?.id) {
+    mergeStoredUser(
+      {
+        id: user.id,
+        email: user.email ?? null,
+        username: user.username,
+        avatar_url: user.avatar_url,
+      },
+      expiresIn
+    );
+  }
+  return stored;
 }
 
 export async function tryEstablishSession(
   accessToken: string,
   refreshToken: string,
-  expiresIn?: number | null
+  expiresIn?: number | null,
+  user?: EstablishSessionUserInput | null,
+  options?: { notify?: boolean }
 ): Promise<boolean> {
   const res = await postSession(accessToken, refreshToken, expiresIn);
   const json = (await res.json()) as unknown;
   if (!res.ok || !sessionMutationOk(json)) return false;
-  writeStoredAuthTokens(accessToken, refreshToken);
+  const stored = persistTokensAndUser(accessToken, refreshToken, expiresIn, user);
+  if (!stored || !readStoredAuthTokens()) return false;
+  if (options?.notify !== false) {
+    notifyAuthSessionChanged();
+  }
   return true;
 }
 
 export async function establishSession(
   accessToken: string,
   refreshToken: string,
-  expiresIn?: number | null
+  expiresIn?: number | null,
+  user?: EstablishSessionUserInput | null
 ): Promise<void> {
   const res = await postSession(accessToken, refreshToken, expiresIn);
   const text = await res.text();
@@ -65,27 +90,27 @@ export async function establishSession(
   if (!res.ok || !sessionMutationOk(json)) {
     throw new Error(text || 'Failed to save session');
   }
-  writeStoredAuthTokens(accessToken, refreshToken);
+  if (!persistTokensAndUser(accessToken, refreshToken, expiresIn, user)) {
+    throw new Error('Failed to persist session tokens in this browser');
+  }
+  dispatchOsNotification({
+    title: 'Signed in',
+    body: user?.email ?? undefined,
+    level: 'success',
+  });
 }
 
 export async function clearSession(): Promise<void> {
   try {
-    const res = await fetchBackendGraphql({ query: CLEAR_SESSION });
-    const text = await res.text();
-    let json: unknown;
-    try {
-      json = JSON.parse(text) as unknown;
-    } catch {
-      json = null;
-    }
-    const ok = Boolean(
-      (json as { data?: { clearSession?: { ok?: boolean } } } | null)?.data?.clearSession?.ok
-    );
-    if (!res.ok || !ok) {
+    const res = await fetch('/api/auth/session', { method: 'DELETE', credentials: 'include' });
+    if (!res.ok) {
+      const text = await res.text();
       throw new Error(text || 'Failed to clear session');
     }
   } finally {
     clearStoredAuthTokens();
+    notifyClearApolloCache();
     notifyAuthSessionChanged();
+    dispatchOsNotification({ title: 'Signed out', level: 'info' });
   }
 }

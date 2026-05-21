@@ -232,6 +232,11 @@ body {
   }
 }
 
+/** Promote react-motion layers to compositor (see react-motion demos). */
+.motion-gpu {
+  transform: translate3d(0, 0, 0);
+}
+
 @layer components {
   .glass-panel {
     background: var(--color-glass-panel);
@@ -387,4 +392,12 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+/* Electron Window Drag Regions */
+.electron-drag {
+  -webkit-app-region: drag;
+}
+.electron-no-drag {
+  -webkit-app-region: no-drag;
 }

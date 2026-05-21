@@ -157,7 +157,7 @@ export function SystemStatusIcons({ compact = false }: { compact?: boolean }) {
                   className="block w-full px-3 py-2 text-left text-slate-300 hover:bg-white/10"
                   onClick={() => {
                     setMenuOpen(false);
-                    if (pathname !== '/') router.push('/');
+                    if (pathname !== '/') void router.push('/');
                     notifyFocusWelcomeAuth();
                   }}
                 >

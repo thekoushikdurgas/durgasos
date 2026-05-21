@@ -272,12 +272,18 @@ export function DesktopMenuBar({
         )
       : null;
 
+  const isEl = typeof window !== 'undefined' && !!window.electronAPI;
+
   return (
     <>
       <LiquidGlassSurface
         variant="liquid"
         withLiquidShell={false}
-        className={cn('min-w-0 w-full rounded-none border-b border-white/10', className)}
+        className={cn(
+          'min-w-0 w-full rounded-none border-b border-white/10',
+          isEl && 'electron-drag',
+          className
+        )}
         contentClassName="w-full min-w-0 min-h-8"
       >
         <div className="flex h-8 w-full min-w-0 items-center justify-between px-4 text-[13px] font-medium text-slate-200">
@@ -287,7 +293,10 @@ export function DesktopMenuBar({
               type="button"
               role="menuitem"
               aria-label="Durgasos"
-              className="flex max-w-[min(100%,14rem)] shrink-0 items-center gap-2 rounded px-1 py-0.5 font-bold tracking-tight text-white outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-cyan-400/40"
+              className={cn(
+                'flex max-w-[min(100%,14rem)] shrink-0 items-center gap-2 rounded px-1 py-0.5 font-bold tracking-tight text-white outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-cyan-400/40',
+                isEl && 'electron-no-drag'
+              )}
               aria-haspopup="menu"
               aria-expanded={openKey === LOGO_MENU_KEY}
               aria-controls={openKey === LOGO_MENU_KEY ? logoMenuId : undefined}
@@ -322,7 +331,10 @@ export function DesktopMenuBar({
                 aria-haspopup="menu"
                 aria-expanded={openKey === menu.label}
                 aria-controls={openKey === menu.label ? `${baseId}-menu-${menu.label}` : undefined}
-                className="shrink-0 rounded px-2 py-0.5 text-slate-300 outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-400/40"
+                className={cn(
+                  'shrink-0 rounded px-2 py-0.5 text-slate-300 outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-400/40',
+                  isEl && 'electron-no-drag'
+                )}
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleMenu(menu.label);
@@ -340,7 +352,10 @@ export function DesktopMenuBar({
             ))}
           </div>
 
-          <div className="flex shrink-0 items-center gap-3" onClick={(e) => e.stopPropagation()}>
+          <div
+            className={cn('flex shrink-0 items-center gap-3', isEl && 'electron-no-drag')}
+            onClick={(e) => e.stopPropagation()}
+          >
             {rightSlot}
           </div>
         </div>

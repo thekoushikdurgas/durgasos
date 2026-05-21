@@ -5,11 +5,24 @@ import { useMemo, useState } from 'react';
 import { CategoryCard } from '@/components/apps/calendar/CategoryCard';
 import { EventFlipCard } from '@/components/apps/calendar/EventFlipCard';
 import {
+  calControlGroup,
+  calError,
+  calGhostBtn,
+  calHeadingLg,
+  calIconMuted,
+  calLinkBold,
+  calMonthLabel,
+  calMuted,
+  calPanel,
+  calSearchInput,
+} from '@/components/apps/calendar/calendar-theme';
+import {
   CALENDAR_CATEGORY_ORDER,
   type CalendarCategoryFilter,
   type CalendarEventView,
   countByCategory,
 } from '@/lib/calendar-format';
+
 const CATEGORY_STYLES: Record<
   Exclude<CalendarCategoryFilter, 'Other'>,
   { colorClass: string; title: string }
@@ -54,13 +67,13 @@ export function EventsTab({
     <div className="mx-auto flex h-full max-w-6xl flex-col gap-8">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Events</h1>
-          <p className="font-medium text-slate-500">From your Google Calendar (primary)</p>
+          <h1 className={calHeadingLg}>Events</h1>
+          <p className={calMuted}>From your Google Calendar (primary)</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <svg
-              className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+              className={`absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 ${calIconMuted}`}
               fill="none"
               stroke="currentColor"
               strokeWidth={2}
@@ -78,24 +91,22 @@ export function EventsTab({
               placeholder="Search events…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full min-w-[12rem] rounded-xl border border-slate-200 bg-white py-2 pl-10 pr-3 text-sm font-medium text-slate-900 shadow-sm outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 sm:w-64"
+              className={calSearchInput}
             />
           </div>
-          <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2 py-1 shadow-sm">
+          <div className={calControlGroup}>
             <button
               type="button"
-              className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-50"
+              className={calGhostBtn}
               aria-label="Previous month"
               onClick={onPrevMonth}
             >
               ‹
             </button>
-            <span className="min-w-[8rem] text-center text-sm font-bold text-slate-700">
-              {monthLabel}
-            </span>
+            <span className={calMonthLabel}>{monthLabel}</span>
             <button
               type="button"
-              className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-50"
+              className={calGhostBtn}
               aria-label="Next month"
               onClick={onNextMonth}
             >
@@ -122,15 +133,15 @@ export function EventsTab({
       </div>
 
       {loading ? (
-        <p className="text-sm font-medium text-slate-400">Loading events…</p>
+        <p className="text-sm font-medium text-white/40">Loading events…</p>
       ) : errorMessage ? (
-        <p className="text-sm font-medium text-red-600">{errorMessage}</p>
+        <p className={calError}>{errorMessage}</p>
       ) : filtered.length === 0 ? (
-        <div className="rounded-[2.5rem] border border-slate-100 bg-white p-12 text-center shadow-sm">
-          <p className="text-lg font-medium text-slate-500">No events match your filters.</p>
+        <div className={`${calPanel} p-12 text-center`}>
+          <p className="text-lg font-medium text-white/50">No events match your filters.</p>
           <button
             type="button"
-            className="mt-2 font-bold text-indigo-600 hover:underline"
+            className={`mt-2 ${calLinkBold}`}
             onClick={() => {
               setActiveCategory(null);
               setSearchQuery('');

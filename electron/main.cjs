@@ -77,6 +77,8 @@ async function resolveStartUrl() {
 async function createWindow() {
   const startUrl = await resolveStartUrl();
 
+  const isMac = process.platform === 'darwin';
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -84,6 +86,8 @@ async function createWindow() {
     minHeight: 640,
     show: false,
     title: 'DurgasOS',
+    frame: isMac,
+    titleBarStyle: isMac ? 'hidden' : 'default',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -117,6 +121,28 @@ app.whenReady().then(() => {
     if (typeof url === 'string' && /^https?:\/\//i.test(url)) {
       await shell.openExternal(url);
     }
+  });
+
+  ipcMain.on('window-minimize', () => {
+    if (mainWindow) mainWindow.minimize();
+  });
+
+  ipcMain.on('window-maximize', () => {
+    if (mainWindow) {
+      if (mainWindow.isMaximized()) {
+        mainWindow.unmaximize();
+      } else {
+        mainWindow.maximize();
+      }
+    }
+  });
+
+  ipcMain.on('window-close', () => {
+    if (mainWindow) mainWindow.close();
+  });
+
+  ipcMain.handle('window-is-maximized', () => {
+    return mainWindow ? mainWindow.isMaximized() : false;
   });
 
   createWindow().catch((err) => {

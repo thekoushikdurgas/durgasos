@@ -13,7 +13,10 @@ import { useTodoLocalBoard } from '@/hooks/use-todo-local-board';
 import { useTodoWorkspaces } from '@/hooks/use-todo-workspaces';
 import { GET_LINKED_GOOGLE_ACCOUNT_TOKEN } from '@/lib/graphql-modules';
 import type { LinkedGoogleAccountRow } from '@/lib/linked-google-accounts';
-import { readGoogleTokenPayload } from '@/lib/read-google-token-payload';
+import {
+  isGoogleAccessTokenExpired,
+  readGoogleTokenPayload,
+} from '@/lib/read-google-token-payload';
 import {
   accountHasGoogleTasksScope,
   LOCAL_GOOGLE_USER_ID,
@@ -46,9 +49,8 @@ export function TodoApp() {
     const ids = new Set(pickerAccounts.map((a) => a.googleUserId));
     const stored = readTodoAccountPicker();
     if (stored && ids.has(stored)) return stored;
-    if (accounts.length > 0) return accounts[0]!.googleUserId;
     return LOCAL_GOOGLE_USER_ID;
-  }, [authed, accounts, pickerAccounts]);
+  }, [authed, pickerAccounts]);
 
   const todoAccountId = useMemo(() => {
     if (!authed || !defaultTodoAccountId) return null;
@@ -65,15 +67,28 @@ export function TodoApp() {
     fetchPolicy: 'cache-and-network',
   });
 
-  const accessTokenForTodo = useMemo(
-    () => readGoogleTokenPayload(tokenQ.data?.getLinkedGoogleAccountToken).accessToken,
+  const tokenPayload = useMemo(
+    () => readGoogleTokenPayload(tokenQ.data?.getLinkedGoogleAccountToken),
     [tokenQ.data?.getLinkedGoogleAccountToken]
   );
+
+  const accessTokenForTodo = useMemo(() => {
+    const { accessToken, expiresAt } = tokenPayload;
+    if (!accessToken) return null;
+    if (isGoogleAccessTokenExpired(expiresAt)) return null;
+    return accessToken;
+  }, [tokenPayload]);
+
+  const switchToLocalDevice = useCallback(() => {
+    setPickedTodoAccountId(LOCAL_GOOGLE_USER_ID);
+    writeTodoAccountPicker(LOCAL_GOOGLE_USER_ID);
+  }, []);
 
   const ws = useTodoWorkspaces(todoAccountId, accessTokenForTodo);
   const googleBoard = useTodoBoard(
     isLocalMode ? null : accessTokenForTodo,
-    isLocalMode ? null : ws.activeWorkspaceId
+    isLocalMode ? null : ws.activeWorkspaceId,
+    isLocalMode ? undefined : switchToLocalDevice
   );
   const localBoard = useTodoLocalBoard(isLocalMode ? ws.activeWorkspaceId : null);
 
@@ -147,13 +162,22 @@ export function TodoApp() {
       ) : !isLocalMode && !accessTokenForTodo ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-amber-200/90">
           <p>No access token. Re-link your Google account in Settings.</p>
-          <button
-            type="button"
-            className="rounded-full border border-white/20 px-4 py-2 text-xs text-white hover:bg-white/10"
-            onClick={openAccounts}
-          >
-            Open Settings → Accounts
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              className="rounded-full border border-white/20 px-4 py-2 text-xs text-white hover:bg-white/10"
+              onClick={openAccounts}
+            >
+              Open Settings → Accounts
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-violet-400/40 px-4 py-2 text-xs text-violet-200 hover:bg-violet-500/10"
+              onClick={switchToLocalDevice}
+            >
+              Use On this device
+            </button>
+          </div>
         </div>
       ) : !hasTasksScope ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center text-sm text-white/60">

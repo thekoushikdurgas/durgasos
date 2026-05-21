@@ -13,6 +13,7 @@ import {
   buildMoveCommit,
   dbTaskToCard,
   localWorkspaceListIds,
+  sortCardsForKanban,
   type KanbanListIds,
   type TodoCard,
   type TodoColumn,
@@ -61,7 +62,7 @@ export function useTodoLocalBoard(workspaceId: string | null) {
         const c = dbTaskToCard({ id, title, column, workspaceId: wid });
         if (c) next.push(c);
       }
-      setCards(next);
+      setCards(sortCardsForKanban(next));
     } catch {
       notice('Failed to load tasks.');
       setCards([]);
@@ -80,13 +81,17 @@ export function useTodoLocalBoard(workspaceId: string | null) {
   const onCardsChange = useCallback(
     async (next: TodoCard[], movedCardId: string) => {
       let prev: TodoCard[] = [];
+      const orderedNext = sortCardsForKanban(next);
       setCards((current) => {
         prev = current;
-        return next;
+        return orderedNext;
       });
-      const diff = buildMoveCommit(prev, next, movedCardId);
-      if (!diff || !workspaceId) return;
-      const movedNext = next.find((c) => c.id === movedCardId);
+      const diff = buildMoveCommit(prev, orderedNext, movedCardId);
+      if (!diff || !workspaceId) {
+        if (!diff) setCards(prev);
+        return;
+      }
+      const movedNext = orderedNext.find((c) => c.id === movedCardId);
       if (!movedNext) return;
       try {
         await client.mutate({
@@ -97,29 +102,51 @@ export function useTodoLocalBoard(workspaceId: string | null) {
             previousTaskId: diff.previousId ?? null,
           },
         });
-        await refresh();
       } catch {
         setCards(prev);
         notice('Could not move task.');
       }
     },
-    [workspaceId, client, refresh]
+    [workspaceId, client]
   );
 
   const onAddCard = useCallback(
     async (column: TodoColumn, title: string) => {
-      if (!workspaceId) return;
+      if (!workspaceId || !listIds) return;
+      const pendingId = `pending-${crypto.randomUUID()}`;
+      const optimistic: TodoCard = {
+        id: pendingId,
+        title,
+        column,
+        tasklistId: listIds[column],
+      };
+      setCards((prev) => sortCardsForKanban([...prev, optimistic]));
       try {
-        await client.mutate({
+        const r = await client.mutate({
           mutation: CREATE_TODO_TASK,
           variables: { workspaceId, column, title },
         });
-        await refresh();
+        const created = r.data?.createTodoTask;
+        const card = created
+          ? dbTaskToCard({
+              id: created.id,
+              title: created.title,
+              column: created.column,
+              workspaceId: created.workspaceId,
+            })
+          : null;
+        if (!card) {
+          setCards((prev) => prev.filter((c) => c.id !== pendingId));
+          notice('Could not create task.');
+          return;
+        }
+        setCards((prev) => sortCardsForKanban(prev.map((c) => (c.id === pendingId ? card : c))));
       } catch {
+        setCards((prev) => prev.filter((c) => c.id !== pendingId));
         notice('Could not create task.');
       }
     },
-    [workspaceId, client, refresh]
+    [workspaceId, listIds, client]
   );
 
   const onDeleteCard = useCallback(

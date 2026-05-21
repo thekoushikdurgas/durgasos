@@ -1,0 +1,9 @@
+query JobStatus($jobId: String!) {
+  jobStatus(jobId: $jobId) {
+    jobId
+    status
+    result
+    error
+    updatedAt
+  }
+}

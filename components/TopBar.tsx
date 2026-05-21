@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Battery, Menu, Monitor, Search, Wifi } from 'lucide-react';
 import { useOS } from '@/components/os-context';
+import { useNotifications } from '@/hooks/use-notifications';
 import { SystemStatusIcons } from '@/components/SystemStatusIcons';
 import {
   DesktopMenuBar,
@@ -14,6 +15,7 @@ import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { APPS } from '@/lib/apps';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-is-mobile';
+import { isElectron, detectPlatform } from '@/lib/platform';
 
 function getLogoMenu(): MenuItemOption[] {
   return [
@@ -65,6 +67,7 @@ function getMenus(hasActiveWindow: boolean): MenuConfig[] {
           disabled: !hasActiveWindow,
         },
         { label: 'Show Notifications', action: 'notifications', shortcut: '⌘⇧N' },
+        { label: 'Desktop Widgets', action: 'widgets', shortcut: '⌘⇧W' },
       ],
     },
     {
@@ -106,6 +109,7 @@ export function TopBar() {
     activeWindow,
     windows,
     toggleNotifCenter,
+    toggleWidgetSidebar,
     isNotifOpen,
     openApp,
     closeWindow,
@@ -113,9 +117,46 @@ export function TopBar() {
     maximizeWindow,
     toggleLauncher,
   } = useOS();
+  const { unreadCount } = useNotifications();
   const isMobile = useIsMobile();
   const [time, setTime] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Electron Window Control State & Effects
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  useEffect(() => {
+    if (!isElectron()) return;
+    window.electronAPI
+      ?.isMaximized()
+      .then(setIsMaximized)
+      .catch(() => {});
+
+    const handleResize = () => {
+      window.electronAPI
+        ?.isMaximized()
+        .then(setIsMaximized)
+        .catch(() => {});
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleMinimize = useCallback(() => {
+    window.electronAPI?.minimize();
+  }, []);
+
+  const handleMaximize = useCallback(async () => {
+    window.electronAPI?.maximize();
+    const state = await window.electronAPI?.isMaximized();
+    if (state !== undefined) {
+      setIsMaximized(state);
+    }
+  }, []);
+
+  const handleClose = useCallback(() => {
+    window.electronAPI?.close();
+  }, []);
 
   useEffect(() => {
     const updateTime = () => {
@@ -173,6 +214,9 @@ export function TopBar() {
         case 'notifications':
           toggleNotifCenter();
           break;
+        case 'widgets':
+          toggleWidgetSidebar();
+          break;
         case 'help-shortcuts':
           window.alert(
             'Menus: Arrow Down to open from a menu title, then Arrow Up/Down to move, Enter to choose, Escape to close.'
@@ -190,6 +234,7 @@ export function TopBar() {
       openApp,
       toggleLauncher,
       toggleNotifCenter,
+      toggleWidgetSidebar,
     ]
   );
 
@@ -203,6 +248,7 @@ export function TopBar() {
         { label: 'Gallery', action: 'open-gallery' as const },
         { label: 'Settings', action: 'preferences' as const },
         { label: 'Notifications', action: 'notifications' as const },
+        { label: 'Widgets', action: 'widgets' as const },
       ] as const,
     []
   );
@@ -264,7 +310,7 @@ export function TopBar() {
               type="button"
               aria-label={isNotifOpen ? 'Hide notification center' : 'Show notification center'}
               className={cn(
-                'rounded px-2 py-1 text-xs font-semibold tabular-nums outline-none transition-colors',
+                'relative rounded px-2 py-1 text-xs font-semibold tabular-nums outline-none transition-colors',
                 'hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-cyan-400/40',
                 isNotifOpen ? 'text-blue-400' : 'text-slate-200 hover:text-white'
               )}
@@ -274,6 +320,12 @@ export function TopBar() {
               }}
             >
               {time}
+              {unreadCount > 0 ? (
+                <span
+                  className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-slate-950"
+                  aria-hidden
+                />
+              ) : null}
             </button>
           </div>
           {mobileMenuOpen ? (
@@ -369,7 +421,7 @@ export function TopBar() {
             type="button"
             aria-label={isNotifOpen ? 'Hide notification center' : 'Show notification center'}
             className={cn(
-              'rounded px-1.5 py-0.5 font-semibold tabular-nums outline-none transition-colors',
+              'relative rounded px-1.5 py-0.5 font-semibold tabular-nums outline-none transition-colors',
               'hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-cyan-400/40',
               isNotifOpen ? 'text-blue-400' : 'text-slate-200 hover:text-white'
             )}
@@ -379,7 +431,92 @@ export function TopBar() {
             }}
           >
             {time}
+            {unreadCount > 0 ? (
+              <span
+                className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-slate-950"
+                aria-hidden
+              />
+            ) : null}
           </button>
+          {isElectron() &&
+            (detectPlatform() === 'electron-win' || detectPlatform() === 'electron-linux') && (
+              <div className="flex items-stretch h-8 -mr-4 border-l border-white/10 ml-2">
+                <button
+                  onClick={handleMinimize}
+                  title="Minimize"
+                  aria-label="Minimize window"
+                  className="w-11 h-full flex items-center justify-center text-slate-300 hover:bg-white/10 hover:text-white transition-colors duration-100 outline-none"
+                >
+                  <svg
+                    width="10"
+                    height="1"
+                    viewBox="0 0 10 1"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect width="10" height="1" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  onClick={handleMaximize}
+                  title={isMaximized ? 'Restore' : 'Maximize'}
+                  aria-label={isMaximized ? 'Restore' : 'Maximize'}
+                  className="w-11 h-full flex items-center justify-center text-slate-300 hover:bg-white/10 hover:text-white transition-colors duration-100 outline-none"
+                >
+                  {isMaximized ? (
+                    <svg
+                      width="10"
+                      height="10"
+                      viewBox="0 0 10 10"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M3 1H9V7" stroke="currentColor" strokeWidth="1" fill="none" />
+                      <path d="M1 3H7V9H1V3Z" stroke="currentColor" strokeWidth="1" fill="none" />
+                    </svg>
+                  ) : (
+                    <svg
+                      width="10"
+                      height="10"
+                      viewBox="0 0 10 10"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect
+                        x="1.5"
+                        y="1.5"
+                        width="7"
+                        height="7"
+                        stroke="currentColor"
+                        strokeWidth="1"
+                        fill="none"
+                      />
+                    </svg>
+                  )}
+                </button>
+                <button
+                  onClick={handleClose}
+                  title="Close"
+                  aria-label="Close window"
+                  className="w-11 h-full flex items-center justify-center text-slate-300 hover:bg-red-600 hover:text-white transition-colors duration-100 outline-none"
+                >
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 10 10"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M1 1L9 9M9 1L1 9"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      fill="none"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
         </>
       }
     />

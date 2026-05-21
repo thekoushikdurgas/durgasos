@@ -2,7 +2,7 @@
 
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   BENTO_SPAN_PRESETS,
@@ -10,7 +10,12 @@ import {
   type MediaItemType,
 } from '@/components/ui/interactive-bento-gallery';
 import { PortfolioGallery, type PortfolioImage } from '@/components/ui/portfolio-gallery';
+import {
+  GalleryInfiniteViewer,
+  type GalleryInfiniteImage,
+} from '@/components/apps/gallery/GalleryInfiniteViewer';
 import { useWindowLaunch } from '@/components/window-launch-context';
+import { useGoogleDriveLaunchSource } from '@/hooks/use-google-drive-launch-source';
 import { useOS } from '@/components/os-context';
 import { getFirebaseAuth, isFirebaseConfigured } from '@/lib/firebase';
 import {
@@ -116,13 +121,16 @@ function mapGoogleMediaItems(raw: unknown[] | undefined): MediaItemType[] {
 }
 
 type SourceTab = 'workspace' | 'google';
+type GalleryShellView = 'face' | 'bento' | 'viewer';
 
 export function GalleryApp() {
   const client = useApolloClient();
   const launch = useWindowLaunch();
+  const driveSrc = useGoogleDriveLaunchSource(launch);
   const { openApp } = useOS();
   const [sourceTab, setSourceTab] = useState<SourceTab>('workspace');
-  const [view, setView] = useState<'face' | 'bento'>('face');
+  const [view, setView] = useState<GalleryShellView>('face');
+  const [viewerFocusId, setViewerFocusId] = useState<string | null>(null);
   const [launchImages, setLaunchImages] = useState<PortfolioImage[]>([]);
   const [selectedGoogleUserId, setSelectedGoogleUserId] = useState<string | null>(null);
   const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
@@ -229,6 +237,12 @@ export function GalleryApp() {
     const s = launch?.storage;
     const name = launch?.fileName ?? '';
     const pathKey = s?.file_path ?? name;
+    if (driveSrc.objectUrl && inferMediaType(name) === 'image') {
+      queueMicrotask(() => {
+        setLaunchImages([{ src: driveSrc.objectUrl!, alt: name || 'Google Drive' }]);
+      });
+      return;
+    }
     if (!pathKey || inferMediaType(pathKey) !== 'image') {
       queueMicrotask(() => {
         setLaunchImages([]);
@@ -256,7 +270,7 @@ export function GalleryApp() {
     return () => {
       cancelled = true;
     };
-  }, [launch?.storage, launch?.fileName, getUrlMut]);
+  }, [launch?.storage, launch?.fileName, launch?.googleDrive, driveSrc.objectUrl, getUrlMut]);
 
   const listPayload = listQ.data?.storageList as StorageListPayload | undefined;
 
@@ -382,6 +396,80 @@ export function GalleryApp() {
     return imgs.length > 0 ? imgs : undefined;
   }, [gpItems]);
 
+  const viewerImages: GalleryInfiniteImage[] = useMemo(() => {
+    const rows: GalleryInfiniteImage[] = [];
+    if (sourceTab === 'workspace') {
+      for (const f of listPayload?.files ?? []) {
+        if (inferMediaType(f.path) !== 'image') continue;
+        const url = urlMap.get(f.path);
+        if (!url) continue;
+        rows.push({ id: f.path, src: url, alt: f.name });
+      }
+    } else {
+      for (const it of gpItems) {
+        if (it.type !== 'image') continue;
+        rows.push({ id: it.id, src: it.url, alt: it.title });
+      }
+    }
+    for (const li of launchImages) {
+      if (!li.src) continue;
+      if (rows.some((r) => r.src === li.src)) continue;
+      const id =
+        launch?.storage?.file_path ??
+        launch?.googleDrive?.fileId ??
+        `launch:${li.src.slice(0, 48)}`;
+      rows.unshift({ id, src: li.src, alt: li.alt });
+    }
+    return rows;
+  }, [
+    sourceTab,
+    listPayload,
+    urlMap,
+    gpItems,
+    launchImages,
+    launch?.storage?.file_path,
+    launch?.googleDrive?.fileId,
+  ]);
+
+  const galleryViewerAutoOpenKey = [
+    launch?.galleryView ?? '',
+    launch?.storage?.file_path ?? '',
+    launch?.googleDrive?.fileId ?? '',
+    launch?.fileName ?? '',
+  ].join('|');
+
+  const galleryViewerAutoOpenKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (launch?.galleryView !== 'viewer') {
+      galleryViewerAutoOpenKeyRef.current = null;
+      return;
+    }
+    if (galleryViewerAutoOpenKeyRef.current === galleryViewerAutoOpenKey) return;
+    const name = launch?.fileName ?? '';
+    const pathHint = launch?.storage?.file_path ?? name;
+    const looksLikeImage =
+      inferMediaType(pathHint) === 'image' ||
+      inferMediaType(name) === 'image' ||
+      Boolean(launch?.googleDrive);
+    const ready =
+      Boolean(launch?.storage?.file_path) ||
+      Boolean(launch?.googleDrive?.fileId) ||
+      launchImages.length > 0 ||
+      inferMediaType(name) === 'image';
+    if (!ready || !looksLikeImage) return;
+    let focus: string | null = null;
+    if (launch?.storage?.file_path) focus = launch.storage.file_path;
+    else if (launch?.googleDrive?.fileId) focus = launch.googleDrive.fileId;
+    else if (launchImages[0]?.src) focus = launchImages[0]!.src;
+    else if (inferMediaType(name) === 'image') focus = `name:${name}`;
+    galleryViewerAutoOpenKeyRef.current = galleryViewerAutoOpenKey;
+    queueMicrotask(() => {
+      setViewerFocusId(focus);
+      setView('viewer');
+    });
+  }, [galleryViewerAutoOpenKey, launch, launchImages]);
+
   const loadMoreGoogle = useCallback(async () => {
     if (!gpNext || !googleAccessToken || !googlePhotosReady || gpLoadingMore || !authed) return;
     setGpLoadingMore(true);
@@ -460,32 +548,43 @@ export function GalleryApp() {
 
   return (
     <div className="absolute inset-0 flex flex-col bg-slate-950/95 text-slate-100">
-      <div className="shrink-0 border-b border-white/10 px-3 py-2">
-        <div className="mx-auto flex max-w-4xl gap-2">
-          <button
-            type="button"
-            className={`${tabBtn} ${sourceTab === 'workspace' ? tabActive : tabIdle}`}
-            onClick={() => {
-              setSourceTab('workspace');
-              setView('face');
-            }}
-          >
-            Workspace storage
-          </button>
-          <button
-            type="button"
-            className={`${tabBtn} ${sourceTab === 'google' ? tabActive : tabIdle}`}
-            onClick={() => {
-              setSourceTab('google');
-              setView('face');
-            }}
-          >
-            Google Photos
-          </button>
+      {view !== 'viewer' ? (
+        <div className="shrink-0 border-b border-white/10 px-3 py-2">
+          <div className="mx-auto flex max-w-4xl gap-2">
+            <button
+              type="button"
+              className={`${tabBtn} ${sourceTab === 'workspace' ? tabActive : tabIdle}`}
+              onClick={() => {
+                setSourceTab('workspace');
+                setView('face');
+              }}
+            >
+              Workspace storage
+            </button>
+            <button
+              type="button"
+              className={`${tabBtn} ${sourceTab === 'google' ? tabActive : tabIdle}`}
+              onClick={() => {
+                setSourceTab('google');
+                setView('face');
+              }}
+            >
+              Google Photos
+            </button>
+          </div>
         </div>
-      </div>
+      ) : null}
 
-      {sourceTab === 'workspace' ? (
+      {view === 'viewer' ? (
+        <GalleryInfiniteViewer
+          images={viewerImages}
+          initialImageId={viewerFocusId ?? undefined}
+          onBack={() => {
+            setViewerFocusId(null);
+            setView('face');
+          }}
+        />
+      ) : sourceTab === 'workspace' ? (
         <>
           {view === 'face' ? (
             <div className="flex min-h-0 flex-1 flex-col p-2">
@@ -513,6 +612,14 @@ export function GalleryApp() {
                 primaryCta={{ text: 'Browse library' }}
                 images={portfolioFaceImages}
                 onPrimaryClick={() => setView('bento')}
+                onImageClick={(index) => {
+                  const imgs = portfolioFaceImages ?? [];
+                  const img = imgs[index];
+                  if (!img?.src) return;
+                  const row = viewerImages.find((r) => r.src === img.src);
+                  setViewerFocusId(row?.id ?? img.src);
+                  setView('viewer');
+                }}
                 className="min-h-0 flex-1"
               />
             </div>
@@ -664,6 +771,14 @@ export function GalleryApp() {
                     primaryCta={{ text: 'Browse library' }}
                     images={googlePreviewImages}
                     onPrimaryClick={() => setView('bento')}
+                    onImageClick={(index) => {
+                      const imgs = googlePreviewImages ?? [];
+                      const img = imgs[index];
+                      if (!img?.src) return;
+                      const row = viewerImages.find((r) => r.src === img.src);
+                      setViewerFocusId(row?.id ?? img.src);
+                      setView('viewer');
+                    }}
                     className="min-h-0 flex-1"
                   />
                 </div>

@@ -26,6 +26,7 @@ import {
   resolveInstallSetFromRemote,
 } from '@/lib/installed-apps-shared';
 import { CACHE_TTL_MS, localCache } from '@/lib/local-cache';
+import { dispatchOsNotification } from '@/lib/notifications';
 
 const STORAGE_KEY = 'durgasos_installed_apps_v1';
 const CHANGED = 'durgasos:installed-apps-changed';
@@ -164,9 +165,17 @@ export function InstalledAppsProvider({ children }: { children: ReactNode }) {
         CACHE_TTL_MS.installed_apps
       );
       if (authed) {
-        void saveInstalled({ variables: { appIds: [...normalized] } }).catch(() => {
-          /* offline */
-        });
+        void saveInstalled({ variables: { appIds: [...normalized] } })
+          .then(() => {
+            dispatchOsNotification({
+              title: 'Apps updated',
+              appId: 'apps-manager',
+              level: 'success',
+            });
+          })
+          .catch(() => {
+            /* offline */
+          });
       }
     },
     [authed, instQ.data?.installedApps?.fileAssociations, saveInstalled]

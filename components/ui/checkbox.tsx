@@ -1,5 +1,11 @@
-import * as React from 'react';
+'use client';
 
+import * as React from 'react';
+import { spring } from 'react-motion';
+
+import { SpringBox } from '@/components/motion/SpringBox';
+import { pressSpring } from '@/lib/motion/spring-presets';
+import { usePrefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
 import { cn } from '@/lib/utils';
 
 export type CheckboxProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> & {
@@ -7,8 +13,9 @@ export type CheckboxProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 't
 };
 
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ className, indeterminate, ...props }, ref) => {
+  ({ className, indeterminate, checked, onChange, ...props }, ref) => {
     const innerRef = React.useRef<HTMLInputElement>(null);
+    const reduced = usePrefersReducedMotion();
     React.useImperativeHandle(ref, () => innerRef.current as HTMLInputElement);
 
     React.useEffect(() => {
@@ -17,21 +24,42 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
       el.indeterminate = Boolean(indeterminate);
     }, [indeterminate]);
 
+    const isChecked = Boolean(checked);
+    const scaleTarget = isChecked ? 1 : 0.85;
+
     return (
-      <input
-        ref={innerRef}
-        type="checkbox"
-        className={cn(
-          'h-4 w-4 shrink-0 cursor-pointer rounded border border-white/25 bg-white/5 shadow-sm backdrop-blur-sm',
-          'accent-[var(--color-accent-primary,#3b82f6)] checked:border-[var(--color-accent-primary,#3b82f6)] checked:bg-[var(--color-accent-primary,#3b82f6)]/20',
-          'transition-[border-color,box-shadow] duration-150 ease-out',
-          'hover:border-[var(--color-accent-primary,#3b82f6)]/70 hover:shadow-[0_0_0_1px_rgba(59,130,246,0.35)]',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary,#3b82f6)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-base,#050711)]',
-          'disabled:cursor-not-allowed disabled:opacity-50',
-          className
-        )}
-        {...props}
-      />
+      <label className={cn('relative inline-flex cursor-pointer items-center', className)}>
+        <input
+          ref={innerRef}
+          type="checkbox"
+          className="peer sr-only"
+          checked={checked}
+          onChange={onChange}
+          {...props}
+        />
+        <SpringBox
+          style={{
+            scale: reduced ? (isChecked ? 1 : 0.85) : spring(scaleTarget, pressSpring),
+            opacity: reduced ? 1 : spring(isChecked ? 1 : 0.9, pressSpring),
+          }}
+          className={cn(
+            'flex h-4 w-4 shrink-0 items-center justify-center rounded border border-white/25 bg-white/5 shadow-sm backdrop-blur-sm',
+            'peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--color-accent-primary,#3b82f6)] peer-focus-visible:ring-offset-2',
+            'peer-checked:border-[var(--color-accent-primary,#3b82f6)] peer-checked:bg-[var(--color-accent-primary,#3b82f6)]/20',
+            'peer-disabled:cursor-not-allowed peer-disabled:opacity-50'
+          )}
+          mapStyle={(s) => ({ transform: `scale(${s.scale ?? 1})`, opacity: s.opacity })}
+        >
+          {isChecked ? (
+            <svg viewBox="0 0 12 12" className="h-2.5 w-2.5 text-cyan-300" aria-hidden>
+              <path
+                fill="currentColor"
+                d="M10.2 2.4 4.5 8.1 1.8 5.4l-.9.9 3.6 3.6 6.3-6.3-.9-.9Z"
+              />
+            </svg>
+          ) : null}
+        </SpringBox>
+      </label>
     );
   }
 );

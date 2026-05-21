@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'motion/react';
+import { type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 
 import { BlurFade } from '@/components/auth/BlurFade';
@@ -41,7 +41,10 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-const stepEase = { duration: 0.3, ease: 'easeOut' as const };
+function AuthStepPanel({ show, children }: { show: boolean; children: ReactNode }) {
+  if (!show) return null;
+  return <div className="animate-in fade-in w-full duration-300">{children}</div>;
+}
 
 export function AuthSignUpFieldset({
   disabled,
@@ -69,12 +72,14 @@ export function AuthSignUpFieldset({
   confirmPasswordInputRef,
   oauthSoon,
   isExistingAccount,
+  checkingEmail,
 }: {
   disabled: boolean;
   ariaBusy: boolean;
   reduceMotion: boolean;
   authStep: 'email' | 'password' | 'confirmPassword';
   isExistingAccount: boolean;
+  checkingEmail: boolean;
   email: string;
   setEmail: (v: string) => void;
   password: string;
@@ -96,170 +101,178 @@ export function AuthSignUpFieldset({
   confirmPasswordInputRef: React.RefObject<HTMLInputElement | null>;
   oauthSoon: () => void;
 }) {
-  const t = reduceMotion ? { duration: 0 } : stepEase;
-  const exitBlur = reduceMotion ? { opacity: 0 } : { opacity: 0, filter: 'blur(4px)' };
+  const useBlurFade = authStep === 'email' && !reduceMotion;
 
   return (
     <fieldset
       disabled={disabled}
       {...(ariaBusy ? { 'aria-busy': 'true' as const } : {})}
-      className="relative z-10 mx-0 flex w-full max-w-full flex-col items-center justify-center gap-[5px] p-0"
+      className="relative z-10 mx-0 flex w-full min-w-[min(100%,320px)] max-w-full flex-col items-center justify-center gap-[5px] p-0"
     >
-      <AnimatePresence mode="wait">
-        {authStep === 'email' && (
-          <motion.div
-            key="email-content"
-            initial={reduceMotion ? false : { y: 6, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={t}
-            className="flex w-full flex-col items-center gap-[10px]"
-          >
+      <AuthStepPanel show={authStep === 'email'}>
+        <div className="flex w-full flex-col items-center gap-[10px]">
+          {useBlurFade ? (
             <BlurFade delay={0.25 * 1}>
               <p className="text-muted-foreground text-sm font-medium">Or continue with</p>
             </BlurFade>
-            <BlurFade delay={0.25 * 2}>
-              <div className="flex w-full max-w-[300px] flex-wrap items-center justify-center gap-3 sm:gap-4">
-                <GlassButton
-                  type="button"
-                  aria-label="Continue with Google"
-                  contentClassName="flex items-center justify-center gap-2"
-                  size="sm"
-                  onClick={oauthSoon}
-                >
-                  <GoogleIcon />
-                  <span className="text-foreground font-semibold">Google</span>
-                </GlassButton>
-                <GlassButton
-                  type="button"
-                  aria-label="Continue with GitHub"
-                  contentClassName="flex items-center justify-center gap-2"
-                  size="sm"
-                  onClick={oauthSoon}
-                >
-                  <GitHubIcon />
-                  <span className="text-foreground font-semibold">GitHub</span>
-                </GlassButton>
-              </div>
-            </BlurFade>
-            <BlurFade delay={0.25 * 3} className="w-full max-w-[300px]">
-              <div className="flex w-full items-center gap-2 py-2">
-                <hr className="border-border w-full" />
-                <span className="text-muted-foreground text-xs font-semibold">OR</span>
-                <hr className="border-border w-full" />
-              </div>
-            </BlurFade>
-          </motion.div>
-        )}
-        {authStep === 'password' && (
-          <motion.div
-            key={isExistingAccount ? 'password-title-existing' : 'password-title-new'}
-            initial={reduceMotion ? false : { y: 6, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={t}
-            className="flex w-fit flex-col items-center gap-[15px] text-center"
-          >
-            <BlurFade delay={0} className="w-full">
-              <div className="text-center">
-                <p className="text-foreground text-balance px-1 font-serif text-3xl font-light tracking-tight sm:text-5xl">
-                  {isExistingAccount ? 'Welcome back' : 'Choose a password'}
-                </p>
-              </div>
-            </BlurFade>
-            <BlurFade delay={0.25 * 1}>
-              <p className="text-muted-foreground text-sm font-medium">
-                {isExistingAccount
-                  ? 'Enter your password to unlock Durgas OS.'
-                  : 'Use at least 6 characters. You will use this to unlock Durgas OS.'}
-              </p>
-            </BlurFade>
-          </motion.div>
-        )}
-        {authStep === 'confirmPassword' && (
-          <motion.div
-            key="confirm-title"
-            initial={reduceMotion ? false : { y: 6, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={t}
-            className="flex w-fit flex-col items-center gap-[15px] text-center"
-          >
-            <BlurFade delay={0} className="w-full">
-              <div className="text-center">
-                <p className="text-foreground text-balance px-1 font-serif text-3xl font-light tracking-tight sm:text-5xl">
-                  Almost there
-                </p>
-              </div>
-            </BlurFade>
-            <BlurFade delay={0.25 * 1}>
-              <p className="text-muted-foreground text-sm font-medium">
-                Confirm your password to finish creating your account
-              </p>
-            </BlurFade>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          ) : (
+            <p className="text-muted-foreground text-sm font-medium">Or continue with</p>
+          )}
+          <div className="flex w-full max-w-[300px] flex-wrap items-center justify-center gap-3 sm:gap-4">
+            <GlassButton
+              type="button"
+              aria-label="Continue with Google"
+              contentClassName="flex items-center justify-center gap-2"
+              size="sm"
+              onClick={oauthSoon}
+            >
+              <GoogleIcon />
+              <span className="text-foreground font-semibold">Google</span>
+            </GlassButton>
+            <GlassButton
+              type="button"
+              aria-label="Continue with GitHub"
+              contentClassName="flex items-center justify-center gap-2"
+              size="sm"
+              onClick={oauthSoon}
+            >
+              <GitHubIcon />
+              <span className="text-foreground font-semibold">GitHub</span>
+            </GlassButton>
+          </div>
+          <div className="flex w-full max-w-[300px] items-center gap-2 py-2">
+            <hr className="border-border w-full" />
+            <span className="text-muted-foreground text-xs font-semibold">OR</span>
+            <hr className="border-border w-full" />
+          </div>
+        </div>
+      </AuthStepPanel>
+
+      <AuthStepPanel show={authStep === 'password'}>
+        <div className="flex w-fit flex-col items-center gap-[15px] px-2 text-center">
+          <p className="text-foreground text-balance font-serif text-3xl font-light tracking-tight sm:text-5xl">
+            {isExistingAccount ? 'Welcome back' : 'Choose a password'}
+          </p>
+          <p className="text-muted-foreground text-sm font-medium">
+            {isExistingAccount
+              ? 'Enter your password to unlock Durgas OS.'
+              : 'Use at least 6 characters. You will use this to unlock Durgas OS.'}
+          </p>
+        </div>
+      </AuthStepPanel>
+
+      <AuthStepPanel show={authStep === 'confirmPassword'}>
+        <div className="flex w-fit flex-col items-center gap-[15px] px-2 text-center">
+          <p className="text-foreground text-balance font-serif text-3xl font-light tracking-tight sm:text-5xl">
+            Almost there
+          </p>
+          <p className="text-muted-foreground text-sm font-medium">
+            Confirm your password to finish creating your account
+          </p>
+        </div>
+      </AuthStepPanel>
 
       <form onSubmit={handleFinalSubmit} className="mt-[15px] w-full max-w-[300px] space-y-6">
-        <AnimatePresence>
-          {authStep !== 'confirmPassword' && (
-            <motion.div
-              key="email-password-fields"
-              exit={exitBlur}
-              transition={t}
-              className="w-full space-y-6"
-            >
-              <BlurFade
-                delay={authStep === 'email' ? 0.25 * 4 : 0}
-                inView={true}
-                className="w-full"
-              >
-                <div className="relative w-full">
-                  <AnimatePresence>
-                    {authStep === 'password' && (
-                      <motion.div
-                        initial={reduceMotion ? false : { y: -10, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={reduceMotion ? { duration: 0 } : { duration: 0.3, delay: 0.4 }}
-                        className="absolute -top-6 left-4 z-10"
-                      >
-                        <label className="text-muted-foreground text-xs font-semibold">Email</label>
-                      </motion.div>
+        {authStep !== 'confirmPassword' ? (
+          <div className="w-full space-y-6">
+            <div className="relative w-full">
+              {authStep === 'password' ? (
+                <label className="text-muted-foreground absolute -top-6 left-4 z-10 text-xs font-semibold">
+                  Email
+                </label>
+              ) : null}
+              <div className="glass-input-wrap w-full">
+                <div className="glass-auth-input-shell">
+                  <div
+                    className={cn(
+                      'relative z-10 flex flex-shrink-0 items-center justify-center overflow-hidden transition-all duration-300 ease-in-out',
+                      email.length > 20 && authStep === 'email' ? 'w-0 px-0' : 'w-10 pl-2'
                     )}
-                  </AnimatePresence>
+                  >
+                    <Mail className="text-foreground/80 h-5 w-5 flex-shrink-0" />
+                  </div>
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    readOnly={authStep === 'password'}
+                    className={cn(
+                      'text-foreground placeholder:text-foreground/60 relative z-10 h-full w-0 min-w-0 flex-grow bg-transparent transition-[padding-right] delay-300 duration-300 ease-in-out focus:outline-none',
+                      isEmailValid && authStep === 'email' ? 'pr-2' : 'pr-0'
+                    )}
+                  />
+                  <div
+                    className={cn(
+                      'relative z-10 flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out',
+                      isEmailValid && authStep === 'email' ? 'self-stretch w-fit pr-1' : 'w-0'
+                    )}
+                  >
+                    <GlassButton
+                      type="button"
+                      onClick={() => void handleProgressStep()}
+                      size="icon"
+                      disabled={checkingEmail}
+                      aria-label={checkingEmail ? 'Checking email' : 'Continue with email'}
+                      aria-busy={checkingEmail}
+                      contentClassName="text-foreground/80 hover:text-foreground"
+                    >
+                      <ArrowRight className={cn('h-5 w-5', checkingEmail && 'animate-pulse')} />
+                    </GlassButton>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {authStep === 'password' ? (
+              <div className="w-full space-y-4">
+                <div className="relative w-full">
+                  {password.length > 0 ? (
+                    <label className="text-muted-foreground absolute -top-6 left-4 z-10 text-xs font-semibold">
+                      Password
+                    </label>
+                  ) : null}
                   <div className="glass-input-wrap w-full">
                     <div className="glass-auth-input-shell">
-                      <div
-                        className={cn(
-                          'relative z-10 flex flex-shrink-0 items-center justify-center overflow-hidden transition-all duration-300 ease-in-out',
-                          email.length > 20 && authStep === 'email' ? 'w-0 px-0' : 'w-10 pl-2'
+                      <div className="relative z-10 flex w-10 flex-shrink-0 items-center justify-center pl-2">
+                        {isPasswordValid ? (
+                          <button
+                            type="button"
+                            aria-label="Toggle password visibility"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="text-foreground/80 hover:text-foreground rounded-full p-2 transition-colors"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-5 w-5" />
+                            ) : (
+                              <Eye className="h-5 w-5" />
+                            )}
+                          </button>
+                        ) : (
+                          <Lock className="text-foreground/80 h-5 w-5 flex-shrink-0" />
                         )}
-                      >
-                        <Mail className="text-foreground/80 h-5 w-5 flex-shrink-0" />
                       </div>
                       <input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        ref={passwordInputRef}
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        className={cn(
-                          'text-foreground placeholder:text-foreground/60 relative z-10 h-full w-0 flex-grow bg-transparent transition-[padding-right] delay-300 duration-300 ease-in-out focus:outline-none',
-                          isEmailValid && authStep === 'email' ? 'pr-2' : 'pr-0'
-                        )}
+                        className="text-foreground placeholder:text-foreground/60 relative z-10 h-full w-0 min-w-0 flex-grow bg-transparent focus:outline-none"
                       />
                       <div
                         className={cn(
                           'relative z-10 flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out',
-                          isEmailValid && authStep === 'email' ? 'self-stretch w-fit pr-1' : 'w-0'
+                          isPasswordValid ? 'self-stretch w-fit pr-1' : 'w-0'
                         )}
                       >
                         <GlassButton
                           type="button"
                           onClick={() => void handleProgressStep()}
                           size="icon"
-                          aria-label="Continue with email"
+                          aria-label={isExistingAccount ? 'Sign in' : 'Submit password'}
                           contentClassName="text-foreground/80 hover:text-foreground"
                         >
                           <ArrowRight className="h-5 w-5" />
@@ -268,168 +281,87 @@ export function AuthSignUpFieldset({
                     </div>
                   </div>
                 </div>
-              </BlurFade>
-              <AnimatePresence>
-                {authStep === 'password' && (
-                  <BlurFade key="password-field" className="w-full">
-                    <div className="relative w-full">
-                      <AnimatePresence>
-                        {password.length > 0 && (
-                          <motion.div
-                            initial={reduceMotion ? false : { y: -10, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={reduceMotion ? { duration: 0 } : { duration: 0.3 }}
-                            className="absolute -top-6 left-4 z-10"
-                          >
-                            <label className="text-muted-foreground text-xs font-semibold">
-                              Password
-                            </label>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                      <div className="glass-input-wrap w-full">
-                        <div className="glass-auth-input-shell">
-                          <div className="relative z-10 flex w-10 flex-shrink-0 items-center justify-center pl-2">
-                            {isPasswordValid ? (
-                              <button
-                                type="button"
-                                aria-label="Toggle password visibility"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="text-foreground/80 hover:text-foreground rounded-full p-2 transition-colors"
-                              >
-                                {showPassword ? (
-                                  <EyeOff className="h-5 w-5" />
-                                ) : (
-                                  <Eye className="h-5 w-5" />
-                                )}
-                              </button>
-                            ) : (
-                              <Lock className="text-foreground/80 h-5 w-5 flex-shrink-0" />
-                            )}
-                          </div>
-                          <input
-                            ref={passwordInputRef}
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="Password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            className="text-foreground placeholder:text-foreground/60 relative z-10 h-full w-0 flex-grow bg-transparent focus:outline-none"
-                          />
-                          <div
-                            className={cn(
-                              'relative z-10 flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out',
-                              isPasswordValid ? 'self-stretch w-fit pr-1' : 'w-0'
-                            )}
-                          >
-                            <GlassButton
-                              type="button"
-                              onClick={() => void handleProgressStep()}
-                              size="icon"
-                              aria-label={isExistingAccount ? 'Sign in' : 'Submit password'}
-                              contentClassName="text-foreground/80 hover:text-foreground"
-                            >
-                              <ArrowRight className="h-5 w-5" />
-                            </GlassButton>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <BlurFade inView delay={0.2}>
-                      <button
-                        type="button"
-                        onClick={handleGoBack}
-                        className="text-foreground/70 hover:text-foreground mt-4 flex items-center gap-2 text-sm transition-colors"
-                      >
-                        <ArrowLeft className="h-4 w-4" /> Go back
-                      </button>
-                    </BlurFade>
-                  </BlurFade>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {authStep === 'confirmPassword' && (
-            <BlurFade key="confirm-password-field" className="w-full">
-              <div className="relative w-full">
-                <AnimatePresence>
-                  {confirmPassword.length > 0 && (
-                    <motion.div
-                      initial={reduceMotion ? false : { y: -10, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={reduceMotion ? { duration: 0 } : { duration: 0.3 }}
-                      className="absolute -top-6 left-4 z-10"
-                    >
-                      <label className="text-muted-foreground text-xs font-semibold">
-                        Confirm password
-                      </label>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                <div className="glass-input-wrap w-full max-w-[300px]">
-                  <div className="glass-auth-input-shell">
-                    <div className="relative z-10 flex w-10 flex-shrink-0 items-center justify-center pl-2">
-                      {isConfirmPasswordValid ? (
-                        <button
-                          type="button"
-                          aria-label="Toggle confirm password visibility"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="text-foreground/80 hover:text-foreground rounded-full p-2 transition-colors"
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff className="h-5 w-5" />
-                          ) : (
-                            <Eye className="h-5 w-5" />
-                          )}
-                        </button>
-                      ) : (
-                        <Lock className="text-foreground/80 h-5 w-5 flex-shrink-0" />
-                      )}
-                    </div>
-                    <input
-                      ref={confirmPasswordInputRef}
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      placeholder="Confirm password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="text-foreground placeholder:text-foreground/60 relative z-10 h-full w-0 flex-grow bg-transparent focus:outline-none"
-                    />
-                    <div
-                      className={cn(
-                        'relative z-10 flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out',
-                        isConfirmPasswordValid ? 'self-stretch w-fit pr-1' : 'w-0'
-                      )}
-                    >
-                      <GlassButton
-                        type="submit"
-                        size="icon"
-                        aria-label="Finish sign-up"
-                        contentClassName="text-foreground/80 hover:text-foreground"
-                      >
-                        <ArrowRight className="h-5 w-5" />
-                      </GlassButton>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <BlurFade inView delay={0.2}>
                 <button
                   type="button"
                   onClick={handleGoBack}
-                  className="text-foreground/70 hover:text-foreground mt-4 flex items-center gap-2 text-sm transition-colors"
+                  className="text-foreground/70 hover:text-foreground flex items-center gap-2 text-sm transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" /> Go back
                 </button>
-              </BlurFade>
-            </BlurFade>
-          )}
-        </AnimatePresence>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {authStep === 'confirmPassword' ? (
+          <div className="w-full space-y-4">
+            <div className="relative w-full">
+              {confirmPassword.length > 0 ? (
+                <label className="text-muted-foreground absolute -top-6 left-4 z-10 text-xs font-semibold">
+                  Confirm password
+                </label>
+              ) : null}
+              <div className="glass-input-wrap w-full max-w-[300px]">
+                <div className="glass-auth-input-shell">
+                  <div className="relative z-10 flex w-10 flex-shrink-0 items-center justify-center pl-2">
+                    {isConfirmPasswordValid ? (
+                      <button
+                        type="button"
+                        aria-label="Toggle confirm password visibility"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="text-foreground/80 hover:text-foreground rounded-full p-2 transition-colors"
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    ) : (
+                      <Lock className="text-foreground/80 h-5 w-5 flex-shrink-0" />
+                    )}
+                  </div>
+                  <input
+                    ref={confirmPasswordInputRef}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Confirm password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="text-foreground placeholder:text-foreground/60 relative z-10 h-full w-0 min-w-0 flex-grow bg-transparent focus:outline-none"
+                  />
+                  <div
+                    className={cn(
+                      'relative z-10 flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out',
+                      isConfirmPasswordValid ? 'self-stretch w-fit pr-1' : 'w-0'
+                    )}
+                  >
+                    <GlassButton
+                      type="submit"
+                      size="icon"
+                      aria-label="Finish sign-up"
+                      contentClassName="text-foreground/80 hover:text-foreground"
+                    >
+                      <ArrowRight className="h-5 w-5" />
+                    </GlassButton>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleGoBack}
+              className="text-foreground/70 hover:text-foreground flex items-center gap-2 text-sm transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" /> Go back
+            </button>
+          </div>
+        ) : null}
       </form>
-      <p className="text-muted-foreground relative z-10 max-w-[280px] px-2 text-center text-xs">
-        Enter your email — we detect whether you already have an account and continue from there.
-      </p>
+      {authStep === 'email' ? (
+        <p className="text-muted-foreground relative z-10 max-w-[280px] px-2 text-center text-xs">
+          Enter your email — we detect whether you already have an account and continue from there.
+        </p>
+      ) : null}
     </fieldset>
   );
 }

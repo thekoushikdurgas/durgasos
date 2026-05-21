@@ -1,12 +1,14 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Copy, RefreshCw } from 'lucide-react';
 
 import { ME } from '@/lib/graphql-modules';
+import { useAuthSession } from '@/components/auth/AuthSessionContext';
 import { notifyFocusWelcomeAuth } from '@/lib/auth-session-events';
-import { readStoredAuthTokens } from '@/lib/auth-tokens-local';
+import { canRunAuthedGraphqlQueries } from '@/lib/auth-graphql-ready';
+import { SettingsSessionSummary } from '@/components/apps/SettingsSessionSummary';
 import { cn } from '@/lib/utils';
 
 function formatJson(value: unknown): string {
@@ -15,13 +17,6 @@ function formatJson(value: unknown): string {
   } catch {
     return String(value);
   }
-}
-
-function maskAccessToken(raw: string | undefined): string {
-  const t = raw?.trim();
-  if (!t) return '—';
-  if (t.length <= 14) return '••••••••';
-  return `${t.slice(0, 6)}…${t.slice(-4)}`;
 }
 
 function JsonPre({ label, value }: { label: string; value: unknown }) {
@@ -47,12 +42,16 @@ function JsonPre({ label, value }: { label: string; value: unknown }) {
 }
 
 export function SettingsProfilePane() {
-  const meQ = useQuery(ME, { fetchPolicy: 'cache-and-network' });
+  const { authenticated: sessionAuthed, user: sessionUser } = useAuthSession();
+  const graphqlReady = canRunAuthedGraphqlQueries();
+  const meQ = useQuery(ME, { fetchPolicy: 'cache-and-network', skip: !graphqlReady });
   const me = meQ.data?.me;
-  const authed = Boolean(me?.id);
+  const profileLoadError = meQ.error
+    ? meQ.error instanceof Error
+      ? meQ.error.message
+      : String(meQ.error)
+    : null;
   const [copied, setCopied] = useState(false);
-
-  const tokens = typeof window !== 'undefined' ? readStoredAuthTokens() : null;
 
   const copyId = useCallback(async () => {
     if (!me?.id) return;
@@ -91,19 +90,60 @@ export function SettingsProfilePane() {
     );
   }
 
-  if (!authed || !me) {
+  if (!graphqlReady) {
     return (
-      <div className="frost-glass-surface rounded-2xl border border-white/10 p-6 text-sm text-white/60">
-        <p className="mb-3">
-          Sign in using the desktop sign-in overlay to view your account and profile details here.
-        </p>
-        <button
-          type="button"
-          onClick={() => notifyFocusWelcomeAuth()}
-          className="inline-block rounded-lg border border-blue-500/40 bg-blue-600/20 px-4 py-2 text-sm font-medium text-blue-200 hover:bg-blue-600/30"
-        >
-          Open sign in
-        </button>
+      <div className="space-y-4">
+        <div className="frost-glass-surface rounded-2xl border border-white/10 p-6 text-sm text-white/60">
+          <p className="mb-3">
+            {sessionAuthed
+              ? 'Session cookies are set but device tokens are missing. Re-open sign-in once to sync GraphQL, or wait a moment for automatic rehydration.'
+              : 'Sign in using the desktop sign-in overlay to view your account and profile details here.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => notifyFocusWelcomeAuth()}
+            className="inline-block rounded-lg border border-blue-500/40 bg-blue-600/20 px-4 py-2 text-sm font-medium text-blue-200 hover:bg-blue-600/30"
+          >
+            Open sign in
+          </button>
+        </div>
+        <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+          <h3 className="mb-3 text-base font-semibold text-white/90">Session (this device)</h3>
+          <SettingsSessionSummary />
+        </section>
+      </div>
+    );
+  }
+
+  if (!me) {
+    const fallbackEmail = sessionUser?.email?.trim();
+    const fallbackId = sessionUser?.id;
+    return (
+      <div className="space-y-4">
+        <div className="frost-glass-surface rounded-2xl border border-amber-500/30 bg-amber-950/20 p-6 text-sm text-amber-100">
+          <p className="mb-3">
+            Signed in on this device, but profile data could not be loaded from the server.
+            {profileLoadError ? ` (${profileLoadError})` : ''}
+          </p>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white/90 hover:bg-white/15"
+            onClick={() => void meQ.refetch()}
+          >
+            <RefreshCw className={cn('h-4 w-4', meQ.loading && 'animate-spin')} aria-hidden />
+            Retry profile
+          </button>
+        </div>
+        {(fallbackEmail || fallbackId) && (
+          <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+            <h3 className="mb-2 text-base font-semibold text-white/90">Cached session user</h3>
+            <p className="text-sm text-white/70">{fallbackEmail ?? fallbackId}</p>
+          </section>
+        )}
+        <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
+          <h3 className="mb-3 text-base font-semibold text-white/90">Session (this device)</h3>
+          <SettingsSessionSummary />
+        </section>
       </div>
     );
   }
@@ -223,16 +263,7 @@ export function SettingsProfilePane() {
           Stored tokens power GraphQL and the AI gateway. For connection issues, see{' '}
           <strong className="text-white/60">Backend &amp; session</strong> in Settings.
         </p>
-        <dl className="grid gap-2 text-sm sm:grid-cols-2">
-          <div className="flex justify-between gap-2 rounded-lg border border-white/5 bg-black/20 px-3 py-2 sm:col-span-2">
-            <dt className="text-white/45">Access token (masked)</dt>
-            <dd className="font-mono text-xs text-white/80">{maskAccessToken(tokens?.access)}</dd>
-          </div>
-          <div className="flex justify-between gap-2 rounded-lg border border-white/5 bg-black/20 px-3 py-2">
-            <dt className="text-white/45">Refresh token stored</dt>
-            <dd className="font-medium text-white/85">{tokens?.refresh ? 'Yes' : 'No'}</dd>
-          </div>
-        </dl>
+        <SettingsSessionSummary />
       </section>
     </div>
   );

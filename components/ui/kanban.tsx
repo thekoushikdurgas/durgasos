@@ -2,8 +2,6 @@
 
 import { type DragEvent, type FormEvent, useState } from 'react';
 import { Flame, Plus, Trash2 } from 'lucide-react';
-import { motion } from 'motion/react';
-
 import { cn } from '@/lib/utils';
 import type { KanbanListIds, TodoCard, TodoColumn } from '@/lib/todo-format';
 import { TODO_COLUMNS } from '@/lib/todo-format';
@@ -107,8 +105,9 @@ const Column = ({
     dt.effectAllowed = 'move';
   };
 
-  const handleDragEnd = (e: DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     if (disabled) return;
+    e.preventDefault();
     const dt = e.dataTransfer;
     if (!dt) return;
     const cardId = dt.getData('cardId');
@@ -135,17 +134,7 @@ const Column = ({
       };
 
       copy = copy.filter((c) => c.id !== cardId);
-
-      const moveToBack = before === '-1';
-
-      if (moveToBack) {
-        copy.push(updated);
-      } else {
-        const insertAtIndex = copy.findIndex((el) => el.id === before);
-        if (insertAtIndex === -1) return;
-
-        copy.splice(insertAtIndex, 0, updated);
-      }
+      copy = insertCardIntoCopy(copy, updated, before);
 
       onCardsChange(copy, cardId);
     }
@@ -191,7 +180,7 @@ const Column = ({
         <span className="rounded text-sm text-neutral-400">{filteredCards.length}</span>
       </div>
       <div
-        onDrop={handleDragEnd}
+        onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={cn(
@@ -224,18 +213,17 @@ const Card = ({ card, handleDragStart, disabled }: CardProps) => {
   return (
     <>
       <DropIndicator beforeId={id} column={column} />
-      <motion.div
-        layout
-        layoutId={id}
+      <div
         draggable={!disabled}
         onDragStart={(e) => handleDragStart(e as unknown as DragEvent<HTMLDivElement>, card)}
+        onDragOver={(e) => e.preventDefault()}
         className={cn(
           'mb-1 cursor-grab rounded border border-white/10 bg-white/5 p-3 active:cursor-grabbing',
           disabled && 'cursor-not-allowed opacity-60'
         )}
       >
         <p className="text-sm text-white/90">{title}</p>
-      </motion.div>
+      </div>
     </>
   );
 };
@@ -322,18 +310,18 @@ const AddCard = ({ column, onAddCard, disabled }: AddCardProps) => {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!text.trim().length) return;
+    const title = text.trim();
+    if (!title.length) return;
 
-    void Promise.resolve(onAddCard(column, text.trim())).then(() => {
-      setText('');
-      setAdding(false);
-    });
+    setText('');
+    setAdding(false);
+    void onAddCard(column, title);
   };
 
   return (
     <>
       {adding ? (
-        <motion.form layout onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -360,10 +348,9 @@ const AddCard = ({ column, onAddCard, disabled }: AddCardProps) => {
               <Plus className="size-3.5" />
             </button>
           </div>
-        </motion.form>
+        </form>
       ) : (
-        <motion.button
-          layout
+        <button
           type="button"
           disabled={disabled}
           onClick={() => setAdding(true)}
@@ -371,11 +358,30 @@ const AddCard = ({ column, onAddCard, disabled }: AddCardProps) => {
         >
           <span>Add card</span>
           <Plus className="size-3.5" />
-        </motion.button>
+        </button>
       )}
     </>
   );
 };
+
+/** Insert a card into the flat list at the correct position within its column. */
+function insertCardIntoCopy(copy: TodoCard[], updated: TodoCard, before: string): TodoCard[] {
+  const col = updated.column;
+  if (before !== '-1') {
+    const at = copy.findIndex((c) => c.id === before);
+    if (at >= 0) {
+      copy.splice(at, 0, updated);
+      return copy;
+    }
+  }
+  let lastInCol = -1;
+  for (let i = 0; i < copy.length; i++) {
+    if (copy[i]!.column === col) lastInCol = i;
+  }
+  if (lastInCol === -1) copy.push(updated);
+  else copy.splice(lastInCol + 1, 0, updated);
+  return copy;
+}
 
 function getNearestIndicator(e: DragEvent<HTMLDivElement>, indicators: HTMLElement[]) {
   const DISTANCE_OFFSET = 50;

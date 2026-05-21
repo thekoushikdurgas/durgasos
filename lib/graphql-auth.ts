@@ -15,6 +15,10 @@ export const SIGN_UP = gql`
       user {
         id
         email
+        profile {
+          username
+          avatarUrl
+        }
       }
       session {
         accessToken
@@ -35,6 +39,10 @@ export const SIGN_IN = gql`
       user {
         id
         email
+        profile {
+          username
+          avatarUrl
+        }
       }
       session {
         accessToken

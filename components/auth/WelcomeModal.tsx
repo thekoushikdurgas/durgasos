@@ -2,18 +2,29 @@
 
 import '@/app/auth-glass.css';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { WelcomeSignUpSection } from '@/components/auth/WelcomeSignUpSection';
 import { useAuthSession } from '@/components/auth/AuthSessionContext';
 import VaporizeTextCycle, { Tag } from '@/components/ui/vaporize-text-cycle';
-import { FOCUS_WELCOME_AUTH_EVENT } from '@/lib/auth-session-events';
+import { AUTH_SESSION_CHANGED_EVENT, FOCUS_WELCOME_AUTH_EVENT } from '@/lib/auth-session-events';
 import { cn } from '@/lib/utils';
 
 export function WelcomeModal() {
   const { ready, authenticated } = useAuthSession();
-  const open = ready && !authenticated;
+  const [forceOpen, setForceOpen] = useState(false);
+  const open = ready && (!authenticated || forceOpen);
   const mainRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (authenticated) setForceOpen(false);
+  }, [authenticated]);
+
+  useEffect(() => {
+    const onSessionChange = () => setForceOpen(false);
+    window.addEventListener(AUTH_SESSION_CHANGED_EVENT, onSessionChange);
+    return () => window.removeEventListener(AUTH_SESSION_CHANGED_EVENT, onSessionChange);
+  }, []);
 
   useEffect(() => {
     mainRef.current = document.getElementById('main-content');
@@ -41,9 +52,12 @@ export function WelcomeModal() {
 
   useEffect(() => {
     const onFocusAuth = () => {
-      document
-        .getElementById('create-account')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setForceOpen(true);
+      requestAnimationFrame(() => {
+        document
+          .getElementById('create-account')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
     };
     window.addEventListener(FOCUS_WELCOME_AUTH_EVENT, onFocusAuth);
     return () => window.removeEventListener(FOCUS_WELCOME_AUTH_EVENT, onFocusAuth);

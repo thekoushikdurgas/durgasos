@@ -1,8 +1,18 @@
 'use client';
 
-import { LayoutGroup, motion } from 'motion/react';
+import { useRef } from 'react';
 import { CalendarDays } from 'lucide-react';
 
+import {
+  calBtnSecondary,
+  calSelect,
+  calTabBtn,
+  calTabBtnActive,
+  calTabBtnIdle,
+  calTabNav,
+  calTabPill,
+} from '@/components/apps/calendar/calendar-theme';
+import { SpringTabIndicator } from '@/components/motion/SpringTabIndicator';
 import type { LinkedGoogleAccountRow } from '@/lib/linked-google-accounts';
 
 export type CalendarShellTab = 'Today' | 'Planning' | 'Contacts' | 'Events';
@@ -24,83 +34,56 @@ export function CalendarHeader({
   onGoogleUserId: (id: string | null) => void;
   onOpenSettings: () => void;
 }) {
-  const activeAccount = accounts.find((a) => a.googleUserId === googleUserId);
+  const navRef = useRef<HTMLElement>(null);
 
   return (
-    <header className="relative z-20 flex h-[72px] shrink-0 items-center justify-between border-b border-slate-100 bg-white px-6 sm:px-10">
-      <div className="flex items-center gap-3 text-xl font-black tracking-tighter text-slate-900 sm:text-2xl">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 shadow-lg shadow-indigo-200">
-          <CalendarDays className="h-6 w-6 text-white" strokeWidth={2.2} aria-hidden />
+    <header className="flex min-h-14 shrink-0 flex-col gap-2 border-b border-white/10 px-4 py-2 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 text-sm font-semibold tracking-tight text-white/90 sm:text-base">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600">
+            <CalendarDays className="size-4 text-white" strokeWidth={2.2} aria-hidden />
+          </span>
+          Calendar
         </div>
-        CLNDR
-      </div>
-
-      <nav className="relative flex rounded-2xl bg-slate-100 p-1.5">
-        <LayoutGroup id="calendar-tabs">
+        <nav ref={navRef} className={calTabNav}>
+          <SpringTabIndicator
+            containerRef={navRef}
+            activeSelector='[aria-selected="true"]'
+            className={calTabPill}
+          />
           {TABS.map((tab) => (
             <button
               key={tab}
               type="button"
+              role="tab"
+              aria-selected={activeTab === tab}
               onClick={() => onTab(tab)}
-              className={`relative z-10 rounded-xl px-4 py-2 text-xs font-bold outline-none transition-colors sm:px-6 sm:text-sm ${
-                activeTab === tab ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'
-              }`}
+              className={`${calTabBtn} ${activeTab === tab ? calTabBtnActive : calTabBtnIdle}`}
             >
               {tab}
-              {activeTab === tab ? (
-                <motion.div
-                  layoutId="calendarActiveTab"
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="absolute inset-0 -z-10 rounded-xl bg-white shadow-sm"
-                />
-              ) : null}
             </button>
           ))}
-        </LayoutGroup>
-      </nav>
-
-      <div className="flex max-w-[min(40vw,220px)] items-center gap-3">
-        <div className="min-w-0 text-right">
-          <label className="sr-only" htmlFor="calendar-linked-account">
-            Linked Google account
-          </label>
-          <select
-            id="calendar-linked-account"
-            className="mb-0.5 max-w-full truncate rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-900"
-            value={googleUserId ?? ''}
-            onChange={(e) => onGoogleUserId(e.target.value || null)}
-          >
-            {accounts.map((a) => (
-              <option key={a.googleUserId} value={a.googleUserId}>
-                {a.displayName?.trim() || a.email || a.googleUserId}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            className="block w-full truncate text-left text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600"
-          >
-            Accounts
-          </button>
-        </div>
-        <div className="h-11 w-11 shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-indigo-100 shadow-md">
-          {activeAccount?.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={activeAccount.photoUrl}
-              alt=""
-              className="h-full w-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs font-bold text-indigo-700">
-              {(activeAccount?.displayName?.trim() || activeAccount?.email || '?')
-                .slice(0, 1)
-                .toUpperCase()}
-            </div>
-          )}
-        </div>
+        </nav>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="sr-only" htmlFor="calendar-linked-account">
+          Linked Google account
+        </label>
+        <select
+          id="calendar-linked-account"
+          className={calSelect}
+          value={googleUserId ?? ''}
+          onChange={(e) => onGoogleUserId(e.target.value || null)}
+        >
+          {accounts.map((a) => (
+            <option key={a.googleUserId} value={a.googleUserId} className="bg-slate-900">
+              {a.displayName?.trim() || a.email || a.googleUserId}
+            </option>
+          ))}
+        </select>
+        <button type="button" className={calBtnSecondary} onClick={onOpenSettings}>
+          Accounts
+        </button>
       </div>
     </header>
   );

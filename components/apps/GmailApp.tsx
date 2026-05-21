@@ -8,6 +8,7 @@ import { GmailHeader } from '@/components/apps/gmail/GmailHeader';
 import { GmailList, type GmailThreadRow } from '@/components/apps/gmail/GmailList';
 import { GmailReader } from '@/components/apps/gmail/GmailReader';
 import { GmailSidebar } from '@/components/apps/gmail/GmailSidebar';
+import { useCachedQuery } from '@/hooks/use-cached-query';
 import { buildGmailListQuery, type GmailFolderId } from '@/lib/gmail-format';
 import {
   GET_LINKED_GOOGLE_ACCOUNT_TOKEN,
@@ -17,6 +18,7 @@ import {
   ME,
 } from '@/lib/graphql-modules';
 import { parseLinkedGoogleAccounts } from '@/lib/linked-google-accounts';
+import { CACHE_TTL_MS } from '@/lib/local-cache';
 import { readGoogleTokenPayload } from '@/lib/read-google-token-payload';
 import { cn } from '@/lib/utils';
 
@@ -36,6 +38,7 @@ export function GmailApp() {
   const { openApp } = useOS();
   const meQ = useQuery(ME);
   const authed = Boolean(meQ.data?.me?.id);
+  const meId = meQ.data?.me?.id ?? '';
 
   const linkedQ = useQuery(LINKED_GOOGLE_ACCOUNTS, {
     skip: !authed,
@@ -92,9 +95,84 @@ export function GmailApp() {
     [folder, searchApplied]
   );
 
+  const listCacheKey =
+    accessToken && googleUserId && meId
+      ? `gmail_messages:${meId}:${googleUserId}:${folder}:${searchApplied}`
+      : 'gmail_messages:__idle__';
+
+  const threadListCached = useCachedQuery<ListThreadsPayload | null>(
+    listCacheKey,
+    async () => {
+      if (!accessToken || !googleUserId || !meId) return null;
+      const { data } = await client.query({
+        query: GMAIL_LIST_THREADS,
+        variables: {
+          params: {
+            access_token: accessToken,
+            max_results: 25,
+            page_token: undefined,
+            q: listQueryString,
+          },
+        },
+        fetchPolicy: 'network-only',
+      });
+      return (data?.gmailListThreads as ListThreadsPayload | undefined) ?? null;
+    },
+    CACHE_TTL_MS.gmail_messages,
+    { backgroundRefreshMs: 30_000 }
+  );
+
+  useEffect(() => {
+    if (!accessToken) {
+      queueMicrotask(() => {
+        setThreads([]);
+        setNextPageToken(null);
+        setSelectedThreadId(null);
+        setThreadJson(null);
+        setListErr(null);
+      });
+      return;
+    }
+    const p = threadListCached.data;
+    const fetchErr = threadListCached.error?.message ?? null;
+    if (p === null && threadListCached.loading) return;
+    queueMicrotask(() => {
+      if (fetchErr) {
+        setListErr(fetchErr);
+        return;
+      }
+      if (p === null) {
+        setListErr(null);
+        return;
+      }
+      if (!p.success) {
+        setListErr('Could not load conversations.');
+        return;
+      }
+      setListErr(null);
+      setThreads(p.threads ?? []);
+      setNextPageToken(p.nextPageToken ?? null);
+    });
+  }, [
+    accessToken,
+    threadListCached.data,
+    threadListCached.loading,
+    threadListCached.error,
+    listCacheKey,
+    listQueryString,
+  ]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    queueMicrotask(() => {
+      setSelectedThreadId(null);
+      setThreadJson(null);
+    });
+  }, [accessToken, listQueryString, listCacheKey]);
+
   const loadThreads = useCallback(
     async (pageToken: string | null, append: boolean) => {
-      if (!accessToken) return;
+      if (!accessToken || !append || !pageToken) return;
       setListErr(null);
       setListLoading(true);
       try {
@@ -104,7 +182,7 @@ export function GmailApp() {
             params: {
               access_token: accessToken,
               max_results: 25,
-              page_token: pageToken ?? undefined,
+              page_token: pageToken,
               q: listQueryString,
             },
           },
@@ -116,7 +194,7 @@ export function GmailApp() {
           return;
         }
         const chunk = p.threads ?? [];
-        setThreads((prev) => (append ? [...prev, ...chunk] : chunk));
+        setThreads((prev) => [...prev, ...chunk]);
         setNextPageToken(p.nextPageToken ?? null);
       } catch (e: unknown) {
         setListErr(e instanceof Error ? e.message : 'List failed.');
@@ -126,23 +204,6 @@ export function GmailApp() {
     },
     [accessToken, client, listQueryString]
   );
-
-  useEffect(() => {
-    if (!accessToken) {
-      queueMicrotask(() => {
-        setThreads([]);
-        setNextPageToken(null);
-        setSelectedThreadId(null);
-        setThreadJson(null);
-      });
-      return;
-    }
-    queueMicrotask(() => {
-      setSelectedThreadId(null);
-      setThreadJson(null);
-      void loadThreads(null, false);
-    });
-  }, [accessToken, listQueryString, loadThreads]);
 
   const openThread = useCallback(
     async (threadId: string) => {
@@ -258,8 +319,8 @@ export function GmailApp() {
                 threads={threads}
                 selectedThreadId={selectedThreadId}
                 onSelectThread={(id) => void openThread(id)}
-                loading={listLoading}
-                error={listErr}
+                loading={threadListCached.loading || listLoading}
+                error={listErr ?? threadListCached.error?.message ?? null}
                 nextPageToken={nextPageToken}
                 onLoadMore={() => void loadThreads(nextPageToken, true)}
               />

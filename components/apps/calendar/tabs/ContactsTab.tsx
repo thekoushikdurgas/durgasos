@@ -4,6 +4,13 @@ import { useQuery } from '@apollo/client/react';
 import Image from 'next/image';
 import { useMemo, useState } from 'react';
 
+import {
+  calError,
+  calHeadingLg,
+  calInputWide,
+  calMuted,
+  calPanelRow,
+} from '@/components/apps/calendar/calendar-theme';
 import { GOOGLE_PEOPLE_LIST_CONTACTS } from '@/lib/graphql-modules';
 import { parsePeopleConnection, type PeopleConnectionView } from '@/lib/google-people-format';
 
@@ -50,29 +57,29 @@ export function ContactsTab({
   return (
     <div className="mx-auto flex h-full max-w-6xl flex-col gap-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Contacts</h1>
+        <h1 className={calHeadingLg}>Contacts</h1>
         <input
           type="search"
           placeholder="Search…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="w-full max-w-md rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          className={calInputWide}
         />
       </div>
 
       {!accessToken ? (
-        <p className="text-sm text-slate-500">Select an account with a valid token.</p>
+        <p className={calMuted}>Select an account with a valid token.</p>
       ) : peopleQ.loading ? (
-        <p className="text-sm text-slate-400">Loading contacts…</p>
+        <p className="text-sm text-white/40">Loading contacts…</p>
       ) : peopleQ.error ? (
-        <p className="text-sm text-red-600">{peopleQ.error.message}</p>
+        <p className={calError}>{peopleQ.error.message}</p>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {filtered.slice(0, 8).map((c) => (
               <div
                 key={c.resourceName}
-                className="flex flex-col items-center gap-3 rounded-[2.5rem] border border-slate-100 bg-white p-6 text-center shadow-xl shadow-slate-200/50"
+                className="flex flex-col items-center gap-3 rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-6 text-center shadow-inner"
               >
                 {c.photoUrl ? (
                   <Image
@@ -85,21 +92,18 @@ export function ContactsTab({
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="mb-1 flex h-[84px] w-[84px] items-center justify-center rounded-full bg-indigo-100 text-xl font-black text-indigo-700 shadow-md">
+                  <div className="mb-1 flex h-[84px] w-[84px] items-center justify-center rounded-full bg-violet-500/20 text-xl font-black text-violet-200 shadow-md">
                     {c.displayName.slice(0, 1).toUpperCase()}
                   </div>
                 )}
-                <p className="line-clamp-2 text-sm font-bold text-slate-900">{c.displayName}</p>
-                {c.email ? <p className="line-clamp-2 text-xs text-slate-500">{c.email}</p> : null}
+                <p className="line-clamp-2 text-sm font-bold text-white/90">{c.displayName}</p>
+                {c.email ? <p className="line-clamp-2 text-xs text-white/50">{c.email}</p> : null}
               </div>
             ))}
           </div>
           <div className="space-y-3">
             {filtered.slice(8).map((c) => (
-              <div
-                key={c.resourceName}
-                className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm"
-              >
+              <div key={c.resourceName} className={`flex items-center gap-4 p-4 ${calPanelRow}`}>
                 {c.photoUrl ? (
                   <Image
                     src={c.photoUrl}
@@ -111,13 +115,13 @@ export function ContactsTab({
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-violet-500/20 text-xs font-bold text-violet-200">
                     {c.displayName.slice(0, 1).toUpperCase()}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-bold text-slate-900">{c.displayName}</p>
-                  {c.email ? <p className="truncate text-xs text-slate-500">{c.email}</p> : null}
+                  <p className="truncate font-bold text-white/90">{c.displayName}</p>
+                  {c.email ? <p className="truncate text-xs text-white/50">{c.email}</p> : null}
                 </div>
               </div>
             ))}

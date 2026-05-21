@@ -10,6 +10,7 @@ import { BlurFade } from '@/components/auth/BlurFade';
 import { ConfettiCanvas, type ConfettiRef } from '@/components/auth/ConfettiCanvas';
 import { GlassButton } from '@/components/auth/GlassAuthButton';
 import { useSignUpFlow } from '@/components/auth/use-sign-up-flow';
+import { cn } from '@/lib/utils';
 
 export function WelcomeSignUpSection() {
   const confettiRef = useRef<ConfettiRef>(null);
@@ -35,40 +36,50 @@ export function WelcomeSignUpSection() {
         className="relative z-[5] m-0 flex h-full min-h-0 w-full flex-1 flex-col items-center justify-center p-0"
         aria-label="Create account"
       >
-        <div className="relative flex h-fit w-fit max-w-full flex-col items-center justify-center overflow-y-auto rounded-2xl border border-border bg-card/45 backdrop-blur-md">
-          <div className="mx-auto w-full max-w-2xl shrink-0 space-y-6 px-4 pt-6 pb-2 text-center">
-            <BlurFade delay={0.25 * 1} className="flex justify-center">
-              <div className="text-primary border-border bg-card/50 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                First-run experience
-              </div>
-            </BlurFade>
+        <div className="relative flex h-fit w-fit min-w-[min(100%,320px)] max-w-full flex-col items-center justify-center overflow-y-auto rounded-2xl border border-border bg-card/45 px-4 backdrop-blur-md">
+          {signUp.authStep === 'email' ? (
+            <div className="mx-auto w-full max-w-2xl shrink-0 space-y-6 pt-6 pb-2 text-center">
+              <BlurFade delay={0.25 * 1} className="flex justify-center">
+                <div className="text-primary border-border bg-card/50 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur">
+                  <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  First-run experience
+                </div>
+              </BlurFade>
 
-            <BlurFade delay={0.25 * 2} className="w-full">
-              <h1 className="font-serif text-4xl font-light tracking-tight sm:text-5xl md:text-6xl">
-                Welcome to your desktop
-              </h1>
-            </BlurFade>
+              <BlurFade delay={0.25 * 2} className="w-full">
+                <h1 className="font-serif text-4xl font-light tracking-tight sm:text-5xl md:text-6xl">
+                  Welcome to your desktop
+                </h1>
+              </BlurFade>
 
-            <BlurFade delay={0.25 * 3} className="flex flex-col items-center justify-center gap-4">
-              <GlassButton
-                asChild
-                size="default"
-                className="inline-flex w-fit flex-col items-center justify-center"
+              <BlurFade
+                delay={0.25 * 3}
+                className="flex flex-col items-center justify-center gap-4"
               >
-                <Link
-                  href="#create-account"
-                  className="text-foreground inline-flex items-center justify-center gap-2 no-underline"
-                  aria-label="Get started — focus create account form"
+                <GlassButton
+                  asChild
+                  size="default"
+                  className="inline-flex w-fit flex-col items-center justify-center"
                 >
-                  Get started
-                  <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-                </Link>
-              </GlassButton>
-            </BlurFade>
-          </div>
+                  <Link
+                    href="#create-account"
+                    className="text-foreground inline-flex items-center justify-center gap-2 no-underline"
+                    aria-label="Get started — focus create account form"
+                  >
+                    Get started
+                    <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
+                  </Link>
+                </GlassButton>
+              </BlurFade>
+            </div>
+          ) : null}
 
-          <div className="flex w-full flex-row items-center justify-center px-0 pb-4">
+          <div
+            className={cn(
+              'flex w-full flex-row items-center justify-center px-0 pb-4',
+              signUp.authStep !== 'email' && 'pt-6'
+            )}
+          >
             <AuthSignUpFieldset
               disabled={signUp.busy || signUp.modalStatus !== 'closed'}
               ariaBusy={signUp.fieldsetAriaBusy}
@@ -95,6 +106,7 @@ export function WelcomeSignUpSection() {
               confirmPasswordInputRef={signUp.confirmPasswordInputRef}
               oauthSoon={signUp.oauthSoon}
               isExistingAccount={signUp.isExistingAccount}
+              checkingEmail={signUp.checkingEmail}
             />
           </div>
         </div>

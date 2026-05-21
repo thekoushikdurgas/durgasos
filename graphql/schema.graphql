@@ -40,8 +40,22 @@ type Query {
   installedApps: InstalledApps
   linkedGoogleAccounts: JSON
   getLinkedGoogleAccountToken(googleUserId: String!): JSON
+  linkedGithubAccounts: JSON
+  githubUser(username: String!, githubUserId: String): JSON
+  githubRepos(username: String!, sort: String, githubUserId: String): JSON
+  githubStarred(username: String!, githubUserId: String): JSON
+  githubReadme(username: String!, githubUserId: String): JSON
   todoWorkspaces(googleUserId: String!): [TodoWorkspace!]!
   todoTasks(workspaceId: String!): [TodoTask!]!
+  jobStatus(jobId: String!): AsyncJobStatus
+}
+
+type AsyncJobStatus {
+  jobId: String!
+  status: String!
+  result: JSON
+  error: String
+  updatedAt: Float!
 }
 
 type Mutation {
@@ -116,6 +130,9 @@ type Mutation {
     expiresAt: Float!
     scopesGranted: String
   ): JSON!
+
+  addLinkedGithubAccount(params: JSON!): JSON!
+  removeLinkedGithubAccount(githubUserId: String!): JSON!
 
   googleTasksInsertTask(params: JSON): JSON!
   googleTasksUpdateTask(params: JSON): JSON!

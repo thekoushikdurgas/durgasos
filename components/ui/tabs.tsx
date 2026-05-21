@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 
+import { SpringTabIndicator } from '@/components/motion/SpringTabIndicator';
 import { cn } from '@/lib/utils';
 
 export type TabsVariant = 'default' | 'underline' | 'pill';
@@ -48,7 +49,7 @@ export function Tabs({
 
 export type TabsListProps = React.HTMLAttributes<HTMLDivElement>;
 
-export function TabsList({ className, onKeyDown, ...props }: TabsListProps) {
+export function TabsList({ className, onKeyDown, children, ...props }: TabsListProps) {
   const { variant } = useTabsContext('TabsList');
   const listRef = React.useRef<HTMLDivElement>(null);
 
@@ -84,13 +85,15 @@ export function TabsList({ className, onKeyDown, ...props }: TabsListProps) {
     onKeyDown?.(e);
   };
 
+  const showIndicator = variant === 'underline' || variant === 'pill';
+
   return (
     <div
       ref={listRef}
       role="tablist"
       onKeyDown={handleKeyDown}
       className={cn(
-        'inline-flex items-center justify-start gap-1',
+        'relative inline-flex items-center justify-start gap-1',
         variant === 'default' &&
           'h-9 rounded-xl border border-white/10 bg-white/5 p-1 shadow-sm backdrop-blur-md',
         variant === 'underline' && 'h-10 gap-0 border-b border-white/15 bg-transparent p-0',
@@ -99,7 +102,20 @@ export function TabsList({ className, onKeyDown, ...props }: TabsListProps) {
         className
       )}
       {...props}
-    />
+    >
+      {showIndicator ? (
+        <SpringTabIndicator
+          containerRef={listRef}
+          activeSelector={`[role="tab"][aria-selected="true"]`}
+          className={
+            variant === 'underline'
+              ? '!top-auto h-0.5 bg-[var(--color-accent-primary,#3b82f6)]'
+              : 'rounded-full bg-[var(--color-accent-primary,#3b82f6)]/25 shadow-[0_0_12px_rgba(59,130,246,0.35)]'
+          }
+        />
+      ) : null}
+      {children}
+    </div>
   );
 }
 
@@ -126,9 +142,7 @@ export function TabsTrigger({ value, className, ...props }: TabsTriggerProps) {
         variant === 'underline' &&
           cn(
             'rounded-none border-b-2 border-transparent px-4 py-2',
-            isSelected
-              ? 'border-[var(--color-accent-primary,#3b82f6)] text-foreground'
-              : 'text-muted-foreground hover:text-foreground'
+            isSelected ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
           ),
         variant === 'pill' &&
           cn(

@@ -1,7 +1,5 @@
 /**
- * Resolve ai.backend base URL (no trailing slash) for **direct** calls (e.g. WebSocket).
- * HTTP GraphQL from the browser uses same-origin `/graphql` (see `getGraphqlHttpUrl`) so
- * Next can rewrite to ai.backend and session cookies apply to the OS host.
+ * Resolve ai.backend base URL (no trailing slash) for HTTP and WebSocket.
  */
 export function getBackendOrigin(): string {
   const explicit = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
@@ -29,27 +27,18 @@ export function getBackendOrigin(): string {
 }
 
 /**
- * Same-origin GraphQL URL (`/graphql` on this app). Next.js rewrites it to ai.backend
- * (`next.config.ts`), so `establishSession` Set-Cookie headers target the OS origin and
- * the Next.js proxy can read `durgas_sb_access`.
+ * GraphQL HTTP URL on **ai.backend** (cross-origin from the Next app).
  *
- * `GET /api/auth/session` on this app is rewritten the same way for the welcome shell’s
- * session probe (`AuthSessionContext`).
+ * Auth uses `Authorization: Bearer` from localStorage (`ApolloGraphQLProvider`, `backend-http.ts`).
+ * Ensure ai.backend `CORS_ORIGINS` includes your DurgasOS origin (e.g. `http://localhost:3000`).
  *
- * `GET /files/...` from GraphQL signed URLs is rewritten to **ai.backend** (see `next.config.ts`).
- *
- * Override: set `NEXT_PUBLIC_GRAPHQL_DIRECT_URL` to a full backend GraphQL URL (skips
- * rewrite; session cookies will not be visible to the Next.js proxy unless same host).
+ * Session cookies use same-origin `app/api/auth/session` (GET/POST/DELETE).
+ * `GET /files/...` signed URLs are proxied to ai.backend under `/files/:path*`.
  */
 export function getGraphqlHttpUrl(): string {
-  const direct = process.env.NEXT_PUBLIC_GRAPHQL_DIRECT_URL?.trim();
-  if (direct) return direct;
-  if (typeof window !== 'undefined') {
-    return `${window.location.origin}/graphql`;
-  }
-  const internal =
-    process.env.INTERNAL_GRAPHQL_ORIGIN?.trim() || `http://127.0.0.1:${process.env.PORT ?? '3000'}`;
-  return `${internal.replace(/\/$/, '')}/graphql`;
+  const explicit = process.env.NEXT_PUBLIC_GRAPHQL_URL?.trim();
+  if (explicit) return explicit;
+  return `${getBackendOrigin()}/graphql`;
 }
 
 /**

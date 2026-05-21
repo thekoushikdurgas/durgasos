@@ -116,6 +116,8 @@ import {
   mapDriveFileToExplorerEntry,
   parseGoogleDriveUserId,
 } from '@/lib/file-explorer-google-drive';
+import { shouldOpenGoogleDriveInBrowser } from '@/lib/google-drive-media';
+import { galleryImageLaunchExtras } from '@/lib/gallery-launch';
 import { parseLinkedGoogleAccounts } from '@/lib/linked-google-accounts';
 import { readGoogleTokenPayload } from '@/lib/read-google-token-payload';
 import type { LaunchPayload } from '@/lib/window-launch';
@@ -1104,6 +1106,18 @@ export function FileExplorerApp() {
         return { storage: entry.storage, fileName: entry.name };
       }
       const base = side === 'left' ? leftPath : rightPath;
+      const driveUid = parseGoogleDriveUserId(base);
+      if (entry.googleDrive && driveUid) {
+        return {
+          pathSegments: [...base],
+          fileName: entry.name,
+          googleDrive: {
+            fileId: entry.googleDrive.fileId,
+            googleUserId: driveUid,
+            mimeType: entry.googleDrive.mimeType,
+          },
+        };
+      }
       return { pathSegments: [...base], fileName: entry.name };
     },
     [leftPath, rightPath]
@@ -1112,15 +1126,37 @@ export function FileExplorerApp() {
   const openDefaultForFile = useCallback(
     (entry: ExplorerEntry, side: 'left' | 'right') => {
       if (entry.kind !== 'file') return;
-      const link = entry.googleDrive?.webViewLink;
-      if (link) {
-        window.open(link, '_blank', 'noopener,noreferrer');
-        return;
-      }
       const ext = extensionFromFileName(entry.name);
       const app = resolveDefaultApp(ext, fileAssociations, installedIds);
+      const useBrowser = shouldOpenGoogleDriveInBrowser(entry);
+      // #region agent log
+      void fetch('http://127.0.0.1:7531/ingest/632941fc-04f7-4b75-9df5-2d52b029d540', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '5e768c' },
+        body: JSON.stringify({
+          sessionId: '5e768c',
+          location: 'FileExplorer.tsx:openDefaultForFile',
+          message: 'drive_open_branch',
+          data: {
+            hypothesisId: 'H_DRIVE_OPEN',
+            hasGoogleDrive: Boolean(entry.googleDrive),
+            ext: ext || null,
+            resolvedApp: app,
+            useBrowser,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+      if (useBrowser && entry.googleDrive?.webViewLink) {
+        window.open(entry.googleDrive.webViewLink, '_blank', 'noopener,noreferrer');
+        return;
+      }
       if (!app) return;
-      openApp(app, buildLaunch(entry, side));
+      openApp(app, {
+        ...buildLaunch(entry, side),
+        ...galleryImageLaunchExtras(app, entry.name),
+      });
     },
     [openApp, buildLaunch, fileAssociations, installedIds]
   );
@@ -1232,7 +1268,10 @@ export function FileExplorerApp() {
 
   const openWith = useCallback(
     (app: AppId, entry: ExplorerEntry, side: 'left' | 'right') => {
-      openApp(app, buildLaunch(entry, side));
+      openApp(app, {
+        ...buildLaunch(entry, side),
+        ...galleryImageLaunchExtras(app, entry.name),
+      });
     },
     [openApp, buildLaunch]
   );
@@ -1469,6 +1508,16 @@ export function FileExplorerApp() {
                 Delete from cloud
               </ContextMenuItem>
             </>
+          ) : null}
+          {driveFile && entry.googleDrive?.webViewLink ? (
+            <ContextMenuItem
+              className="focus:bg-white/10"
+              onSelect={() => {
+                window.open(entry.googleDrive!.webViewLink!, '_blank', 'noopener,noreferrer');
+              }}
+            >
+              Open in Google Drive (browser)
+            </ContextMenuItem>
           ) : null}
           <ContextMenuSeparator className="bg-white/10" />
           <ContextMenuItem

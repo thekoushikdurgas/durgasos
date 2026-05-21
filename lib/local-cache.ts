@@ -12,10 +12,12 @@ type Meta = { order: string[]; max: number };
 type StoredEntry<T> = {
   v: string;
   exp: number;
+  /** When the entry was written (ms); used for stale-while-revalidate. */
+  wroteAt: number;
   data: T;
 };
 
-const DEFAULT_MAX_KEYS = 80;
+const DEFAULT_MAX_KEYS = 200;
 
 function readMeta(): Meta {
   if (typeof window === 'undefined') return { order: [], max: DEFAULT_MAX_KEYS };
@@ -85,6 +87,15 @@ export const CACHE_TTL_MS = {
   weather: 900_000,
   desktop_background: 600_000,
   graphql_proxy: 0,
+  me_query: 120_000,
+  gmail_messages: 60_000,
+  calendar_events: 120_000,
+  contacts: 300_000,
+  github_repos: 300_000,
+  drive_files: 120_000,
+  google_photos: 180_000,
+  todo_workspaces: 300_000,
+  linked_accounts: 300_000,
 } as const;
 
 export class LocalCache {
@@ -94,6 +105,7 @@ export class LocalCache {
     const entry: StoredEntry<T> = {
       v: CACHE_VERSION,
       exp: ttlMs > 0 ? now + ttlMs : now + 365 * 24 * 60 * 60 * 1000,
+      wroteAt: now,
       data: value,
     };
     try {
@@ -133,6 +145,27 @@ export class LocalCache {
       }
       touchOrder(logicalKey);
       return parsed.data as T;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Read cache entry without deleting it when past `exp` (for stale-while-revalidate).
+   */
+  peekEntry<T>(logicalKey: string): StoredEntry<T> | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = window.localStorage.getItem(entryStorageKey(logicalKey));
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as StoredEntry<T>;
+      if (!parsed || typeof parsed !== 'object' || parsed.v !== CACHE_VERSION) return null;
+      if (typeof parsed.exp !== 'number') return null;
+      const wroteAt = typeof parsed.wroteAt === 'number' ? parsed.wroteAt : 0;
+      if (Date.now() <= parsed.exp) {
+        touchOrder(logicalKey);
+      }
+      return { ...parsed, wroteAt, data: parsed.data as T };
     } catch {
       return null;
     }
@@ -226,6 +259,21 @@ export class LocalCache {
     pending.set(logicalKey, p);
     return p;
   }
+}
+
+export type PrefetchEntry<T> = { key: string; ttlMs: number; fetcher: () => Promise<T> };
+
+/** Warm L1 cache in parallel (best-effort; errors swallowed per entry). */
+export async function prefetchCriticalData<T>(entries: PrefetchEntry<T>[]): Promise<void> {
+  await Promise.all(
+    entries.map(async ({ key, ttlMs, fetcher }) => {
+      try {
+        await localCache.getOrFetch(key, fetcher, ttlMs);
+      } catch {
+        /* offline / auth */
+      }
+    })
+  );
 }
 
 export const localCache = new LocalCache();

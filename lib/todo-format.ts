@@ -2,6 +2,15 @@ export type TodoColumn = 'backlog' | 'todo' | 'doing' | 'done';
 
 export const TODO_COLUMNS: readonly TodoColumn[] = ['backlog', 'todo', 'doing', 'done'] as const;
 
+/** Kanban drag/drop expects cards grouped in column display order (not DB column name order). */
+export function sortCardsForKanban(cards: TodoCard[]): TodoCard[] {
+  const out: TodoCard[] = [];
+  for (const col of TODO_COLUMNS) {
+    out.push(...cards.filter((c) => c.column === col));
+  }
+  return out;
+}
+
 export type TodoCard = {
   id: string;
   title: string;
@@ -208,10 +217,7 @@ export function buildMoveCommit(
   let previousId: string | null = null;
   if (idx > 0) {
     const prevCard = inCol[idx - 1]!;
-    if (
-      prevCard.id !== movedCardId &&
-      prevCard.tasklistId === movedNext.tasklistId
-    ) {
+    if (prevCard.id !== movedCardId && prevCard.tasklistId === movedNext.tasklistId) {
       previousId = prevCard.id;
     }
   }

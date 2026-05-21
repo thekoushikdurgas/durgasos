@@ -1,7 +1,5 @@
 'use client';
 
-import { motion } from 'motion/react';
-
 function FloatingPaths({ position, animate }: { position: number; animate: boolean }) {
   const paths = Array.from({ length: 36 }, (_, i) => ({
     id: i,
@@ -25,36 +23,24 @@ function FloatingPaths({ position, animate }: { position: number; animate: boole
         preserveAspectRatio="xMidYMid slice"
       >
         <title>Background paths</title>
-        {paths.map((path) =>
-          animate ? (
-            <motion.path
-              key={path.id}
-              d={path.d}
-              stroke="currentColor"
-              strokeWidth={path.width}
-              strokeOpacity={path.opacity}
-              initial={{ pathLength: 0.3, opacity: 0.6 }}
-              animate={{
-                pathLength: 1,
-                opacity: [0.3, 0.6, 0.3],
-                pathOffset: [0, 1, 0],
-              }}
-              transition={{
-                duration: 20 + (path.id % 10),
-                repeat: Number.POSITIVE_INFINITY,
-                ease: 'linear',
-              }}
-            />
-          ) : (
-            <path
-              key={path.id}
-              d={path.d}
-              stroke="currentColor"
-              strokeWidth={path.width}
-              strokeOpacity={Math.min(0.35, 0.12 + path.id * 0.006)}
-            />
-          )
-        )}
+        {paths.map((path) => (
+          <path
+            key={path.id}
+            d={path.d}
+            stroke="currentColor"
+            strokeWidth={path.width}
+            strokeOpacity={path.opacity}
+            style={
+              animate
+                ? {
+                    opacity: path.opacity,
+                    animation: `pulse ${20 + (path.id % 10)}s ease-in-out infinite`,
+                    animationDelay: `${path.id * 0.15}s`,
+                  }
+                : { strokeOpacity: Math.min(0.35, 0.12 + path.id * 0.006) }
+            }
+          />
+        ))}
       </svg>
     </div>
   );

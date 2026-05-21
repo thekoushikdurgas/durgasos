@@ -1,7 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { Presence } from '@/components/motion/PresenceList';
+import { SpringBox } from '@/components/motion/SpringBox';
+import { overlaySpring } from '@/lib/motion/spring-presets';
+import { useReducedMotionStyle } from '@/lib/motion/use-reduced-motion-style';
 import { Search, Sparkles } from 'lucide-react';
 
 import { useOS } from '@/components/os-context';
@@ -11,6 +14,7 @@ import { useGlobalCommandPaletteShortcut } from '@/hooks/use-command-palette';
 import { useInstalledApps } from '@/hooks/use-installed-apps';
 import { APPS, type AppId } from '@/lib/apps';
 import { cn } from '@/lib/utils';
+import { SHELL_Z } from '@/lib/shell-z-index';
 
 const RECENT_KEY = 'durgasos_command_palette_recent_v1';
 
@@ -108,132 +112,142 @@ export function CommandPalette() {
     setQuery('');
   };
 
+  const backdropStyle = useReducedMotionStyle({ opacity: 1, y: 0 }, overlaySpring);
+  const panelStyle = useReducedMotionStyle({ scale: 1 }, overlaySpring);
+
   return (
-    <AnimatePresence>
-      {isCommandPaletteOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.18 }}
-          className="fixed inset-0 z-[160] flex items-start justify-center bg-black/40 px-3 pt-[12vh] backdrop-blur-sm"
-          onClick={() => toggleCommandPalette()}
-        >
-          <motion.div
+    <Presence show={isCommandPaletteOpen} presenceKey="command-palette">
+      <SpringBox
+        defaultStyle={{ opacity: 0, y: -8 }}
+        style={backdropStyle}
+        className="fixed inset-0 flex items-start justify-center bg-black/40 px-3 pt-[12vh] backdrop-blur-sm"
+        mapStyle={(s) => ({
+          opacity: s.opacity,
+          transform: `translate3d(0, ${s.y ?? 0}px, 0)`,
+          zIndex: SHELL_Z.commandPalette,
+        })}
+      >
+        <div className="h-full w-full" onClick={() => toggleCommandPalette()}>
+          <SpringBox
+            defaultStyle={{ scale: 0.98 }}
+            style={panelStyle}
             className="w-full max-w-lg"
-            onClick={(e) => e.stopPropagation()}
-            initial={{ scale: 0.98 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.98 }}
+            mapStyle={(s) => ({
+              transform: `scale(${s.scale ?? 1})`,
+              width: '100%',
+              maxWidth: '32rem',
+            })}
           >
-            <LiquidGlassSurface
-              variant="liquid"
-              className="overflow-hidden rounded-2xl border border-white/15 shadow-2xl"
-            >
-              <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
-                <button
-                  type="button"
-                  className={cn(
-                    'rounded-md px-2 py-1 text-xs font-medium',
-                    !effectiveAsk ? 'bg-white/15 text-white' : 'text-white/60 hover:text-white'
-                  )}
-                  onClick={() => {
-                    setAskMode(false);
-                    setQuery('');
-                  }}
-                >
-                  Launch
-                </button>
-                <button
-                  type="button"
-                  className={cn(
-                    'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium',
-                    effectiveAsk ? 'bg-white/15 text-white' : 'text-white/60 hover:text-white'
-                  )}
-                  onClick={() => {
-                    setAskMode(true);
-                    if (!query.startsWith('/')) setQuery(`/${query}`);
-                  }}
-                >
-                  <Sparkles className="h-3 w-3" aria-hidden />
-                  Ask
-                </button>
-              </div>
-              <div className="relative border-b border-white/10 p-3">
-                <Search className="pointer-events-none absolute left-6 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
-                <input
-                  autoFocus
-                  value={query}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setQuery(v);
-                    if (v.trimStart().startsWith('/')) setAskMode(true);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      if (effectiveAsk) void runAsk();
-                      else if (appMatches[0]) launchApp(appMatches[0].id);
-                    }
-                    if (e.key === 'Escape') toggleCommandPalette();
-                  }}
-                  placeholder={effectiveAsk ? 'Ask the AI… (leading / optional)' : 'Search apps…'}
-                  className="w-full rounded-xl border border-white/10 bg-black/25 py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary,#3b82f6)]/50"
-                />
-              </div>
-              <div className="max-h-[min(50vh,22rem)] overflow-y-auto p-2 text-sm">
-                {recent.length > 0 && (
-                  <div className="mb-2">
-                    <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/45">
-                      Recent
+            <div onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+              <LiquidGlassSurface
+                variant="liquid"
+                className="overflow-hidden rounded-2xl border border-white/15 shadow-2xl"
+              >
+                <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
+                  <button
+                    type="button"
+                    className={cn(
+                      'rounded-md px-2 py-1 text-xs font-medium',
+                      !effectiveAsk ? 'bg-white/15 text-white' : 'text-white/60 hover:text-white'
+                    )}
+                    onClick={() => {
+                      setAskMode(false);
+                      setQuery('');
+                    }}
+                  >
+                    Launch
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium',
+                      effectiveAsk ? 'bg-white/15 text-white' : 'text-white/60 hover:text-white'
+                    )}
+                    onClick={() => {
+                      setAskMode(true);
+                      if (!query.startsWith('/')) setQuery(`/${query}`);
+                    }}
+                  >
+                    <Sparkles className="h-3 w-3" aria-hidden />
+                    Ask
+                  </button>
+                </div>
+                <div className="relative border-b border-white/10 p-3">
+                  <Search className="pointer-events-none absolute left-6 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <input
+                    autoFocus
+                    value={query}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setQuery(v);
+                      if (v.trimStart().startsWith('/')) setAskMode(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (effectiveAsk) void runAsk();
+                        else if (appMatches[0]) launchApp(appMatches[0].id);
+                      }
+                      if (e.key === 'Escape') toggleCommandPalette();
+                    }}
+                    placeholder={effectiveAsk ? 'Ask the AI… (leading / optional)' : 'Search apps…'}
+                    className="w-full rounded-xl border border-white/10 bg-black/25 py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary,#3b82f6)]/50"
+                  />
+                </div>
+                <div className="max-h-[min(50vh,22rem)] overflow-y-auto p-2 text-sm">
+                  {recent.length > 0 && (
+                    <div className="mb-2">
+                      <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/45">
+                        Recent
+                      </div>
+                      {recent.map((r) => (
+                        <button
+                          key={r}
+                          type="button"
+                          className="flex w-full rounded-lg px-2 py-1.5 text-left text-white/85 hover:bg-white/10"
+                          onClick={() => {
+                            setQuery(r.startsWith('/') ? r : r);
+                            if (r.startsWith('/')) setAskMode(true);
+                          }}
+                        >
+                          {r}
+                        </button>
+                      ))}
                     </div>
-                    {recent.map((r) => (
-                      <button
-                        key={r}
-                        type="button"
-                        className="flex w-full rounded-lg px-2 py-1.5 text-left text-white/85 hover:bg-white/10"
-                        onClick={() => {
-                          setQuery(r.startsWith('/') ? r : r);
-                          if (r.startsWith('/')) setAskMode(true);
-                        }}
-                      >
-                        {r}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {!effectiveAsk && (
-                  <>
-                    <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/45">
-                      Apps
-                    </div>
-                    {appMatches.map((a) => (
-                      <button
-                        key={a.id}
-                        type="button"
-                        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-white/10"
-                        onClick={() => launchApp(a.id)}
-                      >
-                        <a.icon className={cn('h-5 w-5 shrink-0', a.color)} strokeWidth={1.5} />
-                        <span className="font-medium text-white">{a.name}</span>
-                      </button>
-                    ))}
-                  </>
-                )}
-                {effectiveAsk && (
-                  <p className="px-2 py-3 text-xs text-white/55">
-                    Press Enter to send to the desktop AI. Uses the same streaming gateway as the
-                    top AI bar.
-                  </p>
-                )}
-                {streaming && (
-                  <p className="px-2 py-2 text-xs text-cyan-300/90">Streaming response…</p>
-                )}
-              </div>
-            </LiquidGlassSurface>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+                  )}
+                  {!effectiveAsk && (
+                    <>
+                      <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/45">
+                        Apps
+                      </div>
+                      {appMatches.map((a) => (
+                        <button
+                          key={a.id}
+                          type="button"
+                          className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-white/10"
+                          onClick={() => launchApp(a.id)}
+                        >
+                          <a.icon className={cn('h-5 w-5 shrink-0', a.color)} strokeWidth={1.5} />
+                          <span className="font-medium text-white">{a.name}</span>
+                        </button>
+                      ))}
+                    </>
+                  )}
+                  {effectiveAsk && (
+                    <p className="px-2 py-3 text-xs text-white/55">
+                      Press Enter to send to the desktop AI. Uses the same streaming gateway as the
+                      top AI bar.
+                    </p>
+                  )}
+                  {streaming && (
+                    <p className="px-2 py-2 text-xs text-cyan-300/90">Streaming response…</p>
+                  )}
+                </div>
+              </LiquidGlassSurface>
+            </div>
+          </SpringBox>
+        </div>
+      </SpringBox>
+    </Presence>
   );
 }

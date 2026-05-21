@@ -1,0 +1,27 @@
+query LinkedGithubAccounts {
+  linkedGithubAccounts
+}
+
+query GithubUser($username: String!, $githubUserId: String) {
+  githubUser(username: $username, githubUserId: $githubUserId)
+}
+
+query GithubRepos($username: String!, $sort: String, $githubUserId: String) {
+  githubRepos(username: $username, sort: $sort, githubUserId: $githubUserId)
+}
+
+query GithubStarred($username: String!, $githubUserId: String) {
+  githubStarred(username: $username, githubUserId: $githubUserId)
+}
+
+query GithubReadme($username: String!, $githubUserId: String) {
+  githubReadme(username: $username, githubUserId: $githubUserId)
+}
+
+mutation AddLinkedGithubAccount($params: JSON!) {
+  addLinkedGithubAccount(params: $params)
+}
+
+mutation RemoveLinkedGithubAccount($githubUserId: String!) {
+  removeLinkedGithubAccount(githubUserId: $githubUserId)
+}

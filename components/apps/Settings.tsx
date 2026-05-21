@@ -34,7 +34,10 @@ import { SettingsDefaultAppsPane } from '@/components/apps/SettingsDefaultAppsPa
 import { SettingsProfilePane } from '@/components/apps/SettingsProfilePane';
 import { SettingsAccountsPane } from '@/components/apps/SettingsAccountsPane';
 import { useWindowLaunch } from '@/components/window-launch-context';
+import { useAuthSession } from '@/components/auth/AuthSessionContext';
+import { SettingsSessionSummary } from '@/components/apps/SettingsSessionSummary';
 import { notifyFocusWelcomeAuth } from '@/lib/auth-session-events';
+import { canRunAuthedGraphqlQueries } from '@/lib/auth-graphql-ready';
 
 const SETTINGS_TAB_NAMES = [
   'Profile',
@@ -141,10 +144,15 @@ export function SettingsApp() {
     nextFetchPolicy: 'cache-first',
   });
 
-  const meQ = useQuery(ME, { fetchPolicy: 'cache-and-network' });
+  const { authenticated: sessionAuthed, user: sessionUser } = useAuthSession();
+  const graphqlReady = canRunAuthedGraphqlQueries();
+  const meQ = useQuery(ME, { fetchPolicy: 'cache-and-network', skip: !graphqlReady });
   const me = meQ.data?.me;
-  const authed = Boolean(me?.id);
-  const accountTitle = me?.email?.trim() || (me?.id ? `Account ${me.id.slice(0, 8)}…` : 'Guest');
+  const authed = Boolean(me?.id) || graphqlReady;
+  const accountTitle =
+    me?.email?.trim() ||
+    sessionUser?.email?.trim() ||
+    (me?.id ? `Account ${me.id.slice(0, 8)}…` : sessionAuthed ? 'Signed in' : 'Guest');
   const accountSubtitleAuthed = 'Signed in · synced with this session';
   const avatarLetter = (me?.email?.trim()?.[0] ?? me?.id?.[0] ?? 'U').toUpperCase();
 
@@ -194,7 +202,7 @@ export function SettingsApp() {
                 <button
                   type="button"
                   className="font-medium text-blue-300 hover:text-blue-200 hover:underline"
-                  title="Scroll to sign-in on the Welcome screen"
+                  title="Open the desktop sign-in overlay"
                   onClick={() => notifyFocusWelcomeAuth()}
                 >
                   Welcome
@@ -446,8 +454,9 @@ export function SettingsApp() {
             <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
               <h2 className="mb-2 text-lg font-semibold text-white/90">GraphQL endpoint</h2>
               <p className="mb-3 text-sm text-white/50">
-                Resolved HTTP URL for{' '}
-                <code className="rounded bg-black/40 px-1">POST /graphql</code> in this build.
+                Direct HTTP URL to ai.backend for{' '}
+                <code className="rounded bg-black/40 px-1">POST /graphql</code> (not proxied through
+                Next).
               </p>
               <p className="break-all rounded-lg border border-white/10 bg-black/40 p-3 font-mono text-xs text-cyan-200/90">
                 {graphqlUrl}
@@ -476,10 +485,12 @@ export function SettingsApp() {
             </section>
             <section className="frost-glass-surface rounded-2xl border border-white/10 p-6">
               <h2 className="mb-2 text-lg font-semibold text-white/90">Session</h2>
-              <p className="text-sm text-white/50">
-                Auth tokens for the gateway are stored locally after sign-in. Use the desktop
-                sign-in overlay to refresh the session if WebSocket calls fail with 401.
+              <p className="mb-4 text-sm text-white/50">
+                Auth tokens for the gateway are stored in this browser after sign-in (same keys as
+                Apollo Bearer). HttpOnly cookies on the Next origin control the welcome overlay;
+                both should show Yes when signed in.
               </p>
+              <SettingsSessionSummary />
             </section>
           </div>
         )}

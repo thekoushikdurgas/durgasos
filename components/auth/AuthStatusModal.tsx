@@ -1,10 +1,13 @@
 'use client';
 
 import { AlertCircle, Loader, PartyPopper, X } from 'lucide-react';
-import { AnimatePresence, motion, type Transition, type Variants } from 'motion/react';
 import React, { Children, useEffect, useState } from 'react';
 
 import { GlassButton } from '@/components/auth/GlassAuthButton';
+import { Presence } from '@/components/motion/PresenceList';
+import { SpringBox } from '@/components/motion/SpringBox';
+import { overlaySpring } from '@/lib/motion/spring-presets';
+import { useReducedMotionStyle } from '@/lib/motion/use-reduced-motion-style';
 import { cn } from '@/lib/utils';
 
 export type AuthModalStatus = 'closed' | 'loading' | 'error' | 'success';
@@ -31,18 +34,16 @@ function TextLoop({
   children,
   className,
   interval = 2,
-  transition = { duration: 0.3 },
-  variants,
   onIndexChange,
   stopOnEnd = false,
+  reduceMotion,
 }: {
   children: React.ReactNode[];
   className?: string;
   interval?: number;
-  transition?: Transition;
-  variants?: Variants;
   onIndexChange?: (index: number) => void;
   stopOnEnd?: boolean;
+  reduceMotion?: boolean;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const items = Children.toArray(children);
@@ -61,25 +62,22 @@ function TextLoop({
     }, intervalMs);
     return () => clearInterval(timer);
   }, [items.length, interval, onIndexChange, stopOnEnd]);
-  const motionVariants: Variants = {
-    initial: { y: 20, opacity: 0 },
-    animate: { y: 0, opacity: 1 },
-    exit: { y: -20, opacity: 0 },
-  };
+
+  if (reduceMotion) {
+    return <div className={className}>{items[currentIndex]}</div>;
+  }
+
   return (
     <div className={cn('relative inline-block whitespace-nowrap', className)}>
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.div
-          key={currentIndex}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          transition={transition}
-          variants={variants || motionVariants}
-        >
-          {items[currentIndex]}
-        </motion.div>
-      </AnimatePresence>
+      <Presence
+        show
+        presenceKey={String(currentIndex)}
+        enterStyle={{ opacity: 0, y: 20 }}
+        leaveStyle={{ opacity: 0, y: -20 }}
+        targetStyle={{ opacity: 1, y: 0 }}
+      >
+        {items[currentIndex]}
+      </Presence>
     </div>
   );
 }
@@ -97,8 +95,8 @@ export function AuthStatusModal({
   onContinueSuccess: () => void;
   reduceMotion: boolean;
 }) {
-  const overlayTransition = reduceMotion ? { duration: 0 } : undefined;
-  const cardTransition = reduceMotion ? { duration: 0 } : undefined;
+  const overlayStyle = useReducedMotionStyle({ opacity: 1 }, overlaySpring);
+  const cardStyle = useReducedMotionStyle({ opacity: 1, scale: 1 }, overlaySpring);
 
   const liveMessage =
     status === 'loading'
@@ -110,81 +108,97 @@ export function AuthStatusModal({
           : '';
 
   return (
-    <AnimatePresence>
-      {status !== 'closed' && (
-        <motion.div
-          initial={reduceMotion ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={overlayTransition}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          role="presentation"
-        >
-          <motion.div
-            initial={reduceMotion ? false : { scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={reduceMotion ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
-            transition={cardTransition}
+    <Presence show={status !== 'closed'} presenceKey={status}>
+      <SpringBox
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        defaultStyle={reduceMotion ? undefined : { opacity: 0 }}
+        style={overlayStyle}
+        mapStyle={(s) => ({
+          opacity: s.opacity,
+          position: 'fixed',
+          inset: 0,
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        })}
+      >
+        <div role="presentation" className="flex w-full items-center justify-center">
+          <SpringBox
             className="border-border bg-card/80 relative mx-2 flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl border-4 p-8"
-            role={status === 'error' ? 'alertdialog' : 'dialog'}
-            aria-modal="true"
-            aria-label="Account sign-in or sign-up status"
+            defaultStyle={reduceMotion ? undefined : { opacity: 0, scale: 0.9 }}
+            style={cardStyle}
+            mapStyle={(s) => ({
+              opacity: s.opacity,
+              transform: `scale(${s.scale ?? 1})`,
+            })}
           >
-            {status === 'error' ? (
-              <div className="sr-only" aria-live="assertive" aria-atomic="true">
-                {liveMessage}
-              </div>
-            ) : (
-              <div className="sr-only" aria-live="polite" aria-atomic="true">
-                {liveMessage}
-              </div>
-            )}
-            {(status === 'error' || status === 'success') && (
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Close"
-                className="text-muted-foreground hover:text-foreground absolute top-2 right-2 p-1 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            )}
-            {status === 'error' && (
-              <>
-                <AlertCircle className="text-destructive h-12 w-12" aria-hidden />
-                <p className="text-foreground text-lg font-medium" id="auth-modal-error-text">
-                  {errorMessage}
-                </p>
-                <GlassButton type="button" onClick={onClose} size="sm" className="mt-4">
-                  Try again
-                </GlassButton>
-              </>
-            )}
-            {status === 'loading' && (
-              <TextLoop interval={TEXT_LOOP_INTERVAL} stopOnEnd={true}>
-                {modalSteps.slice(0, -1).map((step, i) => (
-                  <div key={i} className="flex flex-col items-center gap-4">
-                    {step.icon}
-                    <p className="text-foreground text-lg font-medium">{step.message}</p>
-                  </div>
-                ))}
-              </TextLoop>
-            )}
-            {status === 'success' && (
-              <div className="flex flex-col items-center gap-4">
-                {modalSteps[modalSteps.length - 1].icon}
-                <p className="text-foreground text-lg font-medium">
-                  {modalSteps[modalSteps.length - 1].message}
-                </p>
-                <GlassButton type="button" onClick={onContinueSuccess} size="sm">
-                  Continue
-                </GlassButton>
-              </div>
-            )}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            <div
+              role={status === 'error' ? 'alertdialog' : 'dialog'}
+              aria-modal="true"
+              aria-label="Account sign-in or sign-up status"
+              className="flex w-full flex-col items-center gap-4"
+            >
+              {status === 'error' ? (
+                <div className="sr-only" aria-live="assertive" aria-atomic="true">
+                  {liveMessage}
+                </div>
+              ) : (
+                <div className="sr-only" aria-live="polite" aria-atomic="true">
+                  {liveMessage}
+                </div>
+              )}
+              {(status === 'error' || status === 'success') && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close"
+                  className="text-muted-foreground hover:text-foreground absolute top-2 right-2 p-1 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+              {status === 'error' && (
+                <>
+                  <AlertCircle className="text-destructive h-12 w-12" aria-hidden />
+                  <p className="text-foreground text-lg font-medium" id="auth-modal-error-text">
+                    {errorMessage}
+                  </p>
+                  <GlassButton type="button" onClick={onClose} size="sm" className="mt-4">
+                    Try again
+                  </GlassButton>
+                </>
+              )}
+              {status === 'loading' && (
+                <TextLoop
+                  interval={TEXT_LOOP_INTERVAL}
+                  stopOnEnd={true}
+                  reduceMotion={reduceMotion}
+                >
+                  {modalSteps.slice(0, -1).map((step, i) => (
+                    <div key={i} className="flex flex-col items-center gap-4">
+                      {step.icon}
+                      <p className="text-foreground text-lg font-medium">{step.message}</p>
+                    </div>
+                  ))}
+                </TextLoop>
+              )}
+              {status === 'success' && (
+                <div className="flex flex-col items-center gap-4">
+                  {modalSteps[modalSteps.length - 1].icon}
+                  <p className="text-foreground text-lg font-medium">
+                    {modalSteps[modalSteps.length - 1].message}
+                  </p>
+                  <GlassButton type="button" onClick={onContinueSuccess} size="sm">
+                    Continue
+                  </GlassButton>
+                </div>
+              )}
+            </div>
+          </SpringBox>
+        </div>
+      </SpringBox>
+    </Presence>
   );
 }
 

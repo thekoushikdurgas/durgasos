@@ -1,7 +1,11 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { AnimatePresence, motion, useReducedMotion, type Variants } from 'motion/react';
+import { Presence } from '@/components/motion/PresenceList';
+import { SpringBox } from '@/components/motion/SpringBox';
+import { overlaySpring, pressSpring } from '@/lib/motion/spring-presets';
+import { useReducedMotionStyle } from '@/lib/motion/use-reduced-motion-style';
+import { usePrefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 
 export interface Character {
@@ -74,37 +78,72 @@ const getGradientColors = (character: Character) => {
   return character.gradientColors || '#06b6d4, #1e3a8a';
 };
 
-/** Stable references so Framer Motion does not re-run the entrance spring on unrelated parent re-renders. */
-const MESSAGE_DOCK_CONTAINER_VARIANTS_FULL: Variants = {
-  hidden: {
-    opacity: 0,
-    y: 24,
-    scale: 0.96,
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      type: 'spring',
-      stiffness: 300,
-      damping: 30,
-      mass: 0.8,
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
+function CharacterDockAvatar({
+  character,
+  index,
+  isExpanded,
+  isSelected,
+  onClick,
+  buttonRef,
+}: {
+  character: Character;
+  index: number;
+  isExpanded: boolean;
+  isSelected: boolean;
+  onClick: () => void;
+  buttonRef: (el: HTMLButtonElement | null) => void;
+}) {
+  const charStyle = useReducedMotionStyle(
+    {
+      opacity: isExpanded && !isSelected ? 0 : 1,
+      y: isExpanded && !isSelected ? 48 : 0,
+      scale: isExpanded && !isSelected ? 0.82 : 1,
     },
-  },
-};
+    pressSpring
+  );
 
-const MESSAGE_DOCK_CONTAINER_VARIANTS_REDUCED: Variants = {
-  hidden: { opacity: 0, y: 0, scale: 1 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0 },
-  },
-};
+  return (
+    <SpringBox
+      className={cn('relative', isSelected && isExpanded && 'absolute left-1 top-1 z-20')}
+      style={charStyle}
+      mapStyle={(s) => ({
+        width: isSelected && isExpanded ? 0 : 'auto',
+        minWidth: isSelected && isExpanded ? 0 : 'auto',
+        overflow: 'visible',
+        opacity: s.opacity,
+        transform: `translate3d(0, ${s.y ?? 0}px, 0) scale(${s.scale ?? 1})`,
+      })}
+    >
+      <button
+        type="button"
+        ref={buttonRef}
+        className={cn(
+          'relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-xl outline-none transition-transform hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-cyan-400/50',
+          !isExpanded && 'hover:-translate-y-1.5 hover:scale-110',
+          isSelected && isExpanded
+            ? 'bg-white/90 ring-2 ring-white/40'
+            : (character.backgroundColor ?? 'bg-white/15 ring-1 ring-white/15')
+        )}
+        onClick={onClick}
+        aria-label={`Message ${character.name}`}
+        aria-pressed={isSelected && isExpanded ? true : false}
+      >
+        <span className="text-2xl" aria-hidden>
+          {character.emoji}
+        </span>
+        {character.online && (
+          <span
+            className={cn(
+              'absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-slate-900 bg-emerald-400 transition-transform',
+              isExpanded && !isSelected ? 'scale-0' : 'scale-100'
+            )}
+            aria-hidden
+          />
+        )}
+      </button>
+    </SpringBox>
+  );
+}
 
 export function MessageDock({
   characters = DEFAULT_MESSAGE_DOCK_CHARACTERS,
@@ -126,7 +165,7 @@ export function MessageDock({
   closeOnEscape = true,
   closeOnSend = true,
 }: MessageDockProps) {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduceMotion = usePrefersReducedMotion();
   const [expandedCharacter, setExpandedCharacter] = useState<number | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const dockRef = useRef<HTMLDivElement>(null);
@@ -175,18 +214,6 @@ export function MessageDock({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [closeOnClickOutside, collapse, expandedCharacter]);
 
-  const containerVariants = shouldReduceMotion
-    ? MESSAGE_DOCK_CONTAINER_VARIANTS_REDUCED
-    : MESSAGE_DOCK_CONTAINER_VARIANTS_FULL;
-
-  const hoverAnimation = shouldReduceMotion
-    ? { scale: 1.02 }
-    : {
-        scale: 1.06,
-        y: -6,
-        transition: { type: 'spring' as const, stiffness: 400, damping: 25 },
-      };
-
   const handleCharacterClick = (index: number) => {
     const character = characters[index];
 
@@ -214,6 +241,17 @@ export function MessageDock({
     expandedCharacter !== null ? (characters[expandedCharacter] ?? null) : null;
   const isExpanded = expandedCharacter !== null;
 
+  const rootStyle = useReducedMotionStyle(
+    enableAnimations && !shouldReduceMotion
+      ? { opacity: 1, y: 0, scale: 1 }
+      : { opacity: 1, y: 0, scale: 1 },
+    overlaySpring
+  );
+  const shellWidthStyle = useReducedMotionStyle(
+    { width: isExpanded ? expandedWidth : collapsedWidth },
+    pressSpring
+  );
+
   const positionClasses =
     dockLayout === 'fixed-center'
       ? position === 'top'
@@ -229,155 +267,85 @@ export function MessageDock({
 
   const collapsedBg = isDark ? 'rgba(15, 23, 42, 0.72)' : '#ffffff';
 
+  const shellBackground =
+    isExpanded && selectedCharacter
+      ? `linear-gradient(to right, ${getGradientColors(selectedCharacter)})`
+      : collapsedBg;
+
   return (
-    <motion.div
-      ref={dockRef}
+    <SpringBox
       className={cn(positionClasses, className)}
-      initial={enableAnimations ? 'hidden' : 'visible'}
-      animate="visible"
-      variants={enableAnimations ? containerVariants : undefined}
+      defaultStyle={
+        enableAnimations && !shouldReduceMotion ? { opacity: 0, y: 24, scale: 0.96 } : undefined
+      }
+      style={rootStyle}
+      mapStyle={(s) => ({
+        opacity: s.opacity,
+        transform: `translate3d(0, ${s.y ?? 0}px, 0) scale(${s.scale ?? 1})`,
+      })}
     >
-      <motion.div
-        className={cn(
-          'rounded-full px-3 py-2 shadow-2xl backdrop-blur-2xl',
-          shellBorder,
-          'border bg-white/10'
-        )}
-        animate={{
-          width: isExpanded ? expandedWidth : collapsedWidth,
-          background:
-            isExpanded && selectedCharacter
-              ? `linear-gradient(to right, ${getGradientColors(selectedCharacter)})`
-              : collapsedBg,
-        }}
-        transition={
-          enableAnimations
-            ? {
-                type: 'spring' as const,
-                stiffness: isExpanded ? 300 : 500,
-                damping: isExpanded ? 30 : 35,
-                mass: isExpanded ? 0.8 : 0.6,
-                background: {
-                  duration: 0.2 * animationDuration,
-                  ease: 'easeInOut',
-                },
-              }
-            : { duration: 0 }
-        }
-      >
-        <div className="relative flex items-center gap-2">
-          {showSparkleButton && (
-            <motion.div
-              className="flex items-center justify-center"
-              animate={{
-                opacity: isExpanded ? 0 : 1,
-                x: isExpanded ? -16 : 0,
-                scale: isExpanded ? 0.85 : 1,
-                pointerEvents: isExpanded ? 'none' : 'auto',
-              }}
-              transition={{ type: 'spring' as const, stiffness: 400, damping: 30 }}
-            >
-              <motion.button
-                type="button"
-                className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
-                whileHover={
-                  !isExpanded
-                    ? {
-                        scale: 1.04,
-                        y: -2,
-                        transition: { type: 'spring' as const, stiffness: 400, damping: 25 },
-                      }
-                    : undefined
-                }
-                whileTap={{ scale: 0.95 }}
-                aria-label="Quick sparkle"
-              >
-                <span className="text-2xl" aria-hidden>
-                  ✨
-                </span>
-              </motion.button>
-            </motion.div>
+      <div ref={dockRef}>
+        <SpringBox
+          className={cn(
+            'rounded-full px-3 py-2 shadow-2xl backdrop-blur-md transition-[background] duration-200',
+            shellBorder,
+            'border bg-white/10'
           )}
-
-          <motion.div
-            className={cn('-ml-2 mr-2 h-6 w-px', sepClass)}
-            animate={{ opacity: isExpanded ? 0 : 1, scaleY: isExpanded ? 0 : 1 }}
-            transition={{
-              type: 'spring' as const,
-              stiffness: 300,
-              damping: 30,
-              delay: isExpanded ? 0 : 0.2,
-            }}
-            aria-hidden
-          />
-
-          {characters.map((character, index) => {
-            const isSelected = expandedCharacter === index;
-
-            return (
-              <motion.div
-                key={character.id ?? `${character.name}-${index}`}
-                className={cn('relative', isSelected && isExpanded && 'absolute left-1 top-1 z-20')}
-                style={{
-                  width: isSelected && isExpanded ? 0 : 'auto',
-                  minWidth: isSelected && isExpanded ? 0 : 'auto',
-                  overflow: 'visible',
-                }}
-                animate={{
-                  opacity: isExpanded && !isSelected ? 0 : 1,
-                  y: isExpanded && !isSelected ? 48 : 0,
-                  scale: isExpanded && !isSelected ? 0.82 : 1,
-                  x: 0,
-                }}
-                transition={{
-                  type: 'spring' as const,
-                  stiffness: 400,
-                  damping: 30,
-                  delay: isExpanded && !isSelected ? index * 0.04 : isExpanded ? 0.08 : 0,
-                }}
+          style={shellWidthStyle}
+          mapStyle={(s) => ({
+            width: s.width,
+            background: shellBackground,
+          })}
+        >
+          <div className="relative flex items-center gap-2">
+            {showSparkleButton && (
+              <div
+                className={cn(
+                  'flex items-center justify-center transition-all duration-200',
+                  isExpanded ? 'pointer-events-none scale-90 opacity-0' : 'scale-100 opacity-100'
+                )}
               >
-                <motion.button
+                <button
                   type="button"
-                  ref={(el) => {
-                    characterButtonRefs.current[index] = el;
-                  }}
-                  className={cn(
-                    'relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-xl outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50',
-                    isSelected && isExpanded
-                      ? 'bg-white/90 ring-2 ring-white/40'
-                      : (character.backgroundColor ?? 'bg-white/15 ring-1 ring-white/15')
-                  )}
-                  onClick={() => handleCharacterClick(index)}
-                  whileHover={!isExpanded ? hoverAnimation : { scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  aria-label={`Message ${character.name}`}
-                  aria-pressed={isSelected && isExpanded}
+                  className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full outline-none transition-transform hover:scale-105 hover:-translate-y-0.5 active:scale-95 focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+                  aria-label="Quick sparkle"
                 >
                   <span className="text-2xl" aria-hidden>
-                    {character.emoji}
+                    ✨
                   </span>
-                  {character.online && (
-                    <motion.div
-                      className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-slate-900 bg-emerald-400"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: isExpanded && !isSelected ? 0 : 1 }}
-                      transition={{
-                        delay: isExpanded ? (isSelected ? 0.25 : 0) : index * 0.08 + 0.35,
-                        type: 'spring' as const,
-                        stiffness: 500,
-                        damping: 30,
-                      }}
-                      aria-hidden
-                    />
-                  )}
-                </motion.button>
-              </motion.div>
-            );
-          })}
+                </button>
+              </div>
+            )}
 
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.input
+            <div
+              className={cn(
+                '-ml-2 mr-2 h-6 w-px origin-center transition-all duration-200',
+                sepClass,
+                isExpanded ? 'scale-y-0 opacity-0' : 'scale-y-100 opacity-100'
+              )}
+              aria-hidden
+            />
+
+            {characters.map((character, index) => {
+              const isSelected = expandedCharacter === index;
+
+              return (
+                <CharacterDockAvatar
+                  key={character.id ?? `${character.name}-${index}`}
+                  character={character}
+                  index={index}
+                  isExpanded={isExpanded}
+                  isSelected={isSelected}
+                  onClick={() => handleCharacterClick(index)}
+                  buttonRef={(el) => {
+                    characterButtonRefs.current[index] = el;
+                  }}
+                />
+              );
+            })}
+
+            <Presence show={isExpanded} presenceKey="dock-input">
+              <input
                 id={inputId}
                 type="text"
                 value={messageInput}
@@ -399,52 +367,30 @@ export function MessageDock({
                   isDark ? 'placeholder:text-slate-400' : 'placeholder:text-gray-600'
                 )}
                 autoFocus={autoFocus}
-                initial={{ opacity: 0, x: 16 }}
-                animate={{
-                  opacity: 1,
-                  x: 0,
-                  transition: { delay: 0.15, type: 'spring' as const, stiffness: 400, damping: 30 },
-                }}
-                exit={{
-                  opacity: 0,
-                  transition: { duration: 0.1, ease: 'easeOut' },
-                }}
               />
-            )}
-          </AnimatePresence>
+            </Presence>
 
-          <motion.div
-            className={cn('-mr-2 ml-2 h-6 w-px', sepClass)}
-            animate={{ opacity: isExpanded ? 0 : 1, scaleY: isExpanded ? 0 : 1 }}
-            transition={{ type: 'spring' as const, stiffness: 300, damping: 30 }}
-            aria-hidden
-          />
-
-          {showMenuButton && (
-            <motion.div
+            <div
               className={cn(
-                'z-20 flex items-center justify-center',
-                isExpanded && 'absolute right-0'
+                '-mr-2 ml-2 h-6 w-px origin-center transition-all duration-200',
+                sepClass,
+                isExpanded ? 'scale-y-0 opacity-0' : 'scale-y-100 opacity-100'
               )}
-              transition={{ type: 'spring' as const, stiffness: 400, damping: 30 }}
-            >
-              <AnimatePresence mode="wait">
-                {!isExpanded ? (
-                  <motion.button
-                    key="menu"
+              aria-hidden
+            />
+
+            {showMenuButton && (
+              <div
+                className={cn(
+                  'z-20 flex items-center justify-center',
+                  isExpanded && 'absolute right-0'
+                )}
+              >
+                <Presence show={!isExpanded} presenceKey="menu">
+                  <button
                     type="button"
-                    className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
-                    whileHover={{
-                      scale: 1.04,
-                      y: -2,
-                      transition: { type: 'spring' as const, stiffness: 400, damping: 25 },
-                    }}
-                    whileTap={{ scale: 0.95 }}
+                    className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full outline-none transition-transform hover:scale-105 hover:-translate-y-0.5 active:scale-95 focus-visible:ring-2 focus-visible:ring-cyan-400/50"
                     aria-label="Message dock menu"
-                    initial={{ opacity: 0, rotate: -90 }}
-                    animate={{ opacity: 1, rotate: 0 }}
-                    exit={{ opacity: 0, rotate: 90 }}
-                    transition={{ type: 'spring' as const, stiffness: 400, damping: 30 }}
                   >
                     <svg
                       width="20"
@@ -460,35 +406,15 @@ export function MessageDock({
                       <line x1="3" y1="12" x2="21" y2="12" />
                       <line x1="3" y1="18" x2="21" y2="18" />
                     </svg>
-                  </motion.button>
-                ) : (
-                  <motion.button
-                    key="send"
+                  </button>
+                </Presence>
+                <Presence show={isExpanded} presenceKey="send">
+                  <button
                     type="button"
                     onClick={handleSendMessage}
-                    className="relative z-30 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/90 outline-none transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-cyan-500/60 disabled:cursor-not-allowed disabled:opacity-50"
-                    whileHover={{ scale: 1.08 }}
-                    whileTap={{ scale: 0.92 }}
+                    className="relative z-30 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/90 outline-none transition-transform hover:scale-110 active:scale-95 hover:bg-white focus-visible:ring-2 focus-visible:ring-cyan-500/60 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={!messageInput.trim()}
                     aria-label="Send message"
-                    initial={{ opacity: 0, scale: 0, rotate: -90 }}
-                    animate={{
-                      opacity: 1,
-                      scale: 1,
-                      rotate: 0,
-                      transition: {
-                        delay: 0.2,
-                        type: 'spring' as const,
-                        stiffness: 400,
-                        damping: 30,
-                      },
-                    }}
-                    exit={{
-                      opacity: 0,
-                      scale: 0,
-                      rotate: 90,
-                      transition: { duration: 0.1, ease: 'easeIn' },
-                    }}
                   >
                     <svg
                       width="16"
@@ -503,13 +429,13 @@ export function MessageDock({
                       <path d="m22 2-7 20-4-9-9-4z" />
                       <path d="M22 2 11 13" />
                     </svg>
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          )}
-        </div>
-      </motion.div>
-    </motion.div>
+                  </button>
+                </Presence>
+              </div>
+            )}
+          </div>
+        </SpringBox>
+      </div>
+    </SpringBox>
   );
 }

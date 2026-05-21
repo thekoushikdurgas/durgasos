@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+
+import { SpringBox } from '@/components/motion/SpringBox';
 import { useOS } from '@/components/os-context';
 import { useInstalledApps } from '@/hooks/use-installed-apps';
 import { useIsMobile } from '@/hooks/use-is-mobile';
@@ -12,6 +13,9 @@ import {
 } from '@/components/ui/message-dock';
 import { MagnifiedDockStrip, type MagnifiedDockItem } from '@/components/ui/magnified-dock-strip';
 import { APPS, type AppId } from '@/lib/apps';
+import { overlaySpring } from '@/lib/motion/spring-presets';
+import { useReducedMotionStyle } from '@/lib/motion/use-reduced-motion-style';
+import { usePrefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
 import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { cn } from '@/lib/utils';
 
@@ -20,10 +24,19 @@ const DOCK_RECESS_PX = 200;
 
 export function Dock() {
   const isMobile = useIsMobile();
-  const { windows, openApp, activeWindow, focusWindow, minimizeWindow, toggleLauncher } = useOS();
+  const {
+    windows,
+    openApp,
+    activeWindow,
+    focusWindow,
+    minimizeWindow,
+    openLauncher,
+    closeLauncher,
+    isLauncherOpen,
+  } = useOS();
   const { installedIds } = useInstalledApps();
   const [lastSentPreview, setLastSentPreview] = useState<string | null>(null);
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = usePrefersReducedMotion();
 
   const recessDock = useMemo(() => {
     const w = windows.find((x) => x.id === activeWindow && !x.isMinimized);
@@ -78,9 +91,13 @@ export function Dock() {
     return [item];
   });
 
-  const dockMotionTransition = reduceMotion
-    ? { duration: 0.12, ease: 'linear' as const }
-    : { duration: 0.55, ease: [0.175, 0.885, 0.32, 1.05] as const };
+  const dockStyle = useReducedMotionStyle(
+    {
+      y: recessDock ? DOCK_RECESS_PX : 0,
+      opacity: reduceMotion && recessDock ? 0 : 1,
+    },
+    overlaySpring
+  );
 
   if (isMobile) return null;
 
@@ -89,14 +106,19 @@ export function Dock() {
       aria-label="Application dock and quick messages"
       className="pointer-events-none absolute bottom-4 left-0 right-0 z-[95] flex justify-center overflow-visible"
     >
-      <motion.div
+      <SpringBox
         className="flex flex-wrap items-end justify-center gap-3 px-2"
-        initial={false}
-        animate={{
-          y: recessDock ? DOCK_RECESS_PX : 0,
-          opacity: reduceMotion && recessDock ? 0 : 1,
-        }}
-        transition={dockMotionTransition}
+        style={dockStyle}
+        mapStyle={(s) => ({
+          transform: `translate3d(0, ${s.y ?? 0}px, 0)`,
+          opacity: s.opacity,
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'flex-end',
+          justifyContent: 'center',
+          gap: '0.75rem',
+          padding: '0 0.5rem',
+        })}
       >
         <div
           className={cn(
@@ -132,14 +154,20 @@ export function Dock() {
         >
           <button
             type="button"
-            aria-label="Open app launcher"
-            onClick={toggleLauncher}
+            aria-label={isLauncherOpen ? 'Close app launcher' : 'Open app launcher'}
+            aria-expanded={isLauncherOpen}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isLauncherOpen) closeLauncher('dock-button');
+              else openLauncher();
+            }}
             className={cn(
               'flex h-12 w-12 shrink-0 items-center justify-center rounded-[50px] shadow-lg outline-none',
               'bg-gradient-to-tr from-cyan-400 to-blue-600 transition-transform',
               'hover:scale-105 active:scale-95',
               'motion-reduce:transition-none motion-reduce:hover:scale-100',
-              'focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900/80'
+              'focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900/80',
+              isLauncherOpen && 'ring-2 ring-white/90 ring-offset-2 ring-offset-slate-900/80'
             )}
             style={{ transitionDuration: 'var(--duration-dock-bounce, 300ms)' }}
           >
@@ -161,7 +189,7 @@ export function Dock() {
             <MagnifiedDockStrip items={items} className="h-full shrink-0 self-stretch" />
           </div>
         </LiquidGlassSurface>
-      </motion.div>
+      </SpringBox>
     </nav>
   );
 }
