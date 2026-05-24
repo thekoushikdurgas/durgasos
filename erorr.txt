@@ -1,891 +1,147 @@
-Microsoft Windows [Version 10.0.26100.8246]
-(c) Microsoft Corporation. All rights reserved.
-
-E:\durgas_ai\thekoushikdurgas.ai\durgasos>codebase.bat
-
-========================================
-  CONTACT360 DASHBOARD STATE CHECK
-========================================
-
-Current directory: E:\durgas_ai\thekoushikdurgas.ai\durgasos
-
-[0] CSS styling inventory...
-----------------------------------------
-  Lists @import graph, Tailwind signals, inline style={{}} locations.
-  Output: reports\css-inventory.txt
-CSS inventory written to reports/css-inventory.txt
-  OK CSS inventory written
-
-
-[1/10] Cleaning and preparing...
-----------------------------------------
-  Running: npm run clean:all
-
-> durgasos@0.1.0 clean:all
-> node scripts/clean.mjs --all
-
-Cleaned .next, out, coverage, .turbo, reports, tsconfig.tsbuildinfo
-  OK Clean completed
-
-  Running: npm install
-
-> durgasos@0.1.0 postinstall
-> node scripts/patch-react-motion.mjs
-
-[patch-react-motion] Guarded componentDidUpdate in 3 file(s); removed build/
-
-up to date, audited 1421 packages in 22s
-
-337 packages are looking for funding
-  run `npm fund` for details
-
-7 vulnerabilities (2 moderate, 5 high)
-
-To address issues that do not require attention, run:
-  npm audit fix
-
-To address all issues (including breaking changes), run:
-  npm audit fix --force
-
-Run `npm audit` for details.
-  OK Dependencies installed
-
-[2/10] GraphQL Codegen...
-----------------------------------------
-  Regenerates graphql/generated from graphql/schema.graphql + graphql/documents (offline).
-  Optional: set CODEGEN_SCHEMA_URL for introspection instead of local SDL (.env.example).
-  Running: npm run codegen
-
-> durgasos@0.1.0 codegen
-> node scripts/codegen.mjs
-
-√ Parse Configuration
-√ Generate outputs
-  OK GraphQL types regenerated
-
-[3/10] Type checking...
-----------------------------------------
-  Same as npm run typecheck (tsc --noEmit); duplicates removed vs older bat.
-  Running: npm run typecheck
-
-> durgasos@0.1.0 typecheck
-> tsc --noEmit
-
-  OK Type check passed
-
-[4/10] Prettier (format check)...
-----------------------------------------
-  Formatter: Prettier (respects .prettierrc / .prettierignore if present)
-  Running: npx prettier --check .
-Checking formatting...
-[warn] components/apps/SettingsAiProvidersPane.tsx
-[warn] components/auth/AuthProfileSync.tsx
-[warn] graphql/generated/fragment-masking.ts
-[warn] graphql/generated/gql.ts
-[warn] graphql/generated/graphql.ts
-[warn] graphql/generated/index.ts
-[warn] lib/establish-session.ts
-[warn] lib/jwt-user-from-access.ts
-[warn] lib/rehydrate-auth-from-cookies.ts
-[warn] next-env.d.ts
-[warn] Code style issues found in 10 files. Run Prettier with --write to fix.
-  Prettier found issues  -  running: npx prettier --write .
-.eslintrc.json 36ms (unchanged)
-app/api/auth/session/rehydrate/route.ts 130ms (unchanged)
-app/api/auth/session/route.ts 36ms (unchanged)
-app/auth-glass.css 90ms (unchanged)
-app/dev/react-motion-smoke/page.tsx 90ms (unchanged)
-app/globals.css 92ms (unchanged)
-app/layout.tsx 28ms (unchanged)
-app/page.tsx 34ms (unchanged)
-capacitor.config.ts 7ms (unchanged)
-codegen.yml 79ms (unchanged)
-components/ApolloGraphQLProvider.tsx 52ms (unchanged)
-components/AppProviders.tsx 7ms (unchanged)
-components/apps/AgentApp.tsx 282ms (unchanged)
-components/apps/AppsManagerApp.tsx 106ms (unchanged)
-components/apps/ArchiverApp.tsx 166ms (unchanged)
-components/apps/BrowserApp.tsx 182ms (unchanged)
-components/apps/calendar/calendar-theme.ts 16ms (unchanged)
-components/apps/calendar/CalendarHeader.tsx 29ms (unchanged)
-components/apps/calendar/CategoryCard.tsx 6ms (unchanged)
-components/apps/calendar/EventFlipCard.tsx 40ms (unchanged)
-components/apps/calendar/tabs/ContactsTab.tsx 40ms (unchanged)
-components/apps/calendar/tabs/EventsTab.tsx 31ms (unchanged)
-components/apps/calendar/tabs/PlanningTab.tsx 32ms (unchanged)
-components/apps/calendar/tabs/TodayTab.tsx 24ms (unchanged)
-components/apps/CalendarApp.tsx 49ms (unchanged)
-components/apps/chat/presentational.tsx 29ms (unchanged)
-components/apps/chat/templates.ts 7ms (unchanged)
-components/apps/ChatApp.tsx 169ms (unchanged)
-components/apps/ContactsApp.tsx 66ms (unchanged)
-components/apps/CouncilApp.tsx 9ms (unchanged)
-components/apps/DocsApp.tsx 53ms (unchanged)
-components/apps/DriveApp.tsx 29ms (unchanged)
-components/apps/FileExplorer.tsx 418ms (unchanged)
-components/apps/FileExplorerUploadPanel.tsx 61ms (unchanged)
-components/apps/FolderTree.tsx 25ms (unchanged)
-components/apps/gallery/GalleryInfiniteViewer.tsx 23ms (unchanged)
-components/apps/GalleryApp.tsx 118ms (unchanged)
-components/apps/gmail/GmailHeader.tsx 17ms (unchanged)
-components/apps/gmail/GmailList.tsx 22ms (unchanged)
-components/apps/gmail/GmailReader.tsx 26ms (unchanged)
-components/apps/gmail/GmailSidebar.tsx 19ms (unchanged)
-components/apps/GmailApp.tsx 48ms (unchanged)
-components/apps/MetricsApp.tsx 10ms (unchanged)
-components/apps/ModuleAppShell.tsx 10ms (unchanged)
-components/apps/MultimodalApp.tsx 17ms (unchanged)
-components/apps/PlayerApp.tsx 42ms (unchanged)
-components/apps/RagApp.tsx 11ms (unchanged)
-components/apps/RemoteApp.tsx 35ms (unchanged)
-components/apps/repo/ContributionGraph.tsx 11ms (unchanged)
-components/apps/repo/GitHubAccountPicker.tsx 8ms (unchanged)
-components/apps/repo/GitHubProfileCard.tsx 18ms (unchanged)
-components/apps/repo/OverviewTab.tsx 15ms (unchanged)
-components/apps/repo/PublicSearchBar.tsx 8ms (unchanged)
-components/apps/repo/RepositoriesTab.tsx 25ms (unchanged)
-components/apps/repo/StarsTab.tsx 17ms (unchanged)
-components/apps/RepoApp.tsx 42ms (unchanged)
-components/apps/ResumeMatcherApp.tsx 113ms (unchanged)
-components/apps/Settings.tsx 62ms (unchanged)
-components/apps/SettingsAccountsPane.tsx 60ms (unchanged)
-components/apps/SettingsAiProvidersPane.tsx 79ms
-components/apps/SettingsDefaultAppsPane.tsx 56ms (unchanged)
-components/apps/SettingsProfilePane.tsx 74ms (unchanged)
-components/apps/SettingsSessionSummary.tsx 9ms (unchanged)
-components/apps/SheetsApp.tsx 37ms (unchanged)
-components/apps/StorageApp.tsx 4ms (unchanged)
-components/apps/Terminal.tsx 22ms (unchanged)
-components/apps/todo/BoardTab.tsx 10ms (unchanged)
-components/apps/todo/TodoHeader.tsx 20ms (unchanged)
-components/apps/todo/WorkspacesTab.tsx 42ms (unchanged)
-components/apps/TodoApp.tsx 37ms (unchanged)
-components/apps/TransferApp.tsx 64ms (unchanged)
-components/apps/VectorDbApp.tsx 68ms (unchanged)
-components/apps/ViewerApp.tsx 64ms (unchanged)
-components/apps/VisionApp.tsx 18ms (unchanged)
-components/apps/VoidIdeApp.tsx 137ms (unchanged)
-components/apps/VolumeManagerApp.tsx 16ms (unchanged)
-components/apps/WorkflowApp.tsx 47ms (unchanged)
-components/auth/auth-mutation-helpers.ts 2ms (unchanged)
-components/auth/AuthProfileSync.tsx 35ms
-components/auth/AuthSessionContext.tsx 37ms (unchanged)
-components/auth/AuthSignUpFieldset.tsx 42ms (unchanged)
-components/auth/AuthStatusModal.tsx 24ms (unchanged)
-components/auth/BlurFade.tsx 7ms (unchanged)
-components/auth/ConfettiCanvas.tsx 6ms (unchanged)
-components/auth/GlassAuthButton.tsx 17ms (unchanged)
-components/auth/use-sign-up-flow.ts 47ms (unchanged)
-components/auth/WelcomeModal.tsx 15ms (unchanged)
-components/auth/WelcomeSignUpSection.tsx 21ms (unchanged)
-components/BackgroundSyncHost.tsx 5ms (unchanged)
-components/CommandPalette.tsx 47ms (unchanged)
-components/desktop-background/DesktopBackgroundLayer.tsx 7ms (unchanged)
-components/desktop-background/DesktopBackgroundProvider.tsx 8ms (unchanged)
-components/DesktopAiSearchBar.tsx 5ms (unchanged)
-components/DesktopNoticeHost.tsx 6ms (unchanged)
-components/DesktopWeatherPanel.tsx 3ms (unchanged)
-components/DesktopWidgets.tsx 2ms (unchanged)
-components/Dock.tsx 30ms (unchanged)
-components/GlobalShellContextMenu.tsx 5ms (unchanged)
-components/GlobalUserContextMenuContent.tsx 16ms (unchanged)
-components/Launcher.tsx 3ms (unchanged)
-components/launcher/Launcher.tsx 17ms (unchanged)
-components/launcher/LauncherAppCard.tsx 18ms (unchanged)
-components/launcher/LauncherAppGrid.tsx 9ms (unchanged)
-components/launcher/LauncherToolbar.tsx 10ms (unchanged)
-components/motion/index.ts 5ms (unchanged)
-components/motion/PresenceList.tsx 28ms (unchanged)
-components/motion/SidebarShellFrame.tsx 12ms (unchanged)
-components/motion/SpringBox.tsx 10ms (unchanged)
-components/motion/SpringTabIndicator.tsx 13ms (unchanged)
-components/motion/StaggerList.tsx 18ms (unchanged)
-components/motion/use-pointer-drag-spring.ts 10ms (unchanged)
-components/NativePlatformBridge.tsx 18ms (unchanged)
-components/notification/LogRow.tsx 5ms (unchanged)
-components/notification/NotificationCard.tsx 10ms (unchanged)
-components/notification/NotificationSidebarExpandedContext.tsx 5ms (unchanged)
-components/notification/NotificationSidebarShell.tsx 36ms (unchanged)
-components/notification/NotificationsPanel.tsx 9ms (unchanged)
-components/notification/sidebar-motion.ts 8ms (unchanged)
-components/notification/StatBar.tsx 5ms (unchanged)
-components/notification/SystemLogsPanel.tsx 22ms (unchanged)
-components/NotificationCenter.tsx 15ms (unchanged)
-components/os-context.tsx 65ms (unchanged)
-components/SystemStatusIcons.tsx 22ms (unchanged)
-components/ThemePreferences.tsx 3ms (unchanged)
-components/TopBar.tsx 62ms (unchanged)
-components/ui/ai-chat-input.tsx 39ms (unchanged)
-components/ui/asmr-desktop-background.tsx 46ms (unchanged)
-components/ui/avatar.tsx 17ms (unchanged)
-components/ui/background-paths.tsx 19ms (unchanged)
-components/ui/badge.tsx 6ms (unchanged)
-components/ui/button.tsx 15ms (unchanged)
-components/ui/checkbox.tsx 20ms (unchanged)
-components/ui/context-menu.tsx 17ms (unchanged)
-components/ui/desktop-menu-bar.tsx 50ms (unchanged)
-components/ui/dropdown-menu.tsx 26ms (unchanged)
-components/ui/infinite-drag-scroll.tsx 62ms (unchanged)
-components/ui/input.tsx 14ms (unchanged)
-components/ui/interactive-bento-gallery.tsx 42ms (unchanged)
-components/ui/kanban.tsx 42ms (unchanged)
-components/ui/liquid-glass.tsx 10ms (unchanged)
-components/ui/magnified-dock-strip.tsx 50ms (unchanged)
-components/ui/message-dock.tsx 40ms (unchanged)
-components/ui/particle-text-effect.tsx 77ms (unchanged)
-components/ui/portfolio-gallery.tsx 22ms (unchanged)
-components/ui/progress.tsx 11ms (unchanged)
-components/ui/radio.tsx 9ms (unchanged)
-components/ui/scroll-area.tsx 5ms (unchanged)
-components/ui/separator.tsx 12ms (unchanged)
-components/ui/stars-canvas.tsx 48ms (unchanged)
-components/ui/tabs.tsx 21ms (unchanged)
-components/ui/vaporize-text-cycle.tsx 132ms (unchanged)
-components/widget/AiSearchWidget.tsx 19ms (unchanged)
-components/widget/DesktopWidgetCanvas.tsx 9ms (unchanged)
-components/widget/DraggableWidget.tsx 20ms (unchanged)
-components/widget/weather/weather-glyphs.tsx 14ms (unchanged)
-components/widget/weather/weather-shared.tsx 13ms (unchanged)
-components/widget/weather/WeatherCurrentWidget.tsx 12ms (unchanged)
-components/widget/weather/WeatherDailyWidget.tsx 12ms (unchanged)
-components/widget/weather/WeatherHourlyWidget.tsx 5ms (unchanged)
-components/widget/WeatherWidgetProvider.tsx 4ms (unchanged)
-components/widget/widget-renderers.tsx 15ms (unchanged)
-components/widget/WidgetCatalogPanel.tsx 16ms (unchanged)
-components/widget/WidgetSidebar.tsx 7ms (unchanged)
-components/widget/WidgetSidebarShell.tsx 17ms (unchanged)
-components/widgets/WidgetShell.tsx 10ms (unchanged)
-components/window-launch-context.tsx 5ms (unchanged)
-components/Window.tsx 21ms (unchanged)
-components/WindowManager.tsx 19ms (unchanged)
-docs/frontend/motion.md 90ms (unchanged)
-docs/ReadME.md 1ms (unchanged)
-electron/main.cjs 59ms (unchanged)
-electron/preload.cjs 10ms (unchanged)
-eslint.config.mjs 16ms (unchanged)
-graphql/documents/agents.graphql 18ms (unchanged)
-graphql/documents/auth.graphql 5ms (unchanged)
-graphql/documents/chat.graphql 5ms (unchanged)
-graphql/documents/council.graphql 2ms (unchanged)
-graphql/documents/github.graphql 2ms (unchanged)
-graphql/documents/gmail.graphql 3ms (unchanged)
-graphql/documents/google-calendar.graphql 1ms (unchanged)
-graphql/documents/google-drive.graphql 9ms (unchanged)
-graphql/documents/google-people.graphql 2ms (unchanged)
-graphql/documents/google-photos.graphql 3ms (unchanged)
-graphql/documents/google-tasks.graphql 2ms (unchanged)
-graphql/documents/health.graphql 2ms (unchanged)
-graphql/documents/installed-apps.graphql 8ms (unchanged)
-graphql/documents/jobs.graphql 2ms (unchanged)
-graphql/documents/linked-accounts.graphql 2ms (unchanged)
-graphql/documents/multimodal.graphql 2ms (unchanged)
-graphql/documents/rag.graphql 2ms (unchanged)
-graphql/documents/storage.graphql 4ms (unchanged)
-graphql/documents/todo-tasks.graphql 3ms (unchanged)
-graphql/documents/todos.graphql 2ms (unchanged)
-graphql/documents/vision.graphql 3ms (unchanged)
-graphql/documents/weather.graphql 1ms (unchanged)
-graphql/documents/widgets.graphql 1ms (unchanged)
-graphql/documents/workflow.graphql 3ms (unchanged)
-graphql/generated/fragment-masking.ts 31ms
-graphql/generated/gql.ts 44ms
-graphql/generated/graphql.ts 577ms
-graphql/generated/index.ts 5ms
-graphql/schema.graphql 32ms (unchanged)
-hooks/use-agent-runner.ts 105ms (unchanged)
-hooks/use-ai-chat-gateway.ts 50ms (unchanged)
-hooks/use-async-job.ts 19ms (unchanged)
-hooks/use-cached-query.ts 20ms (unchanged)
-hooks/use-command-palette.ts 5ms (unchanged)
-hooks/use-desktop-weather.ts 18ms (unchanged)
-hooks/use-google-drive-launch-source.ts 9ms (unchanged)
-hooks/use-ide-threads.ts 40ms (unchanged)
-hooks/use-installed-apps.tsx 27ms (unchanged)
-hooks/use-is-mobile.ts 4ms (unchanged)
-hooks/use-json-rpc-ws.ts 27ms (unchanged)
-hooks/use-launcher-filters.ts 15ms (unchanged)
-hooks/use-linked-google-account.ts 9ms (unchanged)
-hooks/use-notifications.tsx 24ms (unchanged)
-hooks/use-os-logs.tsx 27ms (unchanged)
-hooks/use-stored-auth-tokens.ts 4ms (unchanged)
-hooks/use-system-health.ts 9ms (unchanged)
-hooks/use-system-stats.ts 43ms (unchanged)
-hooks/use-todo-board.ts 36ms (unchanged)
-hooks/use-todo-local-board.ts 29ms (unchanged)
-hooks/use-todo-workspaces.ts 31ms (unchanged)
-hooks/use-widget-layout.ts 34ms (unchanged)
-hooks/use-workflow.ts 4ms (unchanged)
-lib/api-client.ts 8ms (unchanged)
-lib/apollo-cache-events.ts 3ms (unchanged)
-lib/apollo-persist.ts 19ms (unchanged)
-lib/app-file-associations.ts 58ms (unchanged)
-lib/apps.ts 40ms (unchanged)
-lib/archive-mock.ts 4ms (unchanged)
-lib/auth-cookies.ts 1ms (unchanged)
-lib/auth-graphql-ready.ts 2ms (unchanged)
-lib/auth-session-events.ts 3ms (unchanged)
-lib/auth-tokens-local.ts 18ms (unchanged)
-lib/backend-http.ts 13ms (unchanged)
-lib/backend-url.ts 6ms (unchanged)
-lib/background-sync.ts 10ms (unchanged)
-lib/calendar-format.ts 24ms (unchanged)
-lib/chat-thread-titles.ts 7ms (unchanged)
-lib/desktop-ai-conversation.ts 3ms (unchanged)
-lib/desktop-background-storage.ts 11ms (unchanged)
-lib/establish-session.ts 9ms
-lib/file-explorer-google-drive.ts 26ms (unchanged)
-lib/file-explorer-mock.ts 20ms (unchanged)
-lib/file-explorer-storage.ts 19ms (unchanged)
-lib/firebase.ts 10ms (unchanged)
-lib/gallery-launch.ts 3ms (unchanged)
-lib/gmail-format.ts 27ms (unchanged)
-lib/google-drive-media.ts 5ms (unchanged)
-lib/google-link-auth.ts 3ms (unchanged)
-lib/google-people-format.ts 3ms (unchanged)
-lib/google-scope-badges.ts 7ms (unchanged)
-lib/graphql-auth.ts 16ms (unchanged)
-lib/graphql-modules.ts 5ms (unchanged)
-lib/ide-apply.ts 21ms (unchanged)
-lib/ide-workspace.ts 31ms (unchanged)
-lib/installed-apps-shared.ts 4ms (unchanged)
-lib/jwt-user-from-access.ts 6ms
-lib/linked-github-accounts.ts 5ms (unchanged)
-lib/linked-google-accounts.ts 15ms (unchanged)
-lib/local-cache.ts 35ms (unchanged)
-lib/motion/spring-presets.ts 7ms (unchanged)
-lib/motion/spring-style.ts 3ms (unchanged)
-lib/motion/use-in-view-once.ts 8ms (unchanged)
-lib/motion/use-reduced-motion-style.ts 6ms (unchanged)
-lib/notifications.ts 7ms (unchanged)
-lib/os-windows-persist.ts 16ms (unchanged)
-lib/platform.ts 10ms (unchanged)
-lib/read-google-token-payload.ts 6ms (unchanged)
-lib/refresh-session-graphql.ts 5ms (unchanged)
-lib/rehydrate-auth-from-cookies.ts 7ms
-lib/restore-auth-session.ts 8ms (unchanged)
-lib/resume-prompt.ts 11ms (unchanged)
-lib/resume-storage.ts 21ms (unchanged)
-lib/resume-types.ts 3ms (unchanged)
-lib/shell-z-index.ts 5ms (unchanged)
-lib/storage-html-asset-rewrite.ts 92ms (unchanged)
-lib/storage-signed-url.ts 6ms (unchanged)
-lib/todo-format.ts 24ms (unchanged)
-lib/transfer-mock.ts 5ms (unchanged)
-lib/use-is-mobile.ts 7ms (unchanged)
-lib/use-prefers-reduced-motion.ts 3ms (unchanged)
-lib/utils.test.ts 2ms (unchanged)
-lib/utils.ts 12ms (unchanged)
-lib/volume-mock.ts 7ms (unchanged)
-lib/weather-forecast-types.ts 16ms (unchanged)
-lib/widget-layout-utils.ts 40ms (unchanged)
-lib/widget-registry.ts 16ms (unchanged)
-lib/window-launch.ts 10ms (unchanged)
-metadata.json 3ms (unchanged)
-next-env.d.ts 3ms
-next.config.ts 10ms (unchanged)
-package-lock.json 258ms (unchanged)
-package.json 3ms (unchanged)
-postcss.config.mjs 6ms (unchanged)
-proxy.ts 6ms (unchanged)
-public/manifest.json 4ms (unchanged)
-README.md 14ms (unchanged)
-scripts/check-best-practices.mjs 12ms (unchanged)
-scripts/clean.mjs 3ms (unchanged)
-scripts/codegen.mjs 3ms (unchanged)
-scripts/copy-standalone-assets.mjs 10ms (unchanged)
-scripts/css-inventory.mjs 9ms (unchanged)
-scripts/generate-pwa-icons.mjs 6ms (unchanged)
-scripts/patch-react-motion.mjs 13ms (unchanged)
-tailwind.config.ts 7ms (unchanged)
-tsconfig.json 3ms (unchanged)
-types/electron-bridge.d.ts 4ms (unchanged)
-vitest.config.ts 2ms (unchanged)
-  Verifying: npx prettier --check .
-Checking formatting...
-All matched files use Prettier code style!
-  OK Prettier formatted and verified
-
-[5/10] Linting...
-----------------------------------------
-  Running: npm run lint
-
-> durgasos@0.1.0 lint
-> eslint .
-
-
-E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\SettingsAiProvidersPane.tsx
-  184:5  warning  React Hook useCallback has a missing dependency: 'authReady'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
-  197:7  error    Error: Calling setState synchronously within an effect can trigger cascading renders
-
-Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
-* Update external systems with the latest state from React.
-* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
-
-Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
-
-E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\SettingsAiProvidersPane.tsx:197:7
-  195 |     if (!authReady) return;
-  196 |     if (!canAuth) {
-> 197 |       setLoadState('error');
-      |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
-  198 |       setLoadError('Sign in (JWT in localStorage) or paste the server API key above.');
-  199 |       // #region agent log
-  200 |       fetch('http://127.0.0.1:7531/ingest/632941fc-04f7-4b75-9df5-2d52b029d540', {  react-hooks/set-state-in-effect
-
-✖ 2 problems (1 error, 1 warning)
-
-  X Linting errors found
-
-> durgasos@0.1.0 lint:fix
-> eslint . --fix
-
-
-E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\SettingsAiProvidersPane.tsx
-  184:5  warning  React Hook useCallback has a missing dependency: 'authReady'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
-  197:7  error    Error: Calling setState synchronously within an effect can trigger cascading renders
-
-Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
-* Update external systems with the latest state from React.
-* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
-
-Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
-
-E:\durgas_ai\thekoushikdurgas.ai\durgasos\components\apps\SettingsAiProvidersPane.tsx:197:7
-  195 |     if (!authReady) return;
-  196 |     if (!canAuth) {
-> 197 |       setLoadState('error');
-      |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
-  198 |       setLoadError('Sign in (JWT in localStorage) or paste the server API key above.');
-  199 |       // #region agent log
-  200 |       fetch('http://127.0.0.1:7531/ingest/632941fc-04f7-4b75-9df5-2d52b029d540', {  react-hooks/set-state-in-effect
-
-✖ 2 problems (1 error, 1 warning)
-
-
-[6/10] Running tests...
-----------------------------------------
-  Running: npm run test
-
-> durgasos@0.1.0 test
-> vitest run --passWithNoTests
-
-
- RUN  v4.1.6 E:/durgas_ai/thekoushikdurgas.ai/durgasos
-
- ✓ lib/utils.test.ts (1 test) 13ms
-   ✓ cn merges class names 11ms
-
- Test Files  1 passed (1)
-      Tests  1 passed (1)
-   Start at  22:04:18
-   Duration  10.84s (transform 42ms, setup 0ms, import 115ms, tests 13ms, environment 0ms)
-
-  OK All tests passed
-
-[6b] Coverage skipped (set RUN_TEST_COVERAGE=1 to run npm run test:coverage)
-
-[7/10] Next.js best-practices checklist...
-----------------------------------------
-  ~86 scored checks (default threshold 80 reports\check_report_*.json
-  Config: .next-checker-config.json  -  env BEST_PRACTICES_THRESHOLD, BEST_PRACTICES_FORMAT, BEST_PRACTICES_NO_FAIL
-  Running: node scripts\check-best-practices.mjs
-Best-practices score: 100% (10/10)
-OK Next app directory exists
-OK Global stylesheet exists
-OK TypeScript config exists
-OK ESLint config exists
-OK Environment example exists
-OK Ignore file exists
-OK README exists
-OK No committed Next build output
-OK Package has CI script
-OK Package has typecheck script
-  OK Best-practices check passed
-
-[8/10] Final format verification (Prettier via npm)...
-----------------------------------------
-  Running: npm run format
-
-> durgasos@0.1.0 format
-> prettier --write .
-
-.eslintrc.json 21ms (unchanged)
-app/api/auth/session/rehydrate/route.ts 73ms (unchanged)
-app/api/auth/session/route.ts 27ms (unchanged)
-app/auth-glass.css 52ms (unchanged)
-app/dev/react-motion-smoke/page.tsx 56ms (unchanged)
-app/globals.css 46ms (unchanged)
-app/layout.tsx 9ms (unchanged)
-app/page.tsx 20ms (unchanged)
-capacitor.config.ts 4ms (unchanged)
-codegen.yml 23ms (unchanged)
-components/ApolloGraphQLProvider.tsx 18ms (unchanged)
-components/AppProviders.tsx 3ms (unchanged)
-components/apps/AgentApp.tsx 98ms (unchanged)
-components/apps/AppsManagerApp.tsx 36ms (unchanged)
-components/apps/ArchiverApp.tsx 37ms (unchanged)
-components/apps/BrowserApp.tsx 86ms (unchanged)
-components/apps/calendar/calendar-theme.ts 5ms (unchanged)
-components/apps/calendar/CalendarHeader.tsx 12ms (unchanged)
-components/apps/calendar/CategoryCard.tsx 5ms (unchanged)
-components/apps/calendar/EventFlipCard.tsx 21ms (unchanged)
-components/apps/calendar/tabs/ContactsTab.tsx 25ms (unchanged)
-components/apps/calendar/tabs/EventsTab.tsx 26ms (unchanged)
-components/apps/calendar/tabs/PlanningTab.tsx 27ms (unchanged)
-components/apps/calendar/tabs/TodayTab.tsx 20ms (unchanged)
-components/apps/CalendarApp.tsx 29ms (unchanged)
-components/apps/chat/presentational.tsx 12ms (unchanged)
-components/apps/chat/templates.ts 3ms (unchanged)
-components/apps/ChatApp.tsx 87ms (unchanged)
-components/apps/ContactsApp.tsx 25ms (unchanged)
-components/apps/CouncilApp.tsx 11ms (unchanged)
-components/apps/DocsApp.tsx 41ms (unchanged)
-components/apps/DriveApp.tsx 18ms (unchanged)
-components/apps/FileExplorer.tsx 215ms (unchanged)
-components/apps/FileExplorerUploadPanel.tsx 40ms (unchanged)
-components/apps/FolderTree.tsx 13ms (unchanged)
-components/apps/gallery/GalleryInfiniteViewer.tsx 8ms (unchanged)
-components/apps/GalleryApp.tsx 77ms (unchanged)
-components/apps/gmail/GmailHeader.tsx 7ms (unchanged)
-components/apps/gmail/GmailList.tsx 7ms (unchanged)
-components/apps/gmail/GmailReader.tsx 17ms (unchanged)
-components/apps/gmail/GmailSidebar.tsx 13ms (unchanged)
-components/apps/GmailApp.tsx 27ms (unchanged)
-components/apps/MetricsApp.tsx 7ms (unchanged)
-components/apps/ModuleAppShell.tsx 4ms (unchanged)
-components/apps/MultimodalApp.tsx 11ms (unchanged)
-components/apps/PlayerApp.tsx 28ms (unchanged)
-components/apps/RagApp.tsx 5ms (unchanged)
-components/apps/RemoteApp.tsx 18ms (unchanged)
-components/apps/repo/ContributionGraph.tsx 6ms (unchanged)
-components/apps/repo/GitHubAccountPicker.tsx 4ms (unchanged)
-components/apps/repo/GitHubProfileCard.tsx 9ms (unchanged)
-components/apps/repo/OverviewTab.tsx 12ms (unchanged)
-components/apps/repo/PublicSearchBar.tsx 4ms (unchanged)
-components/apps/repo/RepositoriesTab.tsx 11ms (unchanged)
-components/apps/repo/StarsTab.tsx 8ms (unchanged)
-components/apps/RepoApp.tsx 23ms (unchanged)
-components/apps/ResumeMatcherApp.tsx 67ms (unchanged)
-components/apps/Settings.tsx 37ms (unchanged)
-components/apps/SettingsAccountsPane.tsx 27ms (unchanged)
-components/apps/SettingsAiProvidersPane.tsx 37ms (unchanged)
-components/apps/SettingsDefaultAppsPane.tsx 18ms (unchanged)
-components/apps/SettingsProfilePane.tsx 27ms (unchanged)
-components/apps/SettingsSessionSummary.tsx 7ms (unchanged)
-components/apps/SheetsApp.tsx 22ms (unchanged)
-components/apps/StorageApp.tsx 4ms (unchanged)
-components/apps/Terminal.tsx 23ms (unchanged)
-components/apps/todo/BoardTab.tsx 4ms (unchanged)
-components/apps/todo/TodoHeader.tsx 7ms (unchanged)
-components/apps/todo/WorkspacesTab.tsx 18ms (unchanged)
-components/apps/TodoApp.tsx 13ms (unchanged)
-components/apps/TransferApp.tsx 16ms (unchanged)
-components/apps/VectorDbApp.tsx 30ms (unchanged)
-components/apps/ViewerApp.tsx 21ms (unchanged)
-components/apps/VisionApp.tsx 7ms (unchanged)
-components/apps/VoidIdeApp.tsx 90ms (unchanged)
-components/apps/VolumeManagerApp.tsx 29ms (unchanged)
-components/apps/WorkflowApp.tsx 38ms (unchanged)
-components/auth/auth-mutation-helpers.ts 2ms (unchanged)
-components/auth/AuthProfileSync.tsx 8ms (unchanged)
-components/auth/AuthSessionContext.tsx 21ms (unchanged)
-components/auth/AuthSignUpFieldset.tsx 26ms (unchanged)
-components/auth/AuthStatusModal.tsx 38ms (unchanged)
-components/auth/BlurFade.tsx 13ms (unchanged)
-components/auth/ConfettiCanvas.tsx 16ms (unchanged)
-components/auth/GlassAuthButton.tsx 35ms (unchanged)
-components/auth/use-sign-up-flow.ts 68ms (unchanged)
-components/auth/WelcomeModal.tsx 16ms (unchanged)
-components/auth/WelcomeSignUpSection.tsx 24ms (unchanged)
-components/BackgroundSyncHost.tsx 5ms (unchanged)
-components/CommandPalette.tsx 38ms (unchanged)
-components/desktop-background/DesktopBackgroundLayer.tsx 5ms (unchanged)
-components/desktop-background/DesktopBackgroundProvider.tsx 8ms (unchanged)
-components/DesktopAiSearchBar.tsx 3ms (unchanged)
-components/DesktopNoticeHost.tsx 5ms (unchanged)
-components/DesktopWeatherPanel.tsx 3ms (unchanged)
-components/DesktopWidgets.tsx 2ms (unchanged)
-components/Dock.tsx 18ms (unchanged)
-components/GlobalShellContextMenu.tsx 4ms (unchanged)
-components/GlobalUserContextMenuContent.tsx 18ms (unchanged)
-components/Launcher.tsx 1ms (unchanged)
-components/launcher/Launcher.tsx 15ms (unchanged)
-components/launcher/LauncherAppCard.tsx 13ms (unchanged)
-components/launcher/LauncherAppGrid.tsx 7ms (unchanged)
-components/launcher/LauncherToolbar.tsx 11ms (unchanged)
-components/motion/index.ts 2ms (unchanged)
-components/motion/PresenceList.tsx 21ms (unchanged)
-components/motion/SidebarShellFrame.tsx 12ms (unchanged)
-components/motion/SpringBox.tsx 9ms (unchanged)
-components/motion/SpringTabIndicator.tsx 9ms (unchanged)
-components/motion/StaggerList.tsx 9ms (unchanged)
-components/motion/use-pointer-drag-spring.ts 12ms (unchanged)
-components/NativePlatformBridge.tsx 9ms (unchanged)
-components/notification/LogRow.tsx 8ms (unchanged)
-components/notification/NotificationCard.tsx 9ms (unchanged)
-components/notification/NotificationSidebarExpandedContext.tsx 4ms (unchanged)
-components/notification/NotificationSidebarShell.tsx 22ms (unchanged)
-components/notification/NotificationsPanel.tsx 10ms (unchanged)
-components/notification/sidebar-motion.ts 5ms (unchanged)
-components/notification/StatBar.tsx 7ms (unchanged)
-components/notification/SystemLogsPanel.tsx 18ms (unchanged)
-components/NotificationCenter.tsx 10ms (unchanged)
-components/os-context.tsx 268ms (unchanged)
-components/SystemStatusIcons.tsx 33ms (unchanged)
-components/ThemePreferences.tsx 5ms (unchanged)
-components/TopBar.tsx 74ms (unchanged)
-components/ui/ai-chat-input.tsx 45ms (unchanged)
-components/ui/asmr-desktop-background.tsx 39ms (unchanged)
-components/ui/avatar.tsx 12ms (unchanged)
-components/ui/background-paths.tsx 16ms (unchanged)
-components/ui/badge.tsx 6ms (unchanged)
-components/ui/button.tsx 17ms (unchanged)
-components/ui/checkbox.tsx 12ms (unchanged)
-components/ui/context-menu.tsx 25ms (unchanged)
-components/ui/desktop-menu-bar.tsx 62ms (unchanged)
-components/ui/dropdown-menu.tsx 33ms (unchanged)
-components/ui/infinite-drag-scroll.tsx 33ms (unchanged)
-components/ui/input.tsx 15ms (unchanged)
-components/ui/interactive-bento-gallery.tsx 50ms (unchanged)
-components/ui/kanban.tsx 49ms (unchanged)
-components/ui/liquid-glass.tsx 15ms (unchanged)
-components/ui/magnified-dock-strip.tsx 59ms (unchanged)
-components/ui/message-dock.tsx 39ms (unchanged)
-components/ui/particle-text-effect.tsx 85ms (unchanged)
-components/ui/portfolio-gallery.tsx 28ms (unchanged)
-components/ui/progress.tsx 18ms (unchanged)
-components/ui/radio.tsx 12ms (unchanged)
-components/ui/scroll-area.tsx 11ms (unchanged)
-components/ui/separator.tsx 5ms (unchanged)
-components/ui/stars-canvas.tsx 27ms (unchanged)
-components/ui/tabs.tsx 25ms (unchanged)
-components/ui/vaporize-text-cycle.tsx 117ms (unchanged)
-components/widget/AiSearchWidget.tsx 16ms (unchanged)
-components/widget/DesktopWidgetCanvas.tsx 8ms (unchanged)
-components/widget/DraggableWidget.tsx 24ms (unchanged)
-components/widget/weather/weather-glyphs.tsx 8ms (unchanged)
-components/widget/weather/weather-shared.tsx 7ms (unchanged)
-components/widget/weather/WeatherCurrentWidget.tsx 15ms (unchanged)
-components/widget/weather/WeatherDailyWidget.tsx 19ms (unchanged)
-components/widget/weather/WeatherHourlyWidget.tsx 8ms (unchanged)
-components/widget/WeatherWidgetProvider.tsx 4ms (unchanged)
-components/widget/widget-renderers.tsx 12ms (unchanged)
-components/widget/WidgetCatalogPanel.tsx 19ms (unchanged)
-components/widget/WidgetSidebar.tsx 5ms (unchanged)
-components/widget/WidgetSidebarShell.tsx 26ms (unchanged)
-components/widgets/WidgetShell.tsx 10ms (unchanged)
-components/window-launch-context.tsx 7ms (unchanged)
-components/Window.tsx 32ms (unchanged)
-components/WindowManager.tsx 24ms (unchanged)
-docs/frontend/motion.md 69ms (unchanged)
-docs/ReadME.md 1ms (unchanged)
-electron/main.cjs 60ms (unchanged)
-electron/preload.cjs 5ms (unchanged)
-eslint.config.mjs 11ms (unchanged)
-graphql/documents/agents.graphql 11ms (unchanged)
-graphql/documents/auth.graphql 3ms (unchanged)
-graphql/documents/chat.graphql 2ms (unchanged)
-graphql/documents/council.graphql 1ms (unchanged)
-graphql/documents/github.graphql 6ms (unchanged)
-graphql/documents/gmail.graphql 2ms (unchanged)
-graphql/documents/google-calendar.graphql 1ms (unchanged)
-graphql/documents/google-drive.graphql 1ms (unchanged)
-graphql/documents/google-people.graphql 1ms (unchanged)
-graphql/documents/google-photos.graphql 1ms (unchanged)
-graphql/documents/google-tasks.graphql 4ms (unchanged)
-graphql/documents/health.graphql 1ms (unchanged)
-graphql/documents/installed-apps.graphql 2ms (unchanged)
-graphql/documents/jobs.graphql 1ms (unchanged)
-graphql/documents/linked-accounts.graphql 2ms (unchanged)
-graphql/documents/multimodal.graphql 1ms (unchanged)
-graphql/documents/rag.graphql 2ms (unchanged)
-graphql/documents/storage.graphql 2ms (unchanged)
-graphql/documents/todo-tasks.graphql 2ms (unchanged)
-graphql/documents/todos.graphql 2ms (unchanged)
-graphql/documents/vision.graphql 1ms (unchanged)
-graphql/documents/weather.graphql 1ms (unchanged)
-graphql/documents/widgets.graphql 1ms (unchanged)
-graphql/documents/workflow.graphql 1ms (unchanged)
-graphql/generated/fragment-masking.ts 35ms (unchanged)
-graphql/generated/gql.ts 26ms (unchanged)
-graphql/generated/graphql.ts 430ms (unchanged)
-graphql/generated/index.ts 6ms (unchanged)
-graphql/schema.graphql 20ms (unchanged)
-hooks/use-agent-runner.ts 89ms (unchanged)
-hooks/use-ai-chat-gateway.ts 46ms (unchanged)
-hooks/use-async-job.ts 18ms (unchanged)
-hooks/use-cached-query.ts 31ms (unchanged)
-hooks/use-command-palette.ts 5ms (unchanged)
-hooks/use-desktop-weather.ts 21ms (unchanged)
-hooks/use-google-drive-launch-source.ts 12ms (unchanged)
-hooks/use-ide-threads.ts 40ms (unchanged)
-hooks/use-installed-apps.tsx 35ms (unchanged)
-hooks/use-is-mobile.ts 4ms (unchanged)
-hooks/use-json-rpc-ws.ts 16ms (unchanged)
-hooks/use-launcher-filters.ts 10ms (unchanged)
-hooks/use-linked-google-account.ts 13ms (unchanged)
-hooks/use-notifications.tsx 22ms (unchanged)
-hooks/use-os-logs.tsx 21ms (unchanged)
-hooks/use-stored-auth-tokens.ts 7ms (unchanged)
-hooks/use-system-health.ts 13ms (unchanged)
-hooks/use-system-stats.ts 23ms (unchanged)
-hooks/use-todo-board.ts 24ms (unchanged)
-hooks/use-todo-local-board.ts 33ms (unchanged)
-hooks/use-todo-workspaces.ts 29ms (unchanged)
-hooks/use-widget-layout.ts 39ms (unchanged)
-hooks/use-workflow.ts 5ms (unchanged)
-lib/api-client.ts 9ms (unchanged)
-lib/apollo-cache-events.ts 3ms (unchanged)
-lib/apollo-persist.ts 11ms (unchanged)
-lib/app-file-associations.ts 33ms (unchanged)
-lib/apps.ts 23ms (unchanged)
-lib/archive-mock.ts 5ms (unchanged)
-lib/auth-cookies.ts 2ms (unchanged)
-lib/auth-graphql-ready.ts 3ms (unchanged)
-lib/auth-session-events.ts 4ms (unchanged)
-lib/auth-tokens-local.ts 28ms (unchanged)
-lib/backend-http.ts 20ms (unchanged)
-lib/backend-url.ts 8ms (unchanged)
-lib/background-sync.ts 14ms (unchanged)
-lib/calendar-format.ts 32ms (unchanged)
-lib/chat-thread-titles.ts 8ms (unchanged)
-lib/desktop-ai-conversation.ts 4ms (unchanged)
-lib/desktop-background-storage.ts 12ms (unchanged)
-lib/establish-session.ts 19ms (unchanged)
-lib/file-explorer-google-drive.ts 17ms (unchanged)
-lib/file-explorer-mock.ts 29ms (unchanged)
-lib/file-explorer-storage.ts 20ms (unchanged)
-lib/firebase.ts 9ms (unchanged)
-lib/gallery-launch.ts 4ms (unchanged)
-lib/gmail-format.ts 26ms (unchanged)
-lib/google-drive-media.ts 12ms (unchanged)
-lib/google-link-auth.ts 4ms (unchanged)
-lib/google-people-format.ts 13ms (unchanged)
-lib/google-scope-badges.ts 6ms (unchanged)
-lib/graphql-auth.ts 16ms (unchanged)
-lib/graphql-modules.ts 8ms (unchanged)
-lib/ide-apply.ts 25ms (unchanged)
-lib/ide-workspace.ts 53ms (unchanged)
-lib/installed-apps-shared.ts 8ms (unchanged)
-lib/jwt-user-from-access.ts 9ms (unchanged)
-lib/linked-github-accounts.ts 10ms (unchanged)
-lib/linked-google-accounts.ts 16ms (unchanged)
-lib/local-cache.ts 47ms (unchanged)
-lib/motion/spring-presets.ts 8ms (unchanged)
-lib/motion/spring-style.ts 4ms (unchanged)
-lib/motion/use-in-view-once.ts 14ms (unchanged)
-lib/motion/use-reduced-motion-style.ts 7ms (unchanged)
-lib/notifications.ts 13ms (unchanged)
-lib/os-windows-persist.ts 13ms (unchanged)
-lib/platform.ts 6ms (unchanged)
-lib/read-google-token-payload.ts 6ms (unchanged)
-lib/refresh-session-graphql.ts 8ms (unchanged)
-lib/rehydrate-auth-from-cookies.ts 7ms (unchanged)
-lib/restore-auth-session.ts 9ms (unchanged)
-lib/resume-prompt.ts 15ms (unchanged)
-lib/resume-storage.ts 26ms (unchanged)
-lib/resume-types.ts 4ms (unchanged)
-lib/shell-z-index.ts 7ms (unchanged)
-lib/storage-html-asset-rewrite.ts 89ms (unchanged)
-lib/storage-signed-url.ts 11ms (unchanged)
-lib/todo-format.ts 48ms (unchanged)
-lib/transfer-mock.ts 11ms (unchanged)
-lib/use-is-mobile.ts 4ms (unchanged)
-lib/use-prefers-reduced-motion.ts 4ms (unchanged)
-lib/utils.test.ts 3ms (unchanged)
-lib/utils.ts 4ms (unchanged)
-lib/volume-mock.ts 5ms (unchanged)
-lib/weather-forecast-types.ts 19ms (unchanged)
-lib/widget-layout-utils.ts 36ms (unchanged)
-lib/widget-registry.ts 17ms (unchanged)
-lib/window-launch.ts 5ms (unchanged)
-metadata.json 3ms (unchanged)
-next-env.d.ts 2ms (unchanged)
-next.config.ts 15ms (unchanged)
-package-lock.json 287ms (unchanged)
-package.json 5ms (unchanged)
-postcss.config.mjs 5ms (unchanged)
-proxy.ts 10ms (unchanged)
-public/manifest.json 3ms (unchanged)
-README.md 26ms (unchanged)
-scripts/check-best-practices.mjs 26ms (unchanged)
-scripts/clean.mjs 4ms (unchanged)
-scripts/codegen.mjs 8ms (unchanged)
-scripts/copy-standalone-assets.mjs 14ms (unchanged)
-scripts/css-inventory.mjs 13ms (unchanged)
-scripts/generate-pwa-icons.mjs 8ms (unchanged)
-scripts/patch-react-motion.mjs 12ms (unchanged)
-tailwind.config.ts 8ms (unchanged)
-tsconfig.json 5ms (unchanged)
-types/electron-bridge.d.ts 8ms (unchanged)
-vitest.config.ts 2ms (unchanged)
-  OK Final formatting applied
-
-[9/10] Production build check...
-----------------------------------------
-  Running: npm run build
-
-> durgasos@0.1.0 build
-> next build
-
-▲ Next.js 16.2.6 (Turbopack)
-- Environments: .env
-- Experiments (use with caution):
-  · proxyClientMaxBodySize: "48mb"
-
-  Creating an optimized production build ...
-✓ Compiled successfully in 46s
-✓ Finished TypeScript in 40s
-✓ Collecting page data using 7 workers in 1712ms
-✓ Generating static pages using 7 workers (6/6) in 1713ms
-✓ Finalizing page optimization in 3.6s
-
-Route (app)
-┌ ƒ /
-├ ○ /_not-found
-├ ƒ /api/auth/session
-├ ƒ /api/auth/session/rehydrate
-└ ○ /dev/react-motion-smoke
-
-
-ƒ Proxy (Middleware)
-
-○  (Static)   prerendered as static content
-ƒ  (Dynamic)  server-rendered on demand
-
-
-> durgasos@0.1.0 postbuild
-> node scripts/copy-standalone-assets.mjs
-
-[copy-standalone-assets] Copied .next/static and public into .next/standalone.
-  OK Build successful
-
-
-========================================
-  SUMMARY
-========================================
-
-Section Status:
-  [0] CSS inventory:                  see reports\css-inventory.txt if not skipped
-  [1] Cleanup and Preparation:        PASSED
-  [2] GraphQL Codegen:                PASSED
-  [3] Type Checking:                  PASSED
-  [4] Prettier:                       WARNING_FIXED
-  [5] Linting:                        FAILED
-  [6] Testing:                        PASSED
-  [6b] Vitest coverage:               SKIPPED
-  [7] Best practices ~86 checks:      PASSED
-  [8] Final Format:                   PASSED
-  [9] Build Verification:             PASSED
-
-  X Found 1 error(s)
-  Found 1 warning(s)
-
-  Please fix the errors before proceeding.
-
-========================================
-  CHECK COMPLETE
-========================================
-
-
-E:\durgas_ai\thekoushikdurgas.ai\durgasos>
+ GET /api/auth/session 200 in 32ms (next.js: 10ms, proxy.ts: 8ms, application-code: 13ms)
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <MenuProvider scope={{Menu:[...], ...}} open={false} onOpenChange={function useCallbackRef.useMemo} content={null} ...>
+      <MenuProvider scope={{Menu:[...], ...}} onClose={function Menu.useCallback} isUsingKeyboardRef={{current:false}} ...>
+        <ContextMenuTrigger asChild={true}>
+          <MenuAnchor>
+          <Primitive.span data-state="closed" data-disabled={undefined} asChild={true} ref={null} style={{...}} ...>
+            <Primitive.span.Slot data-state="closed" data-disabled={undefined} style={{...}} ...>
+              <Primitive.span.SlotClone data-state="closed" data-disabled={undefined} style={{...}} ...>
+                <div className="pointer-ev..." data-state="closed" data-disabled={undefined} style={{...}} ...>
+                  <LiquidGlassSurface variant="liquid" contentClassName="min-h-0 bg..." className="rounded-2x...">
+                    <div ref={null} className="relative f...">
+                      <div>
+                      <div>
+                      <div>
+                      <div className="relative z...">
+                        <ChatHistoryWidgetContent>
+                          <div className="w-64 flex ...">
+                            <div>
+                            <div className="flex flex-...">
++                             <button
++                               type="button"
++                               className="text-left p-2 rounded-lg bg-white/[0.01] border border-white/5 hover:bg-whi..."
++                               onClick={function onClick}
++                             >
+-                             <div className="text-[10px] text-white/45 py-4 text-center">
+                              ...
+        ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at button (<anonymous>)
+    at <unknown> (components/widget/widget-renderers.tsx:407:15)
+    at Array.map (<anonymous>)
+    at ChatHistoryWidgetContent (components/widget/widget-renderers.tsx:404:25)
+    at WidgetRenderer (components/widget/widget-renderers.tsx:515:11)
+    at <unknown> (components/widget/DesktopWidgetCanvas.tsx:570:25)
+    at Array.map (<anonymous>)
+    at <unknown> (components/widget/DesktopWidgetCanvas.tsx:559:36)
+    at Array.map (<anonymous>)
+    at DesktopWidgetCanvas (components/widget/DesktopWidgetCanvas.tsx:554:54)
+    at Home (app/page.tsx:94:23)
+  405 |             const displayTitle = getThreadTitle(c.id) || `Chat ${...
+  406 |             return (
+> 407 |               <button
+      |               ^
+  408 |                 key={c.id}
+  409 |                 type="button"
+  410 |                 className="text-left p-2 rounded-lg bg-white/[0.0...
+ POST /api/auth/session 200 in 49ms (next.js: 8ms, proxy.ts: 16ms, application-code: 25ms)
+ GET /api/auth/session 200 in 23ms (next.js: 5ms, proxy.ts: 10ms, application-code: 7ms)
+ POST /api/auth/session 200 in 27ms (next.js: 6ms, proxy.ts: 9ms, application-code: 12ms)
+ GET /api/auth/session 200 in 30ms (next.js: 8ms, proxy.ts: 10ms, application-code: 12ms)
+ GET /api/auth/session 200 in 39ms (next.js: 7ms, proxy.ts: 17ms, application-code: 14ms)
+Recoverable Error
+
+
+Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+See more info here: https://nextjs.org/docs/messages/react-hydration-error
+
+
++
+Client
+-
+Server
+  ...
+    <MenuProvider scope={{Menu:[...], ...}} open={false} onOpenChange={function useCallbackRef.useMemo} content={null} ...>
+      <MenuProvider scope={{Menu:[...], ...}} onClose={function Menu.useCallback} isUsingKeyboardRef={{current:false}} ...>
+        <ContextMenuTrigger asChild={true}>
+          <MenuAnchor>
+          <Primitive.span data-state="closed" data-disabled={undefined} asChild={true} ref={null} style={{...}} ...>
+            <Primitive.span.Slot data-state="closed" data-disabled={undefined} style={{...}} ...>
+              <Primitive.span.SlotClone data-state="closed" data-disabled={undefined} style={{...}} ...>
+                <div className="pointer-ev..." data-state="closed" data-disabled={undefined} style={{...}} ...>
+                  <LiquidGlassSurface variant="liquid" contentClassName="min-h-0 bg..." className="rounded-2x...">
+                    <div ref={null} className="relative f...">
+                      <div>
+                      <div>
+                      <div>
+                      <div className="relative z...">
+                        <ChatHistoryWidgetContent>
+                          <div className="w-64 flex ...">
+                            <div>
+                            <div className="flex flex-...">
++                             <button
++                               type="button"
++                               className="text-left p-2 rounded-lg bg-white/[0.01] border border-white/5 hover:bg-whi..."
++                               onClick={function onClick}
++                             >
+-                             <div className="text-[10px] text-white/45 py-4 text-center">
+                              ...
+        ...
+components/widget/widget-renderers.tsx (407:15) @ <unknown>
+
+
+  405 |             const displayTitle = getThreadTitle(c.id) || `Chat ${...
+  406 |             return (
+> 407 |               <button
+      |               ^
+  408 |                 key={c.id}
+  409 |                 type="button"
+  410 |                 className="text-left p-2 rounded-lg bg-white/[0.0...
+Call Stack
+22
+
+Show 11 ignore-listed frame(s)
+button
+<anonymous>
+<unknown>
+components/widget/widget-renderers.tsx (407:15)
+Array.map
+<anonymous>
+ChatHistoryWidgetContent
+components/widget/widget-renderers.tsx (404:25)
+WidgetRenderer
+components/widget/widget-renderers.tsx (515:11)
+<unknown>
+components/widget/DesktopWidgetCanvas.tsx (570:25)
+Array.map
+<anonymous>
+<unknown>
+components/widget/DesktopWidgetCanvas.tsx (559:36)
+Array.map
+<anonymous>
+DesktopWidgetCanvas
+components/widget/DesktopWidgetCanvas.tsx (554:54)
+Home
+app/page.tsx (94:23)

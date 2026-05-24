@@ -5,6 +5,39 @@ import { useCallback, useEffect, useState } from 'react';
 import type { SystemHealthOverall } from '@/hooks/use-system-health';
 import { fetchBackendHealthSnapshot } from '@/lib/backend-http';
 
+export type HostGpuStats = {
+  available: boolean;
+  name: string | null;
+  usagePct: number | null;
+  memoryTotalGb: number | null;
+  memoryUsedGb: number | null;
+};
+
+export type HostStorageVolume = {
+  mount: string;
+  totalGb: number;
+  usedGb: number;
+  pct: number;
+};
+
+export type HostStats = {
+  cpu: {
+    usagePct: number;
+    cores: number;
+  };
+  ram: {
+    totalGb: number;
+    usedGb: number;
+    pct: number;
+  };
+  gpu: HostGpuStats | null;
+  storage: HostStorageVolume[];
+  network: {
+    uploadSpeedBytesSec: number;
+    downloadSpeedBytesSec: number;
+  };
+};
+
 export type CpuPressure = 'nominal' | 'fair' | 'serious' | 'critical' | null;
 
 export type SystemStats = {
@@ -16,6 +49,7 @@ export type SystemStats = {
   backendHealth: SystemHealthOverall;
   wsGatewayOk: boolean;
   activeConnections: number | null;
+  hostStats: HostStats | null;
 };
 
 const DEFAULT_STATS: SystemStats = {
@@ -27,6 +61,7 @@ const DEFAULT_STATS: SystemStats = {
   backendHealth: 'offline',
   wsGatewayOk: false,
   activeConnections: null,
+  hostStats: null,
 };
 
 type NetworkInformationLike = {
@@ -71,7 +106,7 @@ function readNetwork(): SystemStats['network'] {
   };
 }
 
-/** rAF frame delta heuristic when Compute Pressure API is unavailable. */
+/** rAF frame delta heuristic when Compute Pressure API is unavailable. Pauses when tab is hidden. */
 function useRafCpuPressure(): CpuPressure {
   const [pressure, setPressure] = useState<CpuPressure>(null);
 
@@ -81,8 +116,10 @@ function useRafCpuPressure(): CpuPressure {
     let sum = 0;
     let count = 0;
     let rafId = 0;
+    let isHidden = document.hidden;
 
     const tick = (now: number) => {
+      if (isHidden) return;
       const delta = now - last;
       last = now;
       if (delta > 0 && delta < 500) {
@@ -102,8 +139,32 @@ function useRafCpuPressure(): CpuPressure {
       rafId = requestAnimationFrame(tick);
     };
 
-    rafId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafId);
+    const handleVisibilityChange = () => {
+      isHidden = document.hidden;
+      if (isHidden) {
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = 0;
+        }
+      } else {
+        last = performance.now();
+        sum = 0;
+        count = 0;
+        if (!rafId) {
+          rafId = requestAnimationFrame(tick);
+        }
+      }
+    };
+
+    if (!isHidden) {
+      rafId = requestAnimationFrame(tick);
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   return pressure;
@@ -129,6 +190,7 @@ export function useSystemStats(
     let backendHealth: SystemHealthOverall = backendHealthFromHook ?? 'offline';
     let wsGatewayOk = false;
     let activeConnections: number | null = null;
+    let hostStats: HostStats | null = null;
 
     try {
       const snap = await fetchBackendHealthSnapshot();
@@ -141,6 +203,9 @@ export function useSystemStats(
         const ac = (wsBody as Record<string, unknown>).active_connections;
         if (typeof ac === 'number') activeConnections = ac;
       }
+      if (snap.hostStats) {
+        hostStats = snap.hostStats as HostStats;
+      }
     } catch {
       backendHealth = 'offline';
       wsGatewayOk = false;
@@ -152,21 +217,56 @@ export function useSystemStats(
       storage,
       network: readNetwork(),
       cpuPressure: rafPressure,
-      gpuAvailable: false,
+      gpuAvailable: hostStats?.gpu?.available ?? false,
       backendHealth: backendHealthFromHook ?? backendHealth,
       wsGatewayOk,
       activeConnections,
+      hostStats,
     }));
   }, [backendHealthFromHook, rafPressure]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let id: number | undefined;
+
+    const startPolling = () => {
+      if (id) window.clearInterval(id);
+      id = window.setInterval(() => void poll(), pollMs);
+    };
+
+    const stopPolling = () => {
+      if (id) {
+        window.clearInterval(id);
+        id = undefined;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        void poll();
+        startPolling();
+      }
+    };
+
+    // Initial query
     const kick = window.setTimeout(() => {
-      void poll();
+      if (!document.hidden) {
+        void poll();
+      }
     }, 0);
-    const id = window.setInterval(() => void poll(), pollMs);
+
+    if (!document.hidden) {
+      startPolling();
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       window.clearTimeout(kick);
-      window.clearInterval(id);
+      stopPolling();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [poll, pollMs]);
 

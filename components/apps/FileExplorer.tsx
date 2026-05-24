@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUp,
+  Brain,
   ChevronDown,
   Download,
   File,
@@ -24,13 +25,17 @@ import {
   FolderPlus,
   FolderUp,
   Search,
+  Sparkles,
   Table2,
+  Tag,
   Trash2,
   Upload,
   Globe,
   X,
   PanelLeft,
 } from 'lucide-react';
+import { FileTagChips } from '@/components/apps/FileTagChips';
+import { useFileTags } from '@/hooks/use-file-tags';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
@@ -293,6 +298,7 @@ export function FileExplorerApp() {
   const reducedMotion = usePrefersReducedMotion();
   const [explorerMode, setExplorerMode] = useState<ExplorerMode>('browse');
   const [showFolderTree, setShowFolderTree] = useState(false);
+  const { getFileTags, addTag, removeTag } = useFileTags();
 
   const [searchNamePattern, setSearchNamePattern] = useState('*.txt');
   const [searchPhrase, setSearchPhrase] = useState('');
@@ -1310,6 +1316,12 @@ export function FileExplorerApp() {
           >
             Open
           </ContextMenuItem>
+          <ContextMenuItem
+            className="focus:bg-white/10"
+            onSelect={() => copyExplorerPath(base, entry)}
+          >
+            Copy path
+          </ContextMenuItem>
           {cloud ? (
             <>
               <ContextMenuItem
@@ -1334,12 +1346,6 @@ export function FileExplorerApp() {
                 onSelect={() => bumpAndRefetchStorage()}
               >
                 Refresh listing
-              </ContextMenuItem>
-              <ContextMenuItem
-                className="focus:bg-white/10"
-                onSelect={() => copyExplorerPath(base, entry)}
-              >
-                Copy path
               </ContextMenuItem>
               <ContextMenuItem
                 className="focus:bg-white/10"
@@ -1378,12 +1384,6 @@ export function FileExplorerApp() {
               >
                 Refresh listing
               </ContextMenuItem>
-              <ContextMenuItem
-                className="focus:bg-white/10"
-                onSelect={() => copyExplorerPath(base, entry)}
-              >
-                Copy path
-              </ContextMenuItem>
               <ContextMenuItem className="focus:bg-white/10" onSelect={() => openApp('drive')}>
                 Open Drive app
               </ContextMenuItem>
@@ -1399,10 +1399,17 @@ export function FileExplorerApp() {
           <ContextMenuSeparator className="bg-white/10" />
           <ContextMenuItem
             className="focus:bg-white/10"
-            disabled={!driveHere}
             onSelect={() => {
-              const seg = entry.pathSegment ?? entry.explorerPathSegment ?? entry.name;
-              window.alert(`Folder\n\nName: ${entry.name}\nPath segment: ${seg}`);
+              const fullPath = [
+                ...base,
+                entry.pathSegment ?? entry.explorerPathSegment ?? entry.name,
+              ] as PathSegments;
+              const type = folderKindLabel(fullPath);
+              const pathStr = formatPathDisplay(fullPath);
+              const mod = formatModified(entry.modified);
+              window.alert(
+                `Folder Properties\n\nName: ${entry.name}\nType: ${type}\nLocation: ${pathStr}\nModified: ${mod}`
+              );
             }}
           >
             Properties
@@ -1509,6 +1516,80 @@ export function FileExplorerApp() {
               </ContextMenuItem>
             </>
           ) : null}
+          {/* ── AI Actions ── */}
+          {cloudFile ? (
+            <ContextMenuSub>
+              <ContextMenuSubTrigger className="focus:bg-white/10 data-[state=open]:bg-white/10">
+                <Sparkles className="mr-2 h-3.5 w-3.5 text-violet-400" aria-hidden />
+                AI Actions
+              </ContextMenuSubTrigger>
+              <ContextMenuSubContent className="border-white/10 bg-slate-900/95 text-slate-100">
+                <ContextMenuItem
+                  className="focus:bg-white/10"
+                  onSelect={() =>
+                    openApp('chat', {
+                      initialPrompt: `Summarize the file: ${entry.name}\nPath: ${entry.storage?.file_path ?? entry.name}`,
+                    })
+                  }
+                >
+                  <Brain className="mr-2 h-3.5 w-3.5 text-fuchsia-400" aria-hidden />
+                  Summarize with AI
+                </ContextMenuItem>
+                <ContextMenuItem
+                  className="focus:bg-white/10"
+                  onSelect={() =>
+                    openApp('chat', {
+                      initialPrompt: `Embed this file into the RAG knowledge base:\nFile: ${entry.name}\nPath: ${entry.storage?.file_path ?? entry.name}\n\nPlease chunk, embed and store this document so it can be queried.`,
+                    })
+                  }
+                >
+                  <Brain className="mr-2 h-3.5 w-3.5 text-cyan-400" aria-hidden />
+                  Embed to RAG
+                </ContextMenuItem>
+                <ContextMenuItem
+                  className="focus:bg-white/10"
+                  onSelect={() =>
+                    openApp('chat', {
+                      initialPrompt: `Analyze this file and give me insights:\nFile: ${entry.name}\nPath: ${entry.storage?.file_path ?? entry.name}`,
+                    })
+                  }
+                >
+                  <Sparkles className="mr-2 h-3.5 w-3.5 text-sky-400" aria-hidden />
+                  Analyze
+                </ContextMenuItem>
+              </ContextMenuSubContent>
+            </ContextMenuSub>
+          ) : null}
+          {/* ── Tag management ── */}
+          <ContextMenuSub>
+            <ContextMenuSubTrigger className="focus:bg-white/10 data-[state=open]:bg-white/10">
+              <Tag className="mr-2 h-3.5 w-3.5 text-amber-400" aria-hidden />
+              Tags
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent className="border-white/10 bg-slate-900/95 text-slate-100 min-w-[140px]">
+              <ContextMenuItem
+                className="focus:bg-white/10"
+                onSelect={() => {
+                  const tagKey = entry.storage?.file_path ?? entry.name;
+                  const input = window.prompt('Add tag (e.g. important, review, done):');
+                  if (input) addTag(tagKey, input);
+                }}
+              >
+                <Plus className="mr-2 h-3.5 w-3.5" aria-hidden />
+                Add tag…
+              </ContextMenuItem>
+              {getFileTags(entry.storage?.file_path ?? entry.name).map((t) => (
+                <ContextMenuItem
+                  key={t}
+                  className="focus:bg-white/10 text-white/60"
+                  onSelect={() => removeTag(entry.storage?.file_path ?? entry.name, t)}
+                >
+                  <X className="mr-2 h-3 w-3 text-rose-400" aria-hidden />
+                  Remove: {t}
+                </ContextMenuItem>
+              ))}
+            </ContextMenuSubContent>
+          </ContextMenuSub>
           {driveFile && entry.googleDrive?.webViewLink ? (
             <ContextMenuItem
               className="focus:bg-white/10"
@@ -1522,12 +1603,23 @@ export function FileExplorerApp() {
           <ContextMenuSeparator className="bg-white/10" />
           <ContextMenuItem
             className="focus:bg-white/10"
-            disabled={!driveFile}
             onSelect={() => {
-              if (!entry.googleDrive) return;
-              window.alert(
-                `Google Drive file\n\nName: ${entry.name}\nID: ${entry.googleDrive.fileId}\nMIME: ${entry.googleDrive.mimeType ?? '—'}\nLink: ${entry.googleDrive.webViewLink ?? '—'}`
-              );
+              const fullPath = [...base, entry.name] as PathSegments;
+              const pathStr = formatPathDisplay(fullPath);
+              const mod = formatModified(entry.modified);
+              const size = formatBytes(entry.sizeBytes);
+              const type =
+                entry.typeLabel ?? `${extensionFromFileName(entry.name).toUpperCase()} File`;
+
+              if (entry.googleDrive) {
+                window.alert(
+                  `Google Drive File Properties\n\nName: ${entry.name}\nType: ${type}\nLocation: ${pathStr}\nSize: ${size}\nID: ${entry.googleDrive.fileId}\nMIME: ${entry.googleDrive.mimeType ?? '—'}\nModified: ${mod}`
+                );
+              } else {
+                window.alert(
+                  `File Properties\n\nName: ${entry.name}\nType: ${type}\nLocation: ${pathStr}\nSize: ${size}\nModified: ${mod}`
+                );
+              }
             }}
           >
             Properties
@@ -1819,8 +1911,15 @@ export function FileExplorerApp() {
                         <td className="p-2">
                           <EntryIcon entry={entry} />
                         </td>
-                        <td className="max-w-[min(40vw,280px)] min-w-0 truncate p-2 font-medium text-white/90">
-                          {entry.name}
+                        <td className="max-w-[min(40vw,280px)] min-w-0 p-2 font-medium text-white/90">
+                          <div className="flex flex-col gap-1">
+                            <span className="truncate">{entry.name}</span>
+                            <FileTagChips
+                              tags={getFileTags(entry.storage?.file_path ?? entry.name)}
+                              compact
+                              onRemove={(t) => removeTag(entry.storage?.file_path ?? entry.name, t)}
+                            />
+                          </div>
                         </td>
                         <td className="max-w-[72px] truncate p-2 text-right tabular-nums text-white/70">
                           {formatBytes(entry.sizeBytes)}
@@ -1966,15 +2065,20 @@ export function FileExplorerApp() {
                       >
                         {entry.name}
                       </span>
+                      {viewMode === 'grid' && (
+                        <FileTagChips
+                          tags={getFileTags(entry.storage?.file_path ?? entry.name)}
+                          compact
+                          className="justify-center mt-1"
+                          onRemove={(t) => removeTag(entry.storage?.file_path ?? entry.name, t)}
+                        />
+                      )}
                       {viewMode === 'list' && (
-                        <span className="ml-auto shrink-0 text-[10px] text-white/35">
-                          {entry.typeLabel ??
-                            (entry.kind === 'file'
-                              ? 'File'
-                              : entry.kind === 'drive'
-                                ? 'Drive'
-                                : 'Folder')}
-                        </span>
+                        <FileTagChips
+                          tags={getFileTags(entry.storage?.file_path ?? entry.name)}
+                          compact
+                          className="ml-2 shrink-0"
+                        />
                       )}
                     </button>
                   );

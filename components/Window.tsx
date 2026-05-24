@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { X, Minus, Square, Copy } from 'lucide-react';
 
 import { SpringBox } from '@/components/motion/SpringBox';
@@ -60,6 +60,28 @@ export function Window({
     overlaySpring
   );
 
+  const updateGlowEdge = useCallback((e: React.PointerEvent<HTMLElement>) => {
+    const target = e.currentTarget;
+    const { left, top, width, height } = target.getBoundingClientRect();
+    const x = e.clientX - left;
+    const y = e.clientY - top;
+    const cx = width / 2;
+    const cy = height / 2;
+    const dx = x - cx;
+    const dy = y - cy;
+    const kx = dx === 0 ? Infinity : cx / Math.abs(dx);
+    const ky = dy === 0 ? Infinity : cy / Math.abs(dy);
+    const edge = Math.min(Math.max(1 / Math.min(kx, ky), 0), 1);
+    let angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+
+    if (angle < 0) angle += 360;
+
+    target.style.setProperty('--app-edge-x', `${Math.min(Math.max((x / width) * 100, 0), 100)}%`);
+    target.style.setProperty('--app-edge-y', `${Math.min(Math.max((y / height) * 100, 0), 100)}%`);
+    target.style.setProperty('--app-edge-angle', `${angle.toFixed(2)}deg`);
+    target.style.setProperty('--app-edge-strength', `${(edge * 100).toFixed(2)}`);
+  }, []);
+
   if (isMinimized) return null;
 
   const canDrag = !layoutAsMaximized && !isMobile;
@@ -68,7 +90,7 @@ export function Window({
     <SpringBox
       data-os-window
       className={cn(
-        'absolute flex flex-col overflow-hidden transition-[opacity,box-shadow,border-color] duration-200 motion-gpu',
+        'app-glowing-edge-window absolute flex flex-col overflow-hidden transition-[opacity,box-shadow,border-color] duration-200 motion-gpu',
         layoutAsMaximized
           ? 'inset-0 rounded-none'
           : 'rounded-xl border border-white/20 w-[800px] h-[550px]',
@@ -98,7 +120,9 @@ export function Window({
         display: 'flex',
         flexDirection: 'column',
       })}
+      onPointerMove={updateGlowEdge}
     >
+      <span className="app-window-edge-glow" aria-hidden />
       <LiquidGlassSurface
         variant="liquid"
         className={cn(

@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 
 type SidebarShellFrameProps = {
   expanded: boolean;
+  pinned: boolean;
   reducedMotion: boolean;
   side?: 'left' | 'right';
   className?: string;
@@ -22,10 +23,13 @@ type SidebarShellFrameProps = {
   onMouseLeave?: () => void;
   onClick?: (e: React.MouseEvent) => void;
   children: ReactNode;
-};
+  widthOpen?: number;
+  widthClosed?: number;
+} & React.HTMLAttributes<HTMLDivElement>;
 
 export function SidebarShellFrame({
   expanded,
+  pinned,
   reducedMotion,
   side = 'right',
   className,
@@ -34,44 +38,75 @@ export function SidebarShellFrame({
   onMouseLeave,
   onClick,
   children,
+  widthOpen = 240,
+  widthClosed = 48.8,
+  ...rest
 }: SidebarShellFrameProps) {
-  const targets = expanded ? sidebarMotion.open : sidebarMotion.closed;
-  const style = useReducedMotionStyle(targets, sidebarWidthSpring);
+  const layoutTarget = pinned ? { width: widthOpen } : { width: widthClosed };
+  const visualTarget = expanded
+    ? { width: widthOpen, opacity: 1, x: 0 }
+    : { width: widthClosed, opacity: 1, x: 0 };
+
+  const layoutStyle = useReducedMotionStyle(layoutTarget, sidebarWidthSpring);
+  const visualStyle = useReducedMotionStyle(visualTarget, sidebarWidthSpring);
+
   if (reducedMotion) {
+    const activeLayoutWidth = pinned ? widthOpen : widthClosed;
+    const activeVisualWidth = expanded ? widthOpen : widthClosed;
     return (
       <div
-        className={cn('motion-gpu flex shrink-0 flex-col overflow-hidden', className)}
-        style={{ width: targets.width, ...frameStyle }}
+        className={cn('relative flex shrink-0 flex-col h-screen overflow-visible', className)}
+        style={{ width: activeLayoutWidth, ...frameStyle }}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         onClick={onClick}
+        {...rest}
       >
-        {children}
+        <div
+          className={cn(
+            'fixed top-0 bottom-0 h-screen overflow-hidden shadow-2xl transition-all duration-300',
+            side === 'left' ? 'left-0 border-r border-white/10' : 'right-0 border-l border-white/10'
+          )}
+          style={{ width: activeVisualWidth, zIndex: frameStyle?.zIndex }}
+        >
+          <div className="flex h-full min-h-0 w-full flex-col">{children}</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      className={cn('flex shrink-0 flex-col', className)}
-      style={frameStyle}
+    <SpringBox
+      as="div"
+      className={cn('relative flex shrink-0 flex-col h-screen overflow-visible', className)}
+      style={layoutStyle}
+      mapStyle={(s) => ({
+        width: s.width,
+        ...frameStyle,
+      })}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}
+      {...rest}
     >
       <SpringBox
-        className="h-full min-h-0 overflow-hidden"
-        defaultStyle={targets}
-        style={style}
+        as="div"
+        className={cn(
+          'fixed top-0 bottom-0 h-screen min-h-0 overflow-hidden shadow-2xl',
+          side === 'left' ? 'left-0 border-r border-white/10' : 'right-0 border-l border-white/10'
+        )}
+        defaultStyle={visualTarget}
+        style={visualStyle}
         mapStyle={(s) => ({
           width: s.width,
-          opacity: s.opacity,
+          opacity: s.opacity ?? 1,
           transform: `translate3d(${side === 'right' ? (s.x ?? 0) : -(s.x ?? 0)}px, 0, 0)`,
+          zIndex: frameStyle?.zIndex,
         })}
       >
         <div className="flex h-full min-h-0 w-full flex-col">{children}</div>
       </SpringBox>
-    </div>
+    </SpringBox>
   );
 }
 

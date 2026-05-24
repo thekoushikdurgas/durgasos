@@ -1,39 +1,143 @@
 'use client';
 import { useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { useOS, WindowState } from './os-context';
 import { Window } from './Window';
-import { FileExplorerApp } from './apps/FileExplorer';
-import { SettingsApp } from './apps/Settings';
-import { TerminalApp } from './apps/Terminal';
-import { ChatApp } from './apps/ChatApp';
-import { RagApp } from './apps/RagApp';
-import { StorageApp } from './apps/StorageApp';
-import { MetricsApp } from './apps/MetricsApp';
-import { VisionApp } from './apps/VisionApp';
-import { MultimodalApp } from './apps/MultimodalApp';
-import { CouncilApp } from './apps/CouncilApp';
-import { BrowserApp } from './apps/BrowserApp';
-import { AppsManagerApp } from './apps/AppsManagerApp';
-import { VolumeManagerApp } from './apps/VolumeManagerApp';
-import { ArchiverApp } from './apps/ArchiverApp';
-import { PlayerApp } from './apps/PlayerApp';
-import { RemoteApp } from './apps/RemoteApp';
-import { DocsApp } from './apps/DocsApp';
-import { SheetsApp } from './apps/SheetsApp';
-import { TransferApp } from './apps/TransferApp';
-import { WorkflowApp } from './apps/WorkflowApp';
-import { VectorDbApp } from './apps/VectorDbApp';
-import { ResumeMatcherApp } from './apps/ResumeMatcherApp';
-import { VoidIdeApp } from './apps/VoidIdeApp';
-import { GalleryApp } from './apps/GalleryApp';
-import { GmailApp } from './apps/GmailApp';
-import { CalendarApp } from './apps/CalendarApp';
-import { ContactsApp } from './apps/ContactsApp';
-import { DriveApp } from './apps/DriveApp';
-import { TodoApp } from './apps/TodoApp';
-import { RepoApp } from './apps/RepoApp';
-import { ViewerApp } from './apps/ViewerApp';
 import { useIsMobile } from '@/hooks/use-is-mobile';
+
+const LoadingSpinner = () => (
+  <div className="flex h-full w-full items-center justify-center bg-slate-950/20 text-xs text-white/50 backdrop-blur-sm">
+    <div className="flex flex-col items-center gap-2">
+      <div className="h-4 w-4 animate-spin rounded-full border border-sky-400 border-t-transparent" />
+      <span>Loading app...</span>
+    </div>
+  </div>
+);
+
+const FileExplorerApp = dynamic(
+  () => import('./apps/FileExplorer').then((m) => m.FileExplorerApp),
+  { ssr: false, loading: LoadingSpinner }
+);
+const SettingsApp = dynamic(() => import('./apps/Settings').then((m) => m.SettingsApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const TerminalApp = dynamic(() => import('./apps/Terminal').then((m) => m.TerminalApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const ChatApp = dynamic(() => import('./apps/ChatApp').then((m) => m.ChatApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const RagApp = dynamic(() => import('./apps/RagApp').then((m) => m.RagApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const StorageApp = dynamic(() => import('./apps/StorageApp').then((m) => m.StorageApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const MetricsApp = dynamic(() => import('./apps/MetricsApp').then((m) => m.MetricsApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const VisionApp = dynamic(() => import('./apps/VisionApp').then((m) => m.VisionApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const MultimodalApp = dynamic(() => import('./apps/MultimodalApp').then((m) => m.MultimodalApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const CouncilApp = dynamic(() => import('./apps/CouncilApp').then((m) => m.CouncilApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const BrowserApp = dynamic(() => import('./apps/BrowserApp').then((m) => m.BrowserApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const AppsManagerApp = dynamic(
+  () => import('./apps/AppsManagerApp').then((m) => m.AppsManagerApp),
+  { ssr: false, loading: LoadingSpinner }
+);
+const VolumeManagerApp = dynamic(
+  () => import('./apps/VolumeManagerApp').then((m) => m.VolumeManagerApp),
+  { ssr: false, loading: LoadingSpinner }
+);
+const ArchiverApp = dynamic(() => import('./apps/ArchiverApp').then((m) => m.ArchiverApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const PlayerApp = dynamic(() => import('./apps/PlayerApp').then((m) => m.PlayerApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const RemoteApp = dynamic(() => import('./apps/RemoteApp').then((m) => m.RemoteApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const DocsApp = dynamic(() => import('./apps/DocsApp').then((m) => m.DocsApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const SheetsApp = dynamic(() => import('./apps/SheetsApp').then((m) => m.SheetsApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const TransferApp = dynamic(() => import('./apps/TransferApp').then((m) => m.TransferApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const WorkflowApp = dynamic(() => import('./apps/WorkflowApp').then((m) => m.WorkflowApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const VectorDbApp = dynamic(() => import('./apps/VectorDbApp').then((m) => m.VectorDbApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const ResumeMatcherApp = dynamic(
+  () => import('./apps/ResumeMatcherApp').then((m) => m.ResumeMatcherApp),
+  { ssr: false, loading: LoadingSpinner }
+);
+const VoidIdeApp = dynamic(() => import('./apps/VoidIdeApp').then((m) => m.VoidIdeApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const GalleryApp = dynamic(() => import('./apps/GalleryApp').then((m) => m.GalleryApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const GmailApp = dynamic(() => import('./apps/GmailApp').then((m) => m.GmailApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const CalendarApp = dynamic(() => import('./apps/CalendarApp').then((m) => m.CalendarApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const ContactsApp = dynamic(() => import('./apps/ContactsApp').then((m) => m.ContactsApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const DriveApp = dynamic(() => import('./apps/DriveApp').then((m) => m.DriveApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const TodoApp = dynamic(() => import('./apps/TodoApp').then((m) => m.TodoApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const RepoApp = dynamic(() => import('./apps/RepoApp').then((m) => m.RepoApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const ViewerApp = dynamic(() => import('./apps/ViewerApp').then((m) => m.ViewerApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
 
 const FallbackApp = ({ name }: { name: string }) => (
   <div className="absolute inset-0 bg-slate-900 border border-t-0 border-white/5 flex items-center justify-center flex-col gap-4 text-white/50">

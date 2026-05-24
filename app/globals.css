@@ -119,6 +119,19 @@
 }
 
 :root {
+  /* ── DurgasOS design tokens (from vision spec) ── */
+  --bg-root: #050711;
+  --bg-surface: #0d101f;
+  --bg-elevated: #15192a;
+  --accent-primary: #3b82f6;
+  --accent-secondary: #7c3aed;
+  --text-primary: #f9fafb;
+  --text-muted: #9ca3af;
+  --border-subtle: rgba(148, 163, 184, 0.25);
+  /* Neon glow variants */
+  --glow-primary: 0 0 16px rgba(59, 130, 246, 0.7), 0 0 32px rgba(59, 130, 246, 0.3);
+  --glow-secondary: 0 0 16px rgba(124, 58, 237, 0.6), 0 0 32px rgba(124, 58, 237, 0.2);
+
   --background: 220 14% 96%;
   --foreground: 222 47% 11%;
   --card: 0 0% 100%;
@@ -207,6 +220,7 @@ body {
     opacity: 0;
     transform: scale(0.95) translateY(-5px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -217,6 +231,7 @@ body {
   from {
     background-position: 0% 0%;
   }
+
   to {
     background-position: 0% -1000%;
   }
@@ -329,6 +344,101 @@ body {
     outline: 2px solid hsl(var(--ring));
     outline-offset: -2px;
   }
+
+  .app-glowing-edge-window {
+    --app-edge-angle: 135deg;
+    --app-edge-strength: 0;
+    --app-edge-sensitivity: 30;
+    --app-edge-opacity: clamp(0,
+        calc((var(--app-edge-strength) - var(--app-edge-sensitivity)) / (100 - var(--app-edge-sensitivity))),
+        1);
+    --app-edge-glow-color: 190 95% 72%;
+    isolation: isolate;
+  }
+
+  .app-glowing-edge-window::before,
+  .app-glowing-edge-window::after,
+  .app-glowing-edge-window>.app-window-edge-glow {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 240ms ease-out;
+  }
+
+  .app-glowing-edge-window::before {
+    z-index: 1;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(rgba(5, 7, 17, 0.08), rgba(5, 7, 17, 0.08)) padding-box,
+      radial-gradient(at 80% 55%, hsla(268, 100%, 76%, 1), transparent 46%) border-box,
+      radial-gradient(at 69% 34%, hsla(349, 100%, 74%, 1), transparent 46%) border-box,
+      radial-gradient(at 8% 6%, hsla(136, 100%, 78%, 1), transparent 48%) border-box,
+      radial-gradient(at 41% 38%, hsla(192, 100%, 64%, 1), transparent 46%) border-box,
+      radial-gradient(at 86% 85%, hsla(186, 100%, 74%, 1), transparent 48%) border-box,
+      radial-gradient(at 82% 18%, hsla(52, 100%, 65%, 1), transparent 46%) border-box,
+      radial-gradient(at 51% 4%, hsla(12, 100%, 72%, 1), transparent 46%) border-box;
+    mask-image: conic-gradient(from var(--app-edge-angle) at center,
+        black 20%,
+        transparent 38%,
+        transparent 62%,
+        black 80%);
+  }
+
+  .app-glowing-edge-window::after {
+    z-index: 0;
+    background:
+      radial-gradient(at 80% 55%, hsla(268, 100%, 76%, 0.28), transparent 46%),
+      radial-gradient(at 69% 34%, hsla(349, 100%, 74%, 0.22), transparent 46%),
+      radial-gradient(at 8% 6%, hsla(136, 100%, 78%, 0.18), transparent 48%),
+      radial-gradient(at 41% 38%, hsla(192, 100%, 64%, 0.24), transparent 46%),
+      radial-gradient(at 86% 85%, hsla(186, 100%, 74%, 0.22), transparent 48%),
+      radial-gradient(at 82% 18%, hsla(52, 100%, 65%, 0.18), transparent 46%);
+    mask-image: conic-gradient(from var(--app-edge-angle) at center,
+        transparent 4%,
+        black 16%,
+        black 84%,
+        transparent 96%);
+    mix-blend-mode: soft-light;
+  }
+
+  .app-glowing-edge-window>.app-window-edge-glow {
+    z-index: 3;
+    box-shadow:
+      inset 0 0 0 1px hsl(var(--app-edge-glow-color) / 0.75),
+      inset 0 0 8px hsl(var(--app-edge-glow-color) / 0.5),
+      inset 0 0 22px hsl(var(--app-edge-glow-color) / 0.32),
+      0 0 16px hsl(var(--app-edge-glow-color) / 0.36),
+      0 0 36px hsl(var(--app-edge-glow-color) / 0.18);
+    mask-image: conic-gradient(from var(--app-edge-angle) at center,
+        black 3%,
+        transparent 12%,
+        transparent 88%,
+        black 97%);
+    mix-blend-mode: plus-lighter;
+  }
+
+  .app-glowing-edge-window:hover::before,
+  .app-glowing-edge-window:hover::after,
+  .app-glowing-edge-window:hover>.app-window-edge-glow {
+    opacity: var(--app-edge-opacity);
+  }
+
+  .app-glowing-edge-window> :not(.app-window-edge-glow) {
+    position: relative;
+    z-index: 2;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+
+    .app-glowing-edge-window::before,
+    .app-glowing-edge-window::after,
+    .app-glowing-edge-window>.app-window-edge-glow {
+      transition: none;
+    }
+  }
 }
 
 @keyframes window-open {
@@ -336,6 +446,7 @@ body {
     opacity: 0;
     transform: scale(0.95) translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -347,6 +458,7 @@ body {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+
   to {
     opacity: 0;
     transform: scale(0.95) translateY(8px);
@@ -358,6 +470,7 @@ body {
   from {
     transform: translateX(0);
   }
+
   to {
     transform: translateX(-50%);
   }
@@ -371,9 +484,11 @@ body {
 .perspective-1000 {
   perspective: 1000px;
 }
+
 .preserve-3d {
   transform-style: preserve-3d;
 }
+
 .backface-hidden {
   backface-visibility: hidden;
 }
@@ -383,13 +498,16 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
@@ -398,33 +516,146 @@ body {
 .electron-drag {
   -webkit-app-region: drag;
 }
+
 .electron-no-drag {
   -webkit-app-region: no-drag;
 }
 
+/* ── Neon blink brand (main_Screen/neon-blink) ── */
+:root {
+  --neon-blink: #7dfcff;
+  --neon-blink-weak: #7dfcff80;
+  --neon-blink-text: #e6f7ff;
+}
+
+.neon-blink-brand {
+  color: var(--neon-blink);
+  filter: drop-shadow(0 0 6px var(--neon-blink)) drop-shadow(0 0 16px var(--neon-blink-weak));
+}
+
+.neon-blink-brand__text {
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--neon-blink-text);
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 0 2px var(--neon-blink-text),
+    0 0 6px var(--neon-blink),
+    0 0 14px var(--neon-blink-weak);
+}
+
+.neon-blink-brand--compact .neon-blink-brand__text {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-shadow:
+    0 0 1px var(--neon-blink-text),
+    0 0 4px var(--neon-blink),
+    0 0 10px var(--neon-blink-weak);
+}
+
+.neon-blink-brand--default .neon-blink-brand__text {
+  font-size: 27px;
+}
+
+.neon-blink-brand.is-flicker,
+.neon-blink-brand.is-flicker .neon-blink-brand__text {
+  animation: neon-blink-flicker 300ms steps(2, end) 1;
+}
+
+.group\/logo:hover .neon-blink-brand:not(.is-flicker),
+.group\/logo:hover .neon-blink-brand:not(.is-flicker) .neon-blink-brand__text {
+  animation: neon-blink-flicker 220ms steps(2, end) 1;
+}
+
+@keyframes neon-blink-flicker {
+  0% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px var(--neon-blink)) drop-shadow(0 0 16px var(--neon-blink-weak));
+  }
+
+  40% {
+    opacity: 0.38;
+    filter: none;
+    text-shadow: none;
+  }
+
+  55% {
+    opacity: 1;
+    filter: drop-shadow(0 0 4px var(--neon-blink));
+  }
+
+  70% {
+    opacity: 0.5;
+    filter: none;
+    text-shadow: none;
+  }
+
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px var(--neon-blink)) drop-shadow(0 0 16px var(--neon-blink-weak));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .neon-blink-brand,
+  .neon-blink-brand__text {
+    animation: none !important;
+  }
+}
+
+/* ── Neon glow pulse for active dock items ── */
+@keyframes neon-glow-pulse {
+
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px rgba(59, 130, 246, 0.5),
+      0 0 16px rgba(59, 130, 246, 0.2);
+  }
+
+  50% {
+    box-shadow:
+      0 0 14px rgba(59, 130, 246, 0.75),
+      0 0 28px rgba(59, 130, 246, 0.35);
+  }
+}
+
+.dock-item-active-glow {
+  animation: neon-glow-pulse 2.5s ease-in-out infinite;
+  border-color: rgba(59, 130, 246, 0.45) !important;
+}
+
 /* macOS-style Dock Icon Bouncing */
 @keyframes macos-bounce {
+
   0%,
   100% {
     transform: translateY(0);
     animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
+
   30% {
     transform: translateY(-18px);
     animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53);
   }
+
   50% {
     transform: translateY(0);
     animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
+
   70% {
     transform: translateY(-8px);
     animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53);
   }
+
   85% {
     transform: translateY(0);
     animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
+
   93% {
     transform: translateY(-3px);
     animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53);

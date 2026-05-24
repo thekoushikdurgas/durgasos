@@ -22,7 +22,6 @@ import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { useSystemHealth } from '@/hooks/use-system-health';
 import { getGraphqlHttpUrl } from '@/lib/backend-url';
 import { ME, SYSTEM_READY } from '@/lib/graphql-modules';
 import {
@@ -33,6 +32,7 @@ import { SettingsAiProvidersPane } from '@/components/apps/SettingsAiProvidersPa
 import { SettingsDefaultAppsPane } from '@/components/apps/SettingsDefaultAppsPane';
 import { SettingsProfilePane } from '@/components/apps/SettingsProfilePane';
 import { SettingsAccountsPane } from '@/components/apps/SettingsAccountsPane';
+import { SettingsSystemHealthPane } from '@/components/apps/SettingsSystemHealthPane';
 import { useWindowLaunch } from '@/components/window-launch-context';
 import { useAuthSession } from '@/components/auth/AuthSessionContext';
 import { SettingsSessionSummary } from '@/components/apps/SettingsSessionSummary';
@@ -123,7 +123,6 @@ export function SettingsApp() {
   const [accent, setAccent] = useState<'blue' | 'violet' | 'cyan'>('blue');
   const [agentsTab, setAgentsTab] = useState('routing');
   const { backgroundId, setBackgroundId } = useDesktopBackground();
-  const { raw, overall, loading, error, refetch } = useSystemHealth(20_000);
 
   const chatProvider = useMemo(
     () => process.env.NEXT_PUBLIC_CHAT_PROVIDER ?? '(not set — default stack)',
@@ -406,46 +405,7 @@ export function SettingsApp() {
 
         {activeTab === 'Default apps' && <SettingsDefaultAppsPane />}
 
-        {activeTab === 'System health' && (
-          <div className="space-y-6">
-            <section className="frost-glass-surface mb-0 border border-white/10 p-6">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold text-white/90">API health</h2>
-                <span
-                  className={cn(
-                    'rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
-                    overall === 'online' && 'bg-emerald-500/20 text-emerald-300',
-                    overall === 'degraded' && 'bg-amber-500/20 text-amber-200',
-                    overall === 'offline' && 'bg-red-500/20 text-red-200'
-                  )}
-                >
-                  {loading ? 'loading' : overall}
-                </span>
-              </div>
-              {error ? (
-                <p className="text-sm text-red-300">
-                  Could not reach GraphQL health: {error.message}
-                </p>
-              ) : null}
-              <Progress
-                variant="linear"
-                value={loading ? 35 : overall === 'online' ? 100 : overall === 'degraded' ? 66 : 25}
-                max={100}
-                className="mb-4"
-              />
-              <button
-                type="button"
-                className="mb-4 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-sm text-white/90 hover:bg-white/15"
-                onClick={() => void refetch()}
-              >
-                Refresh
-              </button>
-              <pre className="overflow-auto rounded-lg border border-white/10 bg-black/50 p-3 text-[11px] text-slate-300">
-                {JSON.stringify(raw ?? {}, null, 2)}
-              </pre>
-            </section>
-          </div>
-        )}
+        {activeTab === 'System health' && <SettingsSystemHealthPane />}
 
         {activeTab === 'Backend & session' && (
           <div className="space-y-6">

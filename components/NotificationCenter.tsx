@@ -21,7 +21,7 @@ export function NotificationCenter() {
   const stats = useSystemStats(overall);
 
   const [tab, setTab] = useState<PanelTab>('notifications');
-  const [pinned, setPinned] = useState(true);
+  const [pinned, setPinned] = useState(false);
 
   if (!isNotifOpen) return null;
 

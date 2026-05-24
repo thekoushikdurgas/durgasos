@@ -4,8 +4,8 @@ import { useQuery } from '@apollo/client/react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { BoardTab } from '@/components/apps/todo/BoardTab';
-import { TodoHeader, type TodoShellTab } from '@/components/apps/todo/TodoHeader';
-import { WorkspacesTab } from '@/components/apps/todo/WorkspacesTab';
+import { TodoHeader } from '@/components/apps/todo/TodoHeader';
+import { TodoSidebar } from '@/components/apps/todo/TodoSidebar';
 import { useOS } from '@/components/os-context';
 import { useLinkedGoogleAccount } from '@/hooks/use-linked-google-account';
 import { useTodoBoard } from '@/hooks/use-todo-board';
@@ -42,7 +42,6 @@ export function TodoApp() {
   const pickerAccounts = useMemo(() => [localPickerRow, ...accounts], [localPickerRow, accounts]);
 
   const [pickedTodoAccountId, setPickedTodoAccountId] = useState<string | null>(null);
-  const [shellTab, setShellTab] = useState<TodoShellTab>('Board');
 
   const defaultTodoAccountId = useMemo(() => {
     if (!authed) return null;
@@ -111,6 +110,10 @@ export function TodoApp() {
     [setGoogleUserId]
   );
 
+  const activeWorkspace = useMemo(() => {
+    return ws.workspaces.find((w) => w.id === ws.activeWorkspaceId) || null;
+  }, [ws.workspaces, ws.activeWorkspaceId]);
+
   if (!authed) {
     return (
       <div className="flex h-full items-center justify-center bg-slate-950 p-6 text-sm text-white/50">
@@ -128,112 +131,114 @@ export function TodoApp() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-slate-950 text-white/90">
-      <TodoHeader
-        activeTab={shellTab}
-        onTab={setShellTab}
+    <div className="flex h-full w-full overflow-hidden bg-slate-950 text-white/90">
+      <TodoSidebar
+        workspaces={ws.workspaces}
+        loading={ws.loading}
+        activeWorkspaceId={ws.activeWorkspaceId}
+        onWorkspaceSelect={(id) => ws.setActiveWorkspaceId(id)}
+        createWorkspace={ws.createWorkspace}
+        renameWorkspace={ws.renameWorkspace}
+        deleteWorkspace={ws.deleteWorkspace}
         accounts={pickerAccounts}
         googleUserId={todoAccountId ?? LOCAL_GOOGLE_USER_ID}
         onGoogleUserId={onTodoAccountChange}
         onOpenSettings={openAccounts}
-        workspaces={ws.workspaces}
-        activeWorkspaceId={ws.activeWorkspaceId}
-        onWorkspaceChange={(id) => ws.setActiveWorkspaceId(id)}
+        isLocalMode={isLocalMode}
       />
 
-      {isLocalMode ? (
-        <div className="shrink-0 border-b border-white/10 bg-white/[0.03] px-4 py-2 text-center text-xs text-white/55 sm:px-6">
-          Tasks are saved on this device.{' '}
-          <button
-            type="button"
-            className="text-violet-300 underline-offset-2 hover:underline"
-            onClick={openAccounts}
-          >
-            Link Google in Settings
-          </button>{' '}
-          to sync with Google Tasks.
-        </div>
-      ) : null}
+      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+        <TodoHeader
+          activeWorkspaceName={activeWorkspace?.name ?? null}
+          onOpenSettings={openAccounts}
+        />
 
-      {!isLocalMode && !accessTokenForTodo && tokenQ.loading ? (
-        <div className="flex flex-1 items-center justify-center p-6 text-sm text-white/50">
-          Loading account token…
-        </div>
-      ) : !isLocalMode && !accessTokenForTodo ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-amber-200/90">
-          <p>No access token. Re-link your Google account in Settings.</p>
-          <div className="flex flex-wrap items-center justify-center gap-2">
+        {isLocalMode ? (
+          <div className="shrink-0 border-b border-white/10 bg-white/[0.03] px-4 py-2 text-center text-xs text-white/55 sm:px-6">
+            Tasks are saved on this device.{' '}
             <button
               type="button"
-              className="rounded-full border border-white/20 px-4 py-2 text-xs text-white hover:bg-white/10"
+              className="text-violet-300 underline-offset-2 hover:underline"
               onClick={openAccounts}
             >
-              Open Settings → Accounts
-            </button>
-            <button
-              type="button"
-              className="rounded-full border border-violet-400/40 px-4 py-2 text-xs text-violet-200 hover:bg-violet-500/10"
-              onClick={switchToLocalDevice}
-            >
-              Use On this device
-            </button>
+              Link Google in Settings
+            </button>{' '}
+            to sync with Google Tasks.
           </div>
+        ) : null}
+
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {!isLocalMode && !accessTokenForTodo && tokenQ.loading ? (
+            <div className="flex h-full items-center justify-center p-6 text-sm text-white/50">
+              Loading account token…
+            </div>
+          ) : !isLocalMode && !accessTokenForTodo ? (
+            <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-amber-200/90">
+              <p>No access token. Re-link your Google account in Settings.</p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  className="rounded-full border border-white/20 px-4 py-2 text-xs text-white hover:bg-white/10"
+                  onClick={openAccounts}
+                >
+                  Open Settings → Accounts
+                </button>
+                <button
+                  type="button"
+                  className="rounded-full border border-violet-400/40 px-4 py-2 text-xs text-violet-200 hover:bg-violet-500/10"
+                  onClick={switchToLocalDevice}
+                >
+                  Use On this device
+                </button>
+              </div>
+            </div>
+          ) : !hasTasksScope ? (
+            <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center text-sm text-white/60">
+              <p>
+                Google Tasks access is required. Re-link your account in Settings → Accounts to
+                grant the Tasks scope.
+              </p>
+              <button
+                type="button"
+                className="rounded-full border border-white/20 px-4 py-2 text-xs text-white/90 hover:bg-white/10"
+                onClick={openAccounts}
+              >
+                Open Settings → Accounts
+              </button>
+            </div>
+          ) : !ws.activeWorkspaceId && ws.loading ? (
+            <div className="flex h-full items-center justify-center p-6 text-sm text-white/50">
+              Loading workspaces…
+            </div>
+          ) : !board.listIds && board.busy ? (
+            <div className="flex h-full items-center justify-center p-6 text-sm text-white/50">
+              {isLocalMode ? 'Loading tasks…' : 'Syncing with Google Tasks…'}
+            </div>
+          ) : board.listIds ? (
+            <BoardTab
+              listIds={board.listIds}
+              busy={board.busy}
+              cards={board.cards}
+              onCardsChange={board.onCardsChange}
+              onAddCard={board.onAddCard}
+              onDeleteCard={board.onDeleteCard}
+            />
+          ) : !isLocalMode && ws.activeWorkspaceId ? (
+            <div className="flex h-full items-center justify-center p-6 text-sm text-white/50">
+              Could not load task lists.
+            </div>
+          ) : (
+            <BoardTab
+              listIds={null}
+              busy={board.busy}
+              cards={board.cards}
+              onCardsChange={board.onCardsChange}
+              onAddCard={board.onAddCard}
+              onDeleteCard={board.onDeleteCard}
+            />
+          )}
         </div>
-      ) : !hasTasksScope ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center text-sm text-white/60">
-          <p>
-            Google Tasks access is required. Re-link your account in Settings → Accounts to grant
-            the Tasks scope.
-          </p>
-          <button
-            type="button"
-            className="rounded-full border border-white/20 px-4 py-2 text-xs text-white/90 hover:bg-white/10"
-            onClick={openAccounts}
-          >
-            Open Settings → Accounts
-          </button>
-        </div>
-      ) : shellTab === 'Workspaces' ? (
-        <WorkspacesTab
-          workspaces={ws.workspaces}
-          loading={ws.loading}
-          activeWorkspaceId={ws.activeWorkspaceId}
-          createWorkspace={ws.createWorkspace}
-          renameWorkspace={ws.renameWorkspace}
-          deleteWorkspace={ws.deleteWorkspace}
-          isLocalMode={isLocalMode}
-        />
-      ) : !ws.activeWorkspaceId && ws.loading ? (
-        <div className="flex flex-1 items-center justify-center p-6 text-sm text-white/50">
-          Loading workspaces…
-        </div>
-      ) : !board.listIds && board.busy ? (
-        <div className="flex flex-1 items-center justify-center p-6 text-sm text-white/50">
-          {isLocalMode ? 'Loading tasks…' : 'Syncing with Google Tasks…'}
-        </div>
-      ) : board.listIds ? (
-        <BoardTab
-          listIds={board.listIds}
-          busy={board.busy}
-          cards={board.cards}
-          onCardsChange={board.onCardsChange}
-          onAddCard={board.onAddCard}
-          onDeleteCard={board.onDeleteCard}
-        />
-      ) : !isLocalMode && ws.activeWorkspaceId ? (
-        <div className="flex flex-1 items-center justify-center p-6 text-sm text-white/50">
-          Could not load task lists.
-        </div>
-      ) : (
-        <BoardTab
-          listIds={null}
-          busy={board.busy}
-          cards={board.cards}
-          onCardsChange={board.onCardsChange}
-          onAddCard={board.onAddCard}
-          onDeleteCard={board.onDeleteCard}
-        />
-      )}
+      </div>
     </div>
   );
 }

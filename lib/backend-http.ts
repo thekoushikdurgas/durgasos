@@ -41,12 +41,14 @@ const HEALTH_AGG_QUERY = `query BackendHealthSnapshot {
   health: systemHealth(params: {})
   ready: systemReady(params: {})
   ws: websocketGatewayStatus
+  hostStats
 }`;
 
 export type BackendHealthSnapshot = {
   health: unknown;
   ready: unknown;
   wsGateway: { ok: boolean; status: number; body: unknown };
+  hostStats: any;
 };
 
 /** Single GraphQL round-trip for status (replaces separate GET /health, /ready, /ws/status). */
@@ -75,7 +77,9 @@ export async function fetchBackendHealthSnapshot(
   } catch {
     body = null;
   }
-  const data = (body as { data?: { health?: unknown; ready?: unknown; ws?: unknown } })?.data;
+  const data = (
+    body as { data?: { health?: unknown; ready?: unknown; ws?: unknown; hostStats?: unknown } }
+  )?.data;
   const gqlErr = Array.isArray((body as { errors?: unknown })?.errors);
   return {
     health: data?.health ?? null,
@@ -85,5 +89,6 @@ export async function fetchBackendHealthSnapshot(
       status: res.status,
       body: data?.ws ?? body,
     },
+    hostStats: data?.hostStats ?? null,
   };
 }

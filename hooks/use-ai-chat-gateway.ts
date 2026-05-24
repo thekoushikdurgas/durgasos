@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, type MutableRefObject 
 import { readStoredAuthTokens } from '@/lib/auth-tokens-local';
 import { getAiWebSocketGatewayUrl } from '@/lib/backend-url';
 import { getDesktopAiConversationId } from '@/lib/desktop-ai-conversation';
+import { GatewayCancelledError } from '@/lib/gateway-errors';
 
 const THINK_INSTRUCTION =
   'Think step by step briefly, then give a clear, direct final answer for the user.';
@@ -107,6 +108,22 @@ function openWebSocket(
 
     if (msg.error) {
       const errText = msg.error.message ?? 'Request failed';
+      const code = msg.error.code;
+
+      if (code === -32001) {
+        import('@/lib/restore-auth-session').then(({ silentRefreshAuthSession }) => {
+          void silentRefreshAuthSession().then((ok) => {
+            if (ok && wsRef.current === ws) {
+              try {
+                ws.close();
+              } catch {
+                /* ignore */
+              }
+            }
+          });
+        });
+      }
+
       if (pending.kind === 'rpc') {
         pending.reject(new Error(errText));
       } else {
@@ -161,6 +178,7 @@ function openWebSocket(
   };
 
   ws.onerror = () => {
+    if (unmountedRef.current) return;
     for (const [, p] of pendingRef.current) {
       if (p.aborted) continue;
       if (p.kind === 'rpc') {
@@ -174,6 +192,10 @@ function openWebSocket(
 
   ws.onclose = () => {
     if (wsRef.current === ws) wsRef.current = null;
+    if (unmountedRef.current) {
+      pendingRef.current.clear();
+      return;
+    }
     for (const [, p] of pendingRef.current) {
       if (p.aborted) continue;
       if (p.kind === 'rpc') {
@@ -183,9 +205,7 @@ function openWebSocket(
       }
     }
     pendingRef.current.clear();
-    if (!unmountedRef.current) {
-      scheduleReconnectRef.current();
-    }
+    scheduleReconnectRef.current();
   };
 }
 
@@ -274,7 +294,7 @@ export function useAiChatGateway() {
       wsRef.current = null;
       for (const [, p] of pendingMap) {
         if (!p.aborted && p.kind === 'rpc') {
-          p.reject(new Error('Unmounted'));
+          p.reject(new GatewayCancelledError('Unmounted'));
         }
       }
       pendingMap.clear();
@@ -291,7 +311,7 @@ export function useAiChatGateway() {
       if (p.aborted) continue;
       p.aborted = true;
       if (p.kind === 'rpc') {
-        p.reject(new Error('Aborted'));
+        p.reject(new GatewayCancelledError('Aborted'));
       } else {
         p.handlers.onAborted?.();
       }

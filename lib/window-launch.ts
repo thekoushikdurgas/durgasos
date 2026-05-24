@@ -39,6 +39,12 @@ export type LaunchPayload = {
   bypassInstallCheck?: boolean;
   /** When opening Settings, select this sidebar tab (e.g. `Accounts`). */
   settingsTab?: string;
+  /** Pre-fill the initial message when opening an AI chat app. */
+  initialPrompt?: string;
+  /** Gmail thread identifier to display directly upon launch. */
+  gmailThreadId?: string;
+  /** Chat thread / conversation identifier to display directly upon launch. */
+  chatThreadId?: string;
 };
 
 /** Value provided to window content: launch payload plus shell-injected `windowId`. */

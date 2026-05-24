@@ -2,6 +2,7 @@
 
 import { type DragEvent, type FormEvent, useState } from 'react';
 import { Flame, Plus, Trash2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { KanbanListIds, TodoCard, TodoColumn } from '@/lib/todo-format';
 import { TODO_COLUMNS } from '@/lib/todo-format';
@@ -184,16 +185,18 @@ const Column = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={cn(
-          'flex max-h-[calc(100%-2.5rem)] min-h-32 flex-col transition-colors',
+          'flex max-h-[calc(100%-2.5rem)] min-h-32 flex-col transition-colors rounded-xl p-1',
           active ? 'bg-white/5' : 'bg-transparent'
         )}
       >
         <div className="min-h-0 flex-1 space-y-0 overflow-y-auto pr-0.5">
-          {filteredCards.map((c) => {
-            return (
-              <Card key={c.id} card={c} handleDragStart={handleDragStart} disabled={disabled} />
-            );
-          })}
+          <AnimatePresence mode="popLayout">
+            {filteredCards.map((c) => {
+              return (
+                <Card key={c.id} card={c} handleDragStart={handleDragStart} disabled={disabled} />
+              );
+            })}
+          </AnimatePresence>
           <DropIndicator beforeId={null} column={column} />
           <AddCard column={column} onAddCard={onAddCard} disabled={disabled} />
         </div>
@@ -213,17 +216,28 @@ const Card = ({ card, handleDragStart, disabled }: CardProps) => {
   return (
     <>
       <DropIndicator beforeId={id} column={column} />
-      <div
+      <motion.div
+        layout
+        layoutId={id}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
         draggable={!disabled}
         onDragStart={(e) => handleDragStart(e as unknown as DragEvent<HTMLDivElement>, card)}
         onDragOver={(e) => e.preventDefault()}
         className={cn(
-          'mb-1 cursor-grab rounded border border-white/10 bg-white/5 p-3 active:cursor-grabbing',
+          'mb-1 cursor-grab rounded-lg border border-white/10 bg-white/5 p-3 active:cursor-grabbing hover:border-white/20 transition-all duration-200 shadow-sm hover:shadow-md',
           disabled && 'cursor-not-allowed opacity-60'
         )}
+        whileDrag={{
+          scale: 1.02,
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)',
+          borderColor: 'rgba(255, 255, 255, 0.25)',
+          backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        }}
       >
         <p className="text-sm text-white/90">{title}</p>
-      </div>
+      </motion.div>
     </>
   );
 };
@@ -281,19 +295,27 @@ const BurnBarrel = ({ cards, onDeleteCard, disabled }: BurnBarrelProps) => {
   };
 
   return (
-    <div
+    <motion.div
+      layout
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
+      animate={{
+        scale: active ? 1.05 : 1,
+      }}
       className={cn(
-        'mt-10 grid h-56 w-56 shrink-0 place-content-center rounded border text-3xl',
+        'mt-10 grid h-56 w-56 shrink-0 place-content-center rounded-xl border text-3xl transition-colors duration-200',
         active
-          ? 'border-red-800 bg-red-800/20 text-red-500'
-          : 'border-white/15 bg-white/5 text-white/40'
+          ? 'border-red-500/50 bg-red-500/10 text-red-400'
+          : 'border-white/10 bg-white/[0.02] text-white/30'
       )}
     >
-      {active ? <Flame className="size-10 animate-bounce" /> : <Trash2 className="size-10" />}
-    </div>
+      {active ? (
+        <Flame className="size-10 animate-bounce text-red-500 fill-red-500" />
+      ) : (
+        <Trash2 className="size-10 text-white/30" />
+      )}
+    </motion.div>
   );
 };
 
@@ -320,46 +342,56 @@ const AddCard = ({ column, onAddCard, disabled }: AddCardProps) => {
 
   return (
     <>
-      {adding ? (
-        <form onSubmit={handleSubmit}>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            autoFocus
+      <AnimatePresence initial={false}>
+        {adding ? (
+          <motion.form
+            layout
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            onSubmit={handleSubmit}
+            className="mb-1"
+          >
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              autoFocus
+              disabled={disabled}
+              placeholder="Add new task…"
+              className="w-full rounded border border-violet-400/80 bg-violet-500/10 p-3 text-sm text-white placeholder:text-violet-200/60 focus:outline-none disabled:opacity-50"
+            />
+            <div className="mt-1.5 flex items-center justify-end gap-1.5">
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setAdding(false)}
+                className="px-3 py-1.5 text-xs text-white/50 transition-colors hover:text-white/80"
+              >
+                Close
+              </button>
+              <button
+                type="submit"
+                disabled={disabled}
+                className="flex items-center gap-1.5 rounded bg-white px-3 py-1.5 text-xs text-slate-950 transition-colors hover:bg-white/90"
+              >
+                <span>Add</span>
+                <Plus className="size-3.5" />
+              </button>
+            </div>
+          </motion.form>
+        ) : (
+          <motion.button
+            layout
+            type="button"
             disabled={disabled}
-            placeholder="Add new task…"
-            className="w-full rounded border border-violet-400/80 bg-violet-500/10 p-3 text-sm text-white placeholder:text-violet-200/60 focus:outline-none disabled:opacity-50"
-          />
-          <div className="mt-1.5 flex items-center justify-end gap-1.5">
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => setAdding(false)}
-              className="px-3 py-1.5 text-xs text-white/50 transition-colors hover:text-white/80"
-            >
-              Close
-            </button>
-            <button
-              type="submit"
-              disabled={disabled}
-              className="flex items-center gap-1.5 rounded bg-white px-3 py-1.5 text-xs text-slate-950 transition-colors hover:bg-white/90"
-            >
-              <span>Add</span>
-              <Plus className="size-3.5" />
-            </button>
-          </div>
-        </form>
-      ) : (
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => setAdding(true)}
-          className="flex w-full items-center gap-1.5 px-3 py-1.5 text-xs text-white/45 transition-colors hover:text-white/80 disabled:opacity-50"
-        >
-          <span>Add card</span>
-          <Plus className="size-3.5" />
-        </button>
-      )}
+            onClick={() => setAdding(true)}
+            className="flex w-full items-center gap-1.5 px-3 py-1.5 text-xs text-white/45 transition-colors hover:text-white/80 disabled:opacity-50 hover:bg-white/[0.02] rounded-lg"
+          >
+            <span>Add card</span>
+            <Plus className="size-3.5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </>
   );
 };

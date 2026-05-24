@@ -5,7 +5,7 @@ import { APPS } from '@/lib/apps';
 export const APP_SUPPORTED_EXTENSIONS: Record<AppId, readonly string[]> = {
   explorer: [],
   settings: [],
-  terminal: [],
+  terminal: ['sh', 'bash', 'zsh', 'ps1', 'bat', 'cmd'],
   browser: ['htm', 'html', 'pdf', 'xhtml', 'rss', 'atom', 'mhtml', 'webarchive'],
   gallery: [
     'jpg',
@@ -187,11 +187,11 @@ export const APP_SUPPORTED_EXTENSIONS: Record<AppId, readonly string[]> = {
     'zig',
     'nim',
   ],
-  gmail: [],
-  calendar: [],
-  contacts: [],
-  drive: [],
-  todo: [],
+  gmail: ['eml'],
+  calendar: ['ics'],
+  contacts: ['vcf'],
+  drive: ['gdoc', 'gsheet', 'gslides'],
+  todo: ['todo'],
   repo: [],
   viewer: [],
 };
@@ -382,6 +382,7 @@ export function extensionFromFileName(fileName: string): string {
 export function appSupportsExtension(appId: AppId, ext: string): boolean {
   const e = normalizeExtension(ext);
   if (!e) return false;
+  if (appId === 'viewer') return true;
   const caps = APP_SUPPORTED_EXTENSIONS[appId];
   return caps ? caps.includes(e) : false;
 }

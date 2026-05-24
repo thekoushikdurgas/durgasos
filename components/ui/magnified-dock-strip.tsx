@@ -421,8 +421,7 @@ export function MagnifiedDockStrip({
                   'border-white/10 bg-white/5 shadow-inner',
                   'hover:bg-white/10 hover:border-white/20',
                   'focus-visible:border-cyan-400/60 focus-visible:ring-2 focus-visible:ring-cyan-400/40',
-                  item.active &&
-                    'border-white/25 bg-white/20 shadow-[inset_0_0_12px_rgba(255,255,255,0.12)]'
+                  item.active && 'dock-item-active-glow bg-blue-500/15'
                 )}
               >
                 <span

@@ -1,5 +1,17 @@
 import type { LucideIcon } from 'lucide-react';
-import { Bot, CalendarDays, Clock, CloudSun, LayoutGrid, MessageSquare, Rss } from 'lucide-react';
+import {
+  Bot,
+  Calendar,
+  CalendarDays,
+  Clock,
+  CloudSun,
+  HeartPulse,
+  LayoutGrid,
+  ListTodo,
+  Mail,
+  MessageSquare,
+  Rss,
+} from 'lucide-react';
 
 export type WidgetType =
   | 'clock'
@@ -9,7 +21,13 @@ export type WidgetType =
   | 'ai_search'
   | 'agent_status'
   | 'system_feed'
-  | 'quick_actions';
+  | 'system_health'
+  | 'live_feed'
+  | 'quick_actions'
+  | 'app_todo'
+  | 'app_gmail'
+  | 'app_calendar'
+  | 'app_chat';
 
 export type WidgetAnchor = 'top-left' | 'top-center' | 'top-right';
 
@@ -21,6 +39,7 @@ export type WidgetLayoutItem = {
   enabled: boolean;
   position: WidgetPosition;
   zIndex?: number;
+  screen?: number;
 };
 
 export type WidgetDefinition = {
@@ -32,6 +51,7 @@ export type WidgetDefinition = {
   defaultPosition: WidgetPosition;
   anchor: WidgetAnchor;
   defaultZIndex: number;
+  defaultScreen?: number;
 };
 
 export const WIDGET_REGISTRY: WidgetDefinition[] = [
@@ -44,6 +64,7 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     defaultPosition: { x: 0.5, y: 0.06 },
     anchor: 'top-center',
     defaultZIndex: 52,
+    defaultScreen: 1,
   },
   {
     type: 'clock',
@@ -54,6 +75,7 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     defaultPosition: { x: 0.88, y: 0.42 },
     anchor: 'top-right',
     defaultZIndex: 2,
+    defaultScreen: 0,
   },
   {
     type: 'weather_hourly',
@@ -64,6 +86,7 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     defaultPosition: { x: 0.58, y: 0.52 },
     anchor: 'top-left',
     defaultZIndex: 3,
+    defaultScreen: 2,
   },
   {
     type: 'weather_current',
@@ -74,6 +97,7 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     defaultPosition: { x: 0.72, y: 0.52 },
     anchor: 'top-left',
     defaultZIndex: 4,
+    defaultScreen: 0,
   },
   {
     type: 'weather_daily',
@@ -84,6 +108,7 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     defaultPosition: { x: 0.86, y: 0.52 },
     anchor: 'top-left',
     defaultZIndex: 5,
+    defaultScreen: 2,
   },
   {
     type: 'agent_status',
@@ -94,6 +119,7 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     defaultPosition: { x: 0.75, y: 0.32 },
     anchor: 'top-left',
     defaultZIndex: 6,
+    defaultScreen: 2,
   },
   {
     type: 'system_feed',
@@ -104,6 +130,7 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     defaultPosition: { x: 0.75, y: 0.38 },
     anchor: 'top-left',
     defaultZIndex: 7,
+    defaultScreen: 2,
   },
   {
     type: 'quick_actions',
@@ -114,6 +141,73 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     defaultPosition: { x: 0.78, y: 0.44 },
     anchor: 'top-left',
     defaultZIndex: 8,
+    defaultScreen: 2,
+  },
+  {
+    type: 'system_health',
+    label: 'System health',
+    description: 'Live status of backend services (LLM, ChromaDB, Redis, Kafka).',
+    icon: HeartPulse,
+    defaultEnabled: false,
+    defaultPosition: { x: 0.02, y: 0.55 },
+    anchor: 'top-left',
+    defaultZIndex: 9,
+    defaultScreen: 2,
+  },
+  {
+    type: 'live_feed',
+    label: 'Live feed',
+    description: 'Real-time event timeline from OS services.',
+    icon: Rss,
+    defaultEnabled: false,
+    defaultPosition: { x: 0.02, y: 0.38 },
+    anchor: 'top-left',
+    defaultZIndex: 10,
+    defaultScreen: 2,
+  },
+  {
+    type: 'app_todo',
+    label: 'Todo Tasks',
+    description: 'Your active workspace todo tasks.',
+    icon: ListTodo,
+    defaultEnabled: true,
+    defaultPosition: { x: 0.02, y: 0.06 },
+    anchor: 'top-left',
+    defaultZIndex: 20,
+    defaultScreen: 0,
+  },
+  {
+    type: 'app_chat',
+    label: 'AI Chat History',
+    description: 'Recent AI conversations and shortcuts.',
+    icon: MessageSquare,
+    defaultEnabled: true,
+    defaultPosition: { x: 0.02, y: 0.42 },
+    anchor: 'top-left',
+    defaultZIndex: 21,
+    defaultScreen: 1,
+  },
+  {
+    type: 'app_gmail',
+    label: 'Gmail',
+    description: 'Your latest Gmail threads.',
+    icon: Mail,
+    defaultEnabled: false,
+    defaultPosition: { x: 0.28, y: 0.42 },
+    anchor: 'top-left',
+    defaultZIndex: 22,
+    defaultScreen: 1,
+  },
+  {
+    type: 'app_calendar',
+    label: 'Calendar',
+    description: "Today's calendar events.",
+    icon: Calendar,
+    defaultEnabled: false,
+    defaultPosition: { x: 0.28, y: 0.06 },
+    anchor: 'top-left',
+    defaultZIndex: 23,
+    defaultScreen: 1,
   },
 ];
 
@@ -141,5 +235,6 @@ export function createDefaultLayout(): WidgetLayoutItem[] {
     enabled: d.defaultEnabled,
     position: { ...d.defaultPosition },
     zIndex: d.defaultZIndex,
+    screen: d.defaultScreen ?? 0,
   }));
 }

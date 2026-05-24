@@ -68,12 +68,18 @@ export function useJsonRpcStream() {
             jsonrpc?: string;
             id?: string | number | null;
             result?: Record<string, unknown>;
-            error?: { message?: string };
+            error?: { message?: string; code?: number };
           };
           if (msg.jsonrpc !== '2.0') return;
           if (msg.id !== undefined && msg.id !== null && String(msg.id) !== rid) return;
 
           if (msg.error) {
+            const isAuthErr = msg.error.code === -32001;
+            if (isAuthErr) {
+              import('@/lib/restore-auth-session').then(({ silentRefreshAuthSession }) => {
+                void silentRefreshAuthSession().then(() => {});
+              });
+            }
             handlers.onError?.(msg.error.message ?? `${method} failed`);
             cleanup();
             reject(new Error(msg.error.message ?? `${method} failed`));

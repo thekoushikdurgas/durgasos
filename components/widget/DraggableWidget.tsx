@@ -1,13 +1,13 @@
 'use client';
 
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { GripVertical, Move } from 'lucide-react';
 
 import { SpringBox } from '@/components/motion/SpringBox';
 import { usePointerDragSpring } from '@/components/motion/use-pointer-drag-spring';
 import { useOS } from '@/components/os-context';
 import { clampWidgetZIndex, MAX_DESKTOP_WIDGET_Z_INDEX } from '@/lib/shell-z-index';
-import { anchorTransform, resolveDropPosition } from '@/lib/widget-layout-utils';
+import { anchorTransform, resolveDropPosition, snapToGrid } from '@/lib/widget-layout-utils';
 import { getWidgetDefinition, type WidgetLayoutItem } from '@/lib/widget-registry';
 import { useIsMobile } from '@/lib/use-is-mobile';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,9 @@ type Props = {
   containerRef: React.RefObject<HTMLDivElement | null>;
   onPositionChange: (id: string, position: { x: number; y: number }) => void;
   onBringToFront: (id: string) => void;
+  onRemove?: () => void;
+  onDragMove?: (e: React.PointerEvent) => void;
+  onDragEnd?: () => void;
   children: React.ReactNode;
   className?: string;
 };
@@ -26,6 +29,9 @@ export function DraggableWidget({
   containerRef,
   onPositionChange,
   onBringToFront,
+  onRemove,
+  onDragMove,
+  onDragEnd,
   children,
   className,
 }: Props) {
@@ -34,6 +40,11 @@ export function DraggableWidget({
   const nodeRef = useRef<HTMLDivElement>(null);
   const dragStartPosRef = useRef(item.position);
   const dragPointerRef = useRef({ posX: 0, posY: 0, pointerX: 0, pointerY: 0 });
+  const dropHandledRef = useRef(false);
+
+  useEffect(() => {
+    dragStartPosRef.current = item.position;
+  }, [item.position]);
   const def = getWidgetDefinition(item.type);
   const canDrag = isWidgetEditMode && !isMobile;
 
@@ -48,6 +59,7 @@ export function DraggableWidget({
 
   const handleDragOverlayPointerDown = useCallback(
     (e: React.PointerEvent) => {
+      dropHandledRef.current = false;
       dragStartPosRef.current = item.position;
       const posX = typeof dragStyle.x === 'number' ? dragStyle.x : 0;
       const posY = typeof dragStyle.y === 'number' ? dragStyle.y : 0;
@@ -57,21 +69,49 @@ export function DraggableWidget({
     [dragHandlers, dragStyle.x, dragStyle.y, item.position]
   );
 
+  const handleDragOverlayPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      dragHandlers.onPointerMove(e);
+      onDragMove?.(e);
+    },
+    [dragHandlers, onDragMove]
+  );
+
   const handleDragOverlayPointerUp = useCallback(
     (e: React.PointerEvent) => {
+      if (dropHandledRef.current) return;
+      dropHandledRef.current = true;
+
       const dx = e.clientX - dragPointerRef.current.pointerX;
       const dy = e.clientY - dragPointerRef.current.pointerY;
       const offsetX = dragPointerRef.current.posX + dx;
       const offsetY = dragPointerRef.current.posY + dy;
 
-      dragHandlers.onPointerUp(e);
-
       const node = nodeRef.current;
       const container = containerRef.current;
-      if (!node || !container) return;
+      const nRect = node?.getBoundingClientRect();
+      const cRect = container?.getBoundingClientRect();
 
-      const cRect = container.getBoundingClientRect();
-      const nRect = node.getBoundingClientRect();
+      dragHandlers.onPointerUp(e);
+      onDragEnd?.();
+
+      // Check if dropped in sidebar (disable/remove widget)
+      const sidebarEl = document.querySelector('[data-widget-sidebar]');
+      if (sidebarEl) {
+        const sRect = sidebarEl.getBoundingClientRect();
+        if (
+          e.clientX >= sRect.left &&
+          e.clientX <= sRect.right &&
+          e.clientY >= sRect.top &&
+          e.clientY <= sRect.bottom
+        ) {
+          onRemove?.();
+          setPosition(0, 0);
+          return;
+        }
+      }
+
+      if (!node || !container || !nRect || !cRect) return;
       const next = resolveDropPosition(
         def.anchor,
         dragStartPosRef.current,
@@ -81,15 +121,25 @@ export function DraggableWidget({
         cRect
       );
 
-      onPositionChange(item.id, next);
+      const snapped = snapToGrid(next);
+      onPositionChange(item.id, snapped);
       setPosition(0, 0);
     },
-    [containerRef, def.anchor, dragHandlers, item.id, onPositionChange, setPosition]
+    [
+      containerRef,
+      def.anchor,
+      dragHandlers,
+      item.id,
+      onPositionChange,
+      onRemove,
+      setPosition,
+      onDragEnd,
+    ]
   );
 
   const dragOverlayHandlers = {
     onPointerDown: handleDragOverlayPointerDown,
-    onPointerMove: dragHandlers.onPointerMove,
+    onPointerMove: handleDragOverlayPointerMove,
     onPointerMoveCapture: dragHandlers.onPointerMoveCapture,
     onPointerUp: handleDragOverlayPointerUp,
     onPointerCancel: handleDragOverlayPointerUp,
@@ -116,6 +166,8 @@ export function DraggableWidget({
     >
       <div
         ref={nodeRef}
+        data-widget-id={item.id}
+        data-widget-type={item.type}
         onPointerDown={(e) => {
           e.stopPropagation();
           onBringToFront(item.id);

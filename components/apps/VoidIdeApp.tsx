@@ -19,6 +19,7 @@ import {
 import { useMutation, useApolloClient } from '@apollo/client/react';
 import { useWindowLaunch } from '@/components/window-launch-context';
 import { useAiChatGateway } from '@/hooks/use-ai-chat-gateway';
+import { isGatewayBenignError } from '@/lib/gateway-errors';
 import {
   VOID_IDE_SAMPLE_FILES,
   buildIdeAiContext,
@@ -36,6 +37,7 @@ import { STORAGE_GET_URL, STORAGE_LIST } from '@/lib/graphql-modules';
 import { coerceStorageListPayload, type StorageListFileRow } from '@/lib/file-explorer-storage';
 import { fetchStorageText } from '@/lib/storage-signed-url';
 import { cn } from '@/lib/utils';
+import { parseFastApplyBlocks, parseCodeFences, applySearchReplaceBlocks } from '@/lib/ide-apply';
 
 const MONACO_CDN_VS = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs';
 
@@ -119,7 +121,7 @@ export function VoidIdeApp() {
   const windowId = frame?.windowId ?? 'void-ide-fallback';
   const conversationId = useMemo(() => `void-ide-${windowId}`, [windowId]);
 
-  const { sendCompletion, abortActiveRequests } = useAiChatGateway();
+  const { sendCompletion, abortActiveRequests, callRpc, sendStreamingMethod } = useAiChatGateway();
   const [getUrl] = useMutation(STORAGE_GET_URL);
   const apolloClient = useApolloClient();
   const launchFromFilesRef = useRef(false);
@@ -146,9 +148,344 @@ export function VoidIdeApp() {
   const [streamText, setStreamText] = useState('');
   const [chatLog, setChatLog] = useState<ChatTurn[]>([]);
   const editorRef = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
+  const monacoRef = useRef<any>(null);
+
+  // Providers & models selection
+  const [providers, setProviders] = useState<{ name: string; status: string; models: string[] }[]>(
+    []
+  );
+  const [selectedProvider, setSelectedProvider] = useState<string>('');
+  const [selectedModel, setSelectedModel] = useState<string>('');
+
+  // Undo & Inline Edit (Ctrl+K)
+  const [undoBackup, setUndoBackup] = useState<{ path: string; content: string } | null>(null);
+  const [inlineEditActive, setInlineEditActive] = useState(false);
+  const [inlineInstruction, setInlineInstruction] = useState('');
+  const [inlineEditStatus, setInlineEditStatus] = useState<
+    'idle' | 'generating' | 'done' | 'error'
+  >('idle');
+  const [inlineEditError, setInlineEditError] = useState('');
+  const [ctrlkStreamText, setCtrlkStreamText] = useState('');
+  const ctrlkCancelRef = useRef<(() => void) | null>(null);
+  const ctrlkBackupContent = useRef<string>('');
+  const ctrlkSelection = useRef<any>(null);
+  const [ctrlkSelectionState, setCtrlkSelectionState] = useState<{
+    startLineNumber: number;
+    endLineNumber: number;
+    isEmpty: boolean;
+  } | null>(null);
+
+  const markDirty = useCallback((path: string) => {
+    setDirty((d) => new Set(d).add(path));
+  }, []);
 
   const language = useMemo(() => pathToMonacoLanguage(activePath), [activePath]);
 
+  // Load providers from the backend (retry while WebSocket connects)
+  useEffect(() => {
+    let active = true;
+    let attempt = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const fetchProviders = async () => {
+      try {
+        const res = (await callRpc('chat.providers', {})) as {
+          providers?: { name: string; status: string; models: string[] }[];
+        };
+        if (!active) return;
+        if (res?.providers && Array.isArray(res.providers)) {
+          setProviders(res.providers);
+          const defaultProv = res.providers.find((p) => p.status === 'available');
+          if (defaultProv) {
+            setSelectedProvider(defaultProv.name);
+            if (defaultProv.models && defaultProv.models.length > 0) {
+              setSelectedModel(defaultProv.models[0]);
+            }
+          }
+        }
+      } catch (err) {
+        if (!active || isGatewayBenignError(err)) return;
+        if (attempt < 4) {
+          attempt += 1;
+          retryTimer = setTimeout(fetchProviders, 400 * attempt);
+          return;
+        }
+        console.error('Failed to load providers:', err);
+      }
+    };
+
+    retryTimer = setTimeout(fetchProviders, 150);
+    return () => {
+      active = false;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [callRpc]);
+
+  // When selected provider changes, fetch/load its models
+  useEffect(() => {
+    if (!selectedProvider) return;
+    let active = true;
+    let attempt = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const fetchModels = async () => {
+      try {
+        const res = (await callRpc('chat.providers.models', {
+          provider_name: selectedProvider,
+        })) as { models?: string[]; default_model?: string };
+        if (!active) return;
+        if (res?.models && Array.isArray(res.models)) {
+          setProviders((prev) =>
+            prev.map((p) => (p.name === selectedProvider ? { ...p, models: res.models ?? [] } : p))
+          );
+          if (res.default_model && res.models.includes(res.default_model)) {
+            setSelectedModel(res.default_model);
+          } else if (res.models.length > 0) {
+            setSelectedModel(res.models[0]);
+          }
+        }
+      } catch (err) {
+        if (!active || isGatewayBenignError(err)) return;
+        if (attempt < 4) {
+          attempt += 1;
+          retryTimer = setTimeout(fetchModels, 400 * attempt);
+          return;
+        }
+        console.error(`Failed to load models for ${selectedProvider}:`, err);
+      }
+    };
+
+    retryTimer = setTimeout(fetchModels, 150);
+    return () => {
+      active = false;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [selectedProvider, callRpc]);
+
+  const applyResponseBlocks = (content: string) => {
+    const blocks = parseFastApplyBlocks(content);
+    if (blocks.length > 0) {
+      setUndoBackup({ path: activePath, content: buffer });
+      const res = applySearchReplaceBlocks(buffer, blocks);
+      if (res.ok) {
+        setBuffer(res.text);
+        if (mode === 'virtual') {
+          setVirtualContent(activePath, res.text);
+        }
+        markDirty(activePath);
+        window.alert(`Successfully applied ${res.replacedCount} edits!`);
+      } else {
+        window.alert(`Failed to apply: ${res.reason}`);
+      }
+      return;
+    }
+
+    const fences = parseCodeFences(content);
+    if (fences.length > 0) {
+      const code = fences[0].code;
+      const ed = editorRef.current;
+      setUndoBackup({ path: activePath, content: buffer });
+      const selection = ed?.getSelection();
+      if (ed && selection && !selection.isEmpty()) {
+        const monaco = monacoRef.current;
+        if (monaco) {
+          const range = new monaco.Range(
+            selection.startLineNumber,
+            selection.startColumn,
+            selection.endLineNumber,
+            selection.endColumn
+          );
+          ed.executeEdits('apply-fence', [{ range, text: code, forceMoveMarkers: true }]);
+          const val = ed.getValue();
+          setBuffer(val);
+          if (mode === 'virtual') setVirtualContent(activePath, val);
+          markDirty(activePath);
+        }
+      } else {
+        setBuffer(code);
+        if (mode === 'virtual') {
+          setVirtualContent(activePath, code);
+        }
+        markDirty(activePath);
+      }
+      window.alert('Applied code block to file!');
+    } else {
+      window.alert('No code blocks or edit regions found in the response.');
+    }
+  };
+
+  const undoLastApply = () => {
+    if (undoBackup && undoBackup.path === activePath) {
+      setBuffer(undoBackup.content);
+      if (mode === 'virtual') {
+        setVirtualContent(activePath, undoBackup.content);
+      }
+      markDirty(activePath);
+      setUndoBackup(null);
+      window.alert('Undone last apply.');
+    }
+  };
+
+  const handleCancelCtrlK = () => {
+    if (ctrlkCancelRef.current) {
+      ctrlkCancelRef.current();
+      ctrlkCancelRef.current = null;
+    }
+    if (ctrlkBackupContent.current) {
+      setBuffer(ctrlkBackupContent.current);
+      if (mode === 'virtual') {
+        setVirtualContent(activePath, ctrlkBackupContent.current);
+      }
+      markDirty(activePath);
+    }
+    setInlineEditActive(false);
+    setInlineEditStatus('idle');
+    setCtrlkStreamText('');
+  };
+
+  const handleRejectCtrlK = () => {
+    if (ctrlkBackupContent.current) {
+      setBuffer(ctrlkBackupContent.current);
+      if (mode === 'virtual') {
+        setVirtualContent(activePath, ctrlkBackupContent.current);
+      }
+      markDirty(activePath);
+    }
+    setInlineEditActive(false);
+    setInlineEditStatus('idle');
+    setCtrlkStreamText('');
+  };
+
+  const handleAcceptCtrlK = () => {
+    setUndoBackup({ path: activePath, content: ctrlkBackupContent.current });
+    setInlineEditActive(false);
+    setInlineEditStatus('idle');
+    setCtrlkStreamText('');
+  };
+
+  const applyFenceDirectly = (code: string) => {
+    const ed = editorRef.current;
+    const sel = ctrlkSelection.current;
+    if (ed && sel && !sel.isEmpty() && monacoRef.current) {
+      const range = new monacoRef.current.Range(
+        sel.startLineNumber,
+        sel.startColumn,
+        sel.endLineNumber,
+        sel.endColumn
+      );
+      ed.executeEdits('ctrlk-fence', [{ range, text: code, forceMoveMarkers: true }]);
+      const val = ed.getValue();
+      setBuffer(val);
+      if (mode === 'virtual') setVirtualContent(activePath, val);
+      markDirty(activePath);
+    } else {
+      setBuffer(code);
+      if (mode === 'virtual') setVirtualContent(activePath, code);
+      markDirty(activePath);
+    }
+    setInlineEditStatus('done');
+  };
+
+  // Handle Ctrl+K overlay key events
+  useEffect(() => {
+    if (!inlineEditActive) return;
+    const handleKeys = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (
+          inlineEditStatus === 'generating' ||
+          inlineEditStatus === 'idle' ||
+          inlineEditStatus === 'error'
+        ) {
+          handleCancelCtrlK();
+        } else if (inlineEditStatus === 'done') {
+          handleRejectCtrlK();
+        }
+      } else if (e.key === 'Enter' && inlineEditStatus === 'done') {
+        e.preventDefault();
+        handleAcceptCtrlK();
+      }
+    };
+    window.addEventListener('keydown', handleKeys, true);
+    return () => window.removeEventListener('keydown', handleKeys, true);
+  }, [inlineEditActive, inlineEditStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleStartCtrlK = async () => {
+    const inst = inlineInstruction.trim();
+    if (!inst) return;
+    setInlineEditStatus('generating');
+    setInlineEditError('');
+    setCtrlkStreamText('');
+
+    let selectionText = '';
+    const sel = ctrlkSelection.current;
+    if (sel && editorRef.current && !sel.isEmpty()) {
+      selectionText = editorRef.current.getModel()?.getValueInRange(sel) ?? '';
+    }
+
+    const params = {
+      source: ctrlkBackupContent.current,
+      instruction: inst,
+      mode: 'ctrlk',
+      selection: selectionText || undefined,
+      path: activePath,
+      language,
+      provider: selectedProvider || undefined,
+      model: selectedModel || undefined,
+      stream: true,
+    };
+
+    let streamAcc = '';
+    try {
+      const cancel = sendStreamingMethod('ide.code.apply', params, {
+        onChunk: (delta, full) => {
+          streamAcc = full;
+          setCtrlkStreamText(full);
+        },
+        onDone: (full) => {
+          setCtrlkStreamText('');
+          const blocks = parseFastApplyBlocks(full);
+          if (blocks.length > 0) {
+            const res = applySearchReplaceBlocks(ctrlkBackupContent.current, blocks);
+            if (res.ok) {
+              setBuffer(res.text);
+              if (mode === 'virtual') {
+                setVirtualContent(activePath, res.text);
+              }
+              markDirty(activePath);
+              setInlineEditStatus('done');
+            } else {
+              const fences = parseCodeFences(full);
+              if (fences.length > 0) {
+                applyFenceDirectly(fences[0].code);
+              } else {
+                setInlineEditStatus('error');
+                setInlineEditError(`Fast apply parsing failed: ${res.reason}`);
+              }
+            }
+          } else {
+            const fences = parseCodeFences(full);
+            if (fences.length > 0) {
+              applyFenceDirectly(fences[0].code);
+            } else {
+              setInlineEditStatus('error');
+              setInlineEditError(
+                'No valid search/replace blocks or code blocks were returned by the assistant.'
+              );
+            }
+          }
+        },
+        onError: (err) => {
+          setInlineEditStatus('error');
+          setInlineEditError(err);
+        },
+      });
+      ctrlkCancelRef.current = cancel;
+    } catch (err: any) {
+      setInlineEditStatus('error');
+      setInlineEditError(err?.message ?? 'Failed to stream response.');
+    }
+  };
   const filteredPaths = useMemo(() => {
     const q = treeQuery.trim().toLowerCase();
     if (!q) return paths;
@@ -211,10 +548,6 @@ export function VoidIdeApp() {
       setBuffer(text);
     })();
   }, [frame?.fileName, frame?.storage, getUrl, setVirtualContent]);
-
-  const markDirty = useCallback((path: string) => {
-    setDirty((d) => new Set(d).add(path));
-  }, []);
 
   const handleEditorChange = useCallback(
     (value: string | undefined) => {
@@ -442,6 +775,8 @@ export function VoidIdeApp() {
           useRag,
           context: ctx,
           conversationId,
+          provider: selectedProvider || undefined,
+          model: selectedModel || undefined,
         },
         {
           onChunk: (_d, full) => setStreamText(full),
@@ -477,6 +812,8 @@ export function VoidIdeApp() {
     useRag,
     conversationId,
     sendCompletion,
+    selectedProvider,
+    selectedModel,
   ]);
 
   const copyAssistant = useCallback(async (text: string) => {
@@ -623,6 +960,20 @@ export function VoidIdeApp() {
               </button>
             ))}
           </div>
+
+          {undoBackup && undoBackup.path === activePath && (
+            <div className="flex items-center justify-between bg-amber-500/10 border-b border-white/10 px-3 py-1.5 text-xs text-amber-200">
+              <span>Changes applied to editor. You can revert if needed.</span>
+              <button
+                type="button"
+                onClick={undoLastApply}
+                className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] text-amber-100 hover:bg-amber-500/30"
+              >
+                Undo Apply
+              </button>
+            </div>
+          )}
+
           <div className="relative min-h-0 flex-1">
             <Suspense
               fallback={
@@ -638,8 +989,35 @@ export function VoidIdeApp() {
                 language={language}
                 value={buffer}
                 onChange={handleEditorChange}
-                onMount={(ed) => {
+                onMount={(ed, mon) => {
                   editorRef.current = ed;
+                  monacoRef.current = mon;
+
+                  // Add Monaco Action for Ctrl+K
+                  ed.addAction({
+                    id: 'void-inline-edit',
+                    label: 'Inline Edit (Ctrl+K)',
+                    keybindings: [mon.KeyMod.CtrlCmd | mon.KeyCode.KeyK],
+                    run: () => {
+                      const sel = ed.getSelection();
+                      ctrlkSelection.current = sel;
+                      if (sel) {
+                        setCtrlkSelectionState({
+                          startLineNumber: sel.startLineNumber,
+                          endLineNumber: sel.endLineNumber,
+                          isEmpty: sel.isEmpty(),
+                        });
+                      } else {
+                        setCtrlkSelectionState(null);
+                      }
+                      ctrlkBackupContent.current = ed.getValue();
+                      setInlineInstruction('');
+                      setInlineEditError('');
+                      setInlineEditStatus('idle');
+                      setCtrlkStreamText('');
+                      setInlineEditActive(true);
+                    },
+                  });
                 }}
                 options={{
                   minimap: { enabled: true },
@@ -651,6 +1029,139 @@ export function VoidIdeApp() {
                 }}
               />
             </Suspense>
+
+            {/* Ctrl+K Inline Edit Prompt Panel */}
+            {inlineEditActive && (
+              <div className="absolute left-1/2 top-4 z-50 w-[380px] -translate-x-1/2 rounded-xl border border-violet-500/30 bg-[#0e0e11]/95 p-4 shadow-2xl backdrop-blur-md">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-violet-300">
+                    Inline Edit (Ctrl+K)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCancelCtrlK}
+                    className="text-white/45 hover:text-white/80 text-xs"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {ctrlkSelectionState && !ctrlkSelectionState.isEmpty ? (
+                  <div className="mb-2 text-[10px] text-white/50">
+                    Target: Selection (
+                    {ctrlkSelectionState.endLineNumber - ctrlkSelectionState.startLineNumber + 1}{' '}
+                    lines)
+                  </div>
+                ) : (
+                  <div className="mb-2 text-[10px] text-white/50">Target: Entire File</div>
+                )}
+
+                {inlineEditStatus === 'idle' && (
+                  <div className="space-y-3">
+                    <textarea
+                      value={inlineInstruction}
+                      onChange={(e) => setInlineInstruction(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          void handleStartCtrlK();
+                        }
+                      }}
+                      autoFocus
+                      placeholder="Ask AI to edit this code..."
+                      rows={3}
+                      className="w-full resize-none rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white placeholder:text-white/35 outline-none focus:border-violet-500/50"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCancelCtrlK}
+                        className="rounded bg-white/5 px-3 py-1.5 text-xs text-white/70 hover:bg-white/10"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!inlineInstruction.trim()}
+                        onClick={() => void handleStartCtrlK()}
+                        className="rounded bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:opacity-40"
+                      >
+                        Generate
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {inlineEditStatus === 'generating' && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-xs text-white/70">
+                      <span className="h-2 w-2 animate-ping rounded-full bg-violet-400" />
+                      <span>Streaming edits from {selectedProvider || 'default provider'}...</span>
+                    </div>
+                    {ctrlkStreamText && (
+                      <pre className="max-h-32 overflow-y-auto rounded bg-black/50 p-2 font-mono text-[10px] text-white/60 whitespace-pre-wrap">
+                        {ctrlkStreamText}
+                      </pre>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleCancelCtrlK}
+                      className="w-full rounded bg-red-500/10 py-1.5 text-xs text-red-300 hover:bg-red-500/20"
+                    >
+                      Stop
+                    </button>
+                  </div>
+                )}
+
+                {inlineEditStatus === 'done' && (
+                  <div className="space-y-3">
+                    <div className="text-xs text-emerald-300 font-semibold">
+                      Edits generated and previewed in editor.
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleRejectCtrlK}
+                        className="flex-1 rounded bg-red-500/15 py-1.5 text-xs text-red-300 hover:bg-red-500/25"
+                      >
+                        Reject (Esc)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAcceptCtrlK}
+                        className="flex-1 rounded bg-emerald-600 py-1.5 text-xs font-medium text-white hover:bg-emerald-500"
+                      >
+                        Accept (Enter)
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {inlineEditStatus === 'error' && (
+                  <div className="space-y-3">
+                    <div className="text-xs text-red-300 whitespace-pre-wrap">
+                      Error: {inlineEditError}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCancelCtrlK}
+                        className="flex-1 rounded bg-white/5 py-1.5 text-xs text-white/70 hover:bg-white/10"
+                      >
+                        Close
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleStartCtrlK()}
+                        className="flex-1 rounded bg-violet-600 py-1.5 text-xs font-medium text-white hover:bg-violet-500"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <footer className="flex h-6 shrink-0 items-center justify-between border-t border-white/10 bg-[#141416] px-2 text-[10px] text-white/45">
             <span className="truncate font-mono">{activePath}</span>
@@ -677,6 +1188,46 @@ export function VoidIdeApp() {
             ) : null}
           </div>
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-2 text-xs">
+            {/* Provider and Model selectors */}
+            <div className="space-y-2 rounded-lg border border-white/5 bg-black/20 p-2">
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider text-white/45 font-semibold">
+                  Provider
+                </label>
+                <select
+                  value={selectedProvider}
+                  onChange={(e) => setSelectedProvider(e.target.value)}
+                  className="mt-1 w-full rounded border border-white/10 bg-black/40 px-2 py-1 text-xs text-white outline-none focus:border-violet-500/50"
+                >
+                  <option value="">Default Provider</option>
+                  {providers.map((p) => (
+                    <option key={p.name} value={p.name} disabled={p.status !== 'available'}>
+                      {p.name} {p.status !== 'available' ? '(Unavailable)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider text-white/45 font-semibold">
+                  Model
+                </label>
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="mt-1 w-full rounded border border-white/10 bg-black/40 px-2 py-1 text-xs text-white outline-none focus:border-violet-500/50"
+                >
+                  <option value="">Default Model</option>
+                  {providers
+                    .find((p) => p.name === selectedProvider)
+                    ?.models.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
             <label className="flex items-center gap-2 text-white/70">
               <input type="checkbox" checked={think} onChange={(e) => setThink(e.target.checked)} />
               Think step-by-step
@@ -713,13 +1264,25 @@ export function VoidIdeApp() {
                     <p className="whitespace-pre-wrap">{m.content}</p>
                   )}
                   {m.role === 'assistant' ? (
-                    <button
-                      type="button"
-                      className="mt-2 text-[10px] text-cyan-400 hover:underline"
-                      onClick={() => void copyAssistant(m.content)}
-                    >
-                      Copy reply
-                    </button>
+                    <div className="mt-2 flex gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        className="text-[10px] text-cyan-400 hover:underline"
+                        onClick={() => void copyAssistant(m.content)}
+                      >
+                        Copy reply
+                      </button>
+                      {(parseFastApplyBlocks(m.content).length > 0 ||
+                        parseCodeFences(m.content).length > 0) && (
+                        <button
+                          type="button"
+                          className="text-[10px] text-emerald-400 hover:underline font-semibold"
+                          onClick={() => applyResponseBlocks(m.content)}
+                        >
+                          Apply to Editor
+                        </button>
+                      )}
+                    </div>
                   ) : null}
                 </div>
               ))}

@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useState, type ReactNode } from 'react';
-import { ChevronsUpDown, LayoutGrid, Pin, PinOff, RotateCcw, X } from 'lucide-react';
+import { ChevronsUpDown, LayoutGrid, Pin, PinOff, RotateCcw, X, Sliders } from 'lucide-react';
 
 import { LabelSpring, SidebarShellFrame } from '@/components/motion/SidebarShellFrame';
 import { useAuthSession } from '@/components/auth/AuthSessionContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +20,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { usePrefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
 import { useIsMobile } from '@/lib/use-is-mobile';
+import { useWidgetLayout } from '@/hooks/use-widget-layout';
+import { useOS } from '@/components/os-context';
 import { cn } from '@/lib/utils';
 import { SHELL_Z } from '@/lib/shell-z-index';
 
@@ -29,6 +32,8 @@ function userInitials(email: string | null | undefined, username?: string | null
 }
 
 type Props = {
+  activeTab: 'catalog' | 'manage';
+  onTabChange: (tab: 'catalog' | 'manage') => void;
   onClose: () => void;
   onResetLayout: () => void;
   pinned: boolean;
@@ -37,6 +42,8 @@ type Props = {
 };
 
 export function WidgetSidebarShell({
+  activeTab,
+  onTabChange,
   onClose,
   onResetLayout,
   pinned,
@@ -47,6 +54,9 @@ export function WidgetSidebarShell({
   const reducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
   const [hoverExpanded, setHoverExpanded] = useState(false);
+
+  const { enabledCount, setEnabledByType } = useWidgetLayout();
+  const { isWidgetEditMode } = useOS();
 
   const effectivePinned = isMobile || pinned;
   const expanded = effectivePinned || hoverExpanded;
@@ -59,23 +69,54 @@ export function WidgetSidebarShell({
     if (!effectivePinned) setHoverExpanded(false);
   }, [effectivePinned]);
 
+  const handleDragOver = useCallback(
+    (e: React.DragEvent) => {
+      if (!isWidgetEditMode) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    },
+    [isWidgetEditMode]
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      if (!isWidgetEditMode) return;
+      e.preventDefault();
+      const type = e.dataTransfer.getData('text/plain');
+      if (!type) return;
+      setEnabledByType(type as any, false);
+    },
+    [isWidgetEditMode, setEnabledByType]
+  );
+
+  const navRowClass = (tab: 'catalog' | 'manage') =>
+    cn(
+      'flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-white/10 hover:text-cyan-300',
+      activeTab === tab && 'bg-white/15 text-cyan-400'
+    );
+
   return (
     <SidebarShellFrame
       expanded={expanded}
+      pinned={effectivePinned}
       reducedMotion={reducedMotion}
       side="left"
       className={cn(
-        'fixed border-r border-white/10',
-        'bottom-20 left-2 top-10 max-md:inset-y-0 max-md:left-0 max-md:bottom-0 max-md:top-0 max-md:max-w-sm'
+        'max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-[9600] max-md:w-full max-md:max-w-sm'
       )}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={(e) => e.stopPropagation()}
       style={{ zIndex: SHELL_Z.widgetSidebar }}
+      widthOpen={240}
+      widthClosed={48.8}
+      data-widget-sidebar="true"
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       <LiquidGlassSurface
         variant="liquid"
-        className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl max-md:rounded-none text-sm shadow-2xl"
+        className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-none text-sm shadow-2xl"
         contentClassName="flex h-full min-h-0 flex-col p-0"
       >
         <ul className="flex h-full min-h-0 flex-col text-slate-400">
@@ -134,11 +175,71 @@ export function WidgetSidebarShell({
             </div>
           </div>
 
-          <div className="flex h-8 w-full shrink-0 items-center gap-2 px-3 text-cyan-400">
-            <LayoutGrid className="h-4 w-4 shrink-0" />
-            <LabelSpring show={expanded} reducedMotion={reducedMotion}>
-              <span className="text-sm font-medium">Widget catalog</span>
-            </LabelSpring>
+          <div className="flex w-full flex-col gap-1 p-2">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'catalog'}
+              className={navRowClass('catalog')}
+              onClick={() => onTabChange('catalog')}
+              title="Widget Catalog"
+            >
+              <div className="relative flex items-center justify-center">
+                <LayoutGrid className="h-4 w-4 shrink-0" />
+                {!expanded && enabledCount > 0 ? (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500 text-[8px] font-bold text-black ring-1 ring-black/20">
+                    {enabledCount}
+                  </span>
+                ) : null}
+              </div>
+              <LabelSpring
+                show={expanded}
+                reducedMotion={reducedMotion}
+                className="flex items-center gap-2"
+              >
+                <span className="ml-2 text-sm font-medium">Catalog</span>
+                {enabledCount > 0 ? (
+                  <Badge
+                    variant="outline"
+                    className="ml-auto h-fit border-none bg-cyan-500/20 px-1.5 text-[10px] text-cyan-300"
+                  >
+                    {enabledCount}
+                  </Badge>
+                ) : null}
+              </LabelSpring>
+            </button>
+
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'manage'}
+              className={navRowClass('manage')}
+              onClick={() => onTabChange('manage')}
+              title="Manage Widgets"
+            >
+              <div className="relative flex items-center justify-center">
+                <Sliders className="h-4 w-4 shrink-0" />
+                {!expanded && isWidgetEditMode ? (
+                  <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
+                  </span>
+                ) : null}
+              </div>
+              <LabelSpring
+                show={expanded}
+                reducedMotion={reducedMotion}
+                className="flex items-center gap-2"
+              >
+                <span className="ml-2 text-sm font-medium">Manage</span>
+                {isWidgetEditMode ? (
+                  <span className="ml-auto flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-cyan-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-400"></span>
+                  </span>
+                ) : null}
+              </LabelSpring>
+            </button>
           </div>
 
           <Separator className="mx-2 bg-white/10" />

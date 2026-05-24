@@ -371,7 +371,23 @@ export function MarkdownReader({ readmeText, loading, username }: MarkdownReader
                 decodedSrc.includes('jsdelivr') ||
                 alt.toLowerCase().includes('badge') ||
                 alt.toLowerCase().includes('icon') ||
-                ['c', 'c++', 'java', 'python', 'javascript', 'js', 'ts', 'typescript', 'php', 'html', 'css', 'linux', 'windows', 'github', 'linkedin'].includes(alt.toLowerCase().trim())
+                [
+                  'c',
+                  'c++',
+                  'java',
+                  'python',
+                  'javascript',
+                  'js',
+                  'ts',
+                  'typescript',
+                  'php',
+                  'html',
+                  'css',
+                  'linux',
+                  'windows',
+                  'github',
+                  'linkedin',
+                ].includes(alt.toLowerCase().trim())
               );
             }
 
@@ -389,7 +405,11 @@ export function MarkdownReader({ readmeText, loading, username }: MarkdownReader
             const isSpanOrDiv =
               type === 'span' ||
               type === 'div' ||
-              (typeof type === 'function' && (type.name === 'span' || type.displayName === 'span' || type.name === 'div' || type.displayName === 'div'));
+              (typeof type === 'function' &&
+                (type.name === 'span' ||
+                  type.displayName === 'span' ||
+                  type.name === 'div' ||
+                  type.displayName === 'div'));
 
             if (isSpanOrDiv) {
               return isBadgeElement(props.children);
@@ -407,9 +427,7 @@ export function MarkdownReader({ readmeText, loading, username }: MarkdownReader
           );
         }
 
-        return (
-          <p className="leading-relaxed mb-4 text-white/75">{highlightText(children)}</p>
-        );
+        return <p className="leading-relaxed mb-4 text-white/75">{highlightText(children)}</p>;
       },
 
       li: ({ children, checked, ...props }: any) => {
@@ -495,7 +513,23 @@ export function MarkdownReader({ readmeText, loading, username }: MarkdownReader
           decodedSrc.includes('jsdelivr') ||
           actualAlt.toLowerCase().includes('badge') ||
           actualAlt.toLowerCase().includes('icon') ||
-          ['c', 'c++', 'java', 'python', 'javascript', 'js', 'ts', 'typescript', 'php', 'html', 'css', 'linux', 'windows', 'github', 'linkedin'].includes(actualAlt.toLowerCase().trim());
+          [
+            'c',
+            'c++',
+            'java',
+            'python',
+            'javascript',
+            'js',
+            'ts',
+            'typescript',
+            'php',
+            'html',
+            'css',
+            'linux',
+            'windows',
+            'github',
+            'linkedin',
+          ].includes(actualAlt.toLowerCase().trim());
 
         if (isBadgeOrIcon) {
           return (

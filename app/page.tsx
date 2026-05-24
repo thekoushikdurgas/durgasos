@@ -2,6 +2,7 @@
 
 import { GlobalShellContextMenu } from '@/components/GlobalShellContextMenu';
 import { OSProvider, useOS } from '@/components/os-context';
+import { WidgetLayoutProvider } from '@/hooks/use-widget-layout';
 import { InstalledAppsProvider } from '@/hooks/use-installed-apps';
 import { OsLogsProvider } from '@/hooks/use-os-logs';
 import { NotificationsProvider } from '@/hooks/use-notifications';
@@ -15,6 +16,8 @@ import { WidgetSidebar } from '@/components/widget/WidgetSidebar';
 import { CommandPalette } from '@/components/CommandPalette';
 import { SystemStatusBridge } from '@/components/SystemStatusIcons';
 import { DesktopNoticeHost } from '@/components/DesktopNoticeHost';
+import { WsPushNotificationBridge } from '@/components/WsPushNotificationBridge';
+import { BootScreen } from '@/components/BootScreen';
 import React, { use } from 'react';
 
 // Wrapper to handle global desktop clicks
@@ -44,7 +47,11 @@ function DesktopInteractionManager({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <div className="relative h-full w-full" data-desktop-surface onClick={handleDesktopClick}>
+    <div
+      className="relative flex-1 min-w-0 h-full"
+      data-desktop-surface
+      onClick={handleDesktopClick}
+    >
       {children}
     </div>
   );
@@ -65,35 +72,42 @@ export default function Home({ params, searchParams }: HomePageProps) {
       id="main-content"
       className="relative flex h-screen min-h-[100dvh] w-full flex-col overflow-hidden bg-transparent font-sans text-slate-200"
     >
+      {/* Boot screen — overlays everything, self-dismisses after startup sequence */}
+      <BootScreen />
       <InstalledAppsProvider>
         <NotificationsProvider>
           <OsLogsProvider>
             <OSProvider>
-              <SystemStatusBridge />
-              <DesktopNoticeHost />
-              <GlobalShellContextMenu>
-                <header className="relative z-[100] w-full shrink-0">
-                  <TopBar />
-                </header>
+              <WidgetLayoutProvider>
+                <SystemStatusBridge />
+                <DesktopNoticeHost />
+                <WsPushNotificationBridge />
+                <GlobalShellContextMenu>
+                  <header className="relative z-[100] w-full shrink-0">
+                    <TopBar />
+                  </header>
 
-                <div className="relative z-10 flex h-full min-h-0 w-full flex-1">
-                  <DesktopInteractionManager>
-                    <DesktopWidgetCanvas />
+                  <div className="relative z-10 flex h-full min-h-0 w-full flex-1">
+                    <WidgetSidebar />
 
-                    <WindowManager />
-                  </DesktopInteractionManager>
+                    <DesktopInteractionManager>
+                      <DesktopWidgetCanvas />
 
-                  {/* Shell overlays outside desktop click-to-dismiss so opening from the dock is not instantly closed */}
-                  <Launcher />
-                  <WidgetSidebar />
-                  <NotificationCenter />
-                  <CommandPalette />
-                </div>
+                      <WindowManager />
+                    </DesktopInteractionManager>
 
-                <Dock />
+                    <NotificationCenter />
 
-                <div className="pointer-events-none absolute bottom-0 z-[94] h-1 w-full bg-gradient-to-r from-cyan-500 via-transparent to-purple-500 opacity-40" />
-              </GlobalShellContextMenu>
+                    {/* Shell overlays outside desktop click-to-dismiss so opening from the dock is not instantly closed */}
+                    <Launcher />
+                    <CommandPalette />
+                  </div>
+
+                  <Dock />
+
+                  <div className="pointer-events-none absolute bottom-0 z-[94] h-1 w-full bg-gradient-to-r from-cyan-500 via-transparent to-purple-500 opacity-40" />
+                </GlobalShellContextMenu>
+              </WidgetLayoutProvider>
             </OSProvider>
           </OsLogsProvider>
         </NotificationsProvider>

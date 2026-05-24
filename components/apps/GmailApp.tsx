@@ -4,6 +4,7 @@ import { useApolloClient, useQuery } from '@apollo/client/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useOS } from '@/components/os-context';
+import { useWindowLaunch } from '@/components/window-launch-context';
 import { GmailHeader } from '@/components/apps/gmail/GmailHeader';
 import { GmailList, type GmailThreadRow } from '@/components/apps/gmail/GmailList';
 import { GmailReader } from '@/components/apps/gmail/GmailReader';
@@ -36,6 +37,7 @@ type GetThreadPayload = {
 export function GmailApp() {
   const client = useApolloClient();
   const { openApp } = useOS();
+  const launchOptions = useWindowLaunch();
   const meQ = useQuery(ME);
   const authed = Boolean(meQ.data?.me?.id);
   const meId = meQ.data?.me?.id ?? '';
@@ -234,6 +236,15 @@ export function GmailApp() {
     },
     [accessToken, client]
   );
+
+  useEffect(() => {
+    const threadId = launchOptions?.gmailThreadId;
+    if (threadId) {
+      queueMicrotask(() => {
+        void openThread(threadId);
+      });
+    }
+  }, [launchOptions?.gmailThreadId, openThread]);
 
   const handleSearchSubmit = useCallback(() => {
     setSearchApplied(searchDraft.trim());

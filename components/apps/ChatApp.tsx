@@ -8,6 +8,7 @@ import {
   ME,
 } from '@/lib/graphql-modules';
 import { useAiChatGateway } from '@/hooks/use-ai-chat-gateway';
+import { useWindowLaunch } from '@/components/window-launch-context';
 import { getThreadTitle, removeThreadTitle, setThreadTitle } from '@/lib/chat-thread-titles';
 import { CHAT_PROMPT_TEMPLATES } from '@/components/apps/chat/templates';
 import { NavItem, ProjectCard, PromptCard } from '@/components/apps/chat/presentational';
@@ -94,10 +95,21 @@ function MarkdownBody({ content }: { content: string }) {
 
 export function ChatApp() {
   const { sendCompletion, abortActiveRequests } = useAiChatGateway();
+  const launchOptions = useWindowLaunch();
   const [activeThreadId, setActiveThreadId] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
     return new URLSearchParams(window.location.search).get('chatThread');
   });
+
+  useEffect(() => {
+    const threadId = launchOptions?.chatThreadId;
+    if (threadId) {
+      queueMicrotask(() => {
+        setActiveThreadId(threadId);
+      });
+    }
+  }, [launchOptions?.chatThreadId]);
+
   const [inputValue, setInputValue] = useState('');
   const [think, setThink] = useState(false);
   const [deepSearch, setDeepSearch] = useState(false);

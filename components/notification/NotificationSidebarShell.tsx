@@ -92,11 +92,11 @@ export function NotificationSidebarShell({
   return (
     <SidebarShellFrame
       expanded={expanded}
+      pinned={effectivePinned}
       reducedMotion={reducedMotion}
       side="right"
       className={cn(
-        'fixed border-l border-white/10',
-        'bottom-20 right-2 top-10 max-md:inset-y-0 max-md:right-0 max-md:bottom-0 max-md:top-0 max-md:max-w-sm'
+        'max-md:fixed max-md:inset-y-0 max-md:right-0 max-md:z-[9600] max-md:w-full max-md:max-w-sm'
       )}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -105,7 +105,7 @@ export function NotificationSidebarShell({
     >
       <LiquidGlassSurface
         variant="liquid"
-        className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl max-md:rounded-none text-sm shadow-2xl"
+        className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-none text-sm shadow-2xl"
         contentClassName="flex h-full min-h-0 flex-col p-0"
       >
         <ul className="flex h-full min-h-0 flex-col text-slate-400">
@@ -189,7 +189,15 @@ export function NotificationSidebarShell({
               onClick={() => onTabChange('notifications')}
               title="Notifications"
             >
-              <Bell className="h-4 w-4 shrink-0" />
+              <div className="relative flex items-center justify-center">
+                <Bell className="h-4 w-4 shrink-0" />
+                {!expanded && unreadCount > 0 ? (
+                  <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                  </span>
+                ) : null}
+              </div>
               <LabelSpring
                 show={expanded}
                 reducedMotion={reducedMotion}
@@ -214,7 +222,18 @@ export function NotificationSidebarShell({
               onClick={() => onTabChange('system')}
               title="System & Logs"
             >
-              <FileClock className="h-4 w-4 shrink-0" />
+              <div className="relative flex items-center justify-center">
+                <FileClock className="h-4 w-4 shrink-0" />
+                {!expanded ? (
+                  <span
+                    className={cn(
+                      'absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full',
+                      backendDot
+                    )}
+                    aria-hidden
+                  />
+                ) : null}
+              </div>
               <LabelSpring
                 show={expanded}
                 reducedMotion={reducedMotion}

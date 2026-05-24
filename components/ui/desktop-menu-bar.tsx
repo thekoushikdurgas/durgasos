@@ -18,12 +18,12 @@ import { cn } from '@/lib/utils';
 export type MenuItemOption =
   | { type: 'separator' }
   | {
-      label: string;
-      action?: string;
-      shortcut?: string;
-      type?: 'item';
-      disabled?: boolean;
-    };
+    label: string;
+    action?: string;
+    shortcut?: string;
+    type?: 'item';
+    disabled?: boolean;
+  };
 
 export type MenuConfig = {
   label: string;
@@ -257,19 +257,19 @@ export function DesktopMenuBar({
   const portal =
     openKey && typeof document !== 'undefined'
       ? createPortal(
-          <MenuDropdownPanel
-            id={openMenuDomId}
-            items={openItems}
-            position={panelPos}
-            panelRef={panelRef}
-            onRequestClose={() => {
-              close();
-              lastTriggerRef.current?.focus();
-            }}
-            onSelect={handleSelect}
-          />,
-          document.body
-        )
+        <MenuDropdownPanel
+          id={openMenuDomId}
+          items={openItems}
+          position={panelPos}
+          panelRef={panelRef}
+          onRequestClose={() => {
+            close();
+            lastTriggerRef.current?.focus();
+          }}
+          onSelect={handleSelect}
+        />,
+        document.body
+      )
       : null;
 
   const isEl = typeof window !== 'undefined' && !!window.electronAPI;
@@ -294,7 +294,7 @@ export function DesktopMenuBar({
               role="menuitem"
               aria-label="Durgasos"
               className={cn(
-                'flex max-w-[min(100%,14rem)] shrink-0 items-center gap-2 rounded px-1 py-0.5 font-bold tracking-tight text-white outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-cyan-400/40',
+                'group/logo flex max-w-[min(100%,14rem)] shrink-0 items-center gap-2 rounded px-1 py-0.5 outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-cyan-400/40',
                 isEl && 'electron-no-drag'
               )}
               aria-haspopup="menu"

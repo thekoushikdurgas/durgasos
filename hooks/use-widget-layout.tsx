@@ -1,6 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useSyncExternalStore } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import { fetchBackendGraphql } from '@/lib/backend-http';
 import {
@@ -20,21 +28,12 @@ const STORAGE_KEY_V2 = 'durgasos_widgets_layout_v2';
 const STORAGE_KEY_V1 = 'durgasos_widgets_layout_v1';
 const LAYOUT_CHANGED = 'durgasos:widget-layout-changed';
 
-/** Stable reference for useSyncExternalStore server snapshot (must not allocate per call). */
-const SERVER_SNAPSHOT: WidgetLayoutItem[] = createDefaultLayout();
-
-let snapshotJson = '';
-let snapshotItems: WidgetLayoutItem[] = SERVER_SNAPSHOT;
 let serverHydrated = false;
 let pushCancel: (() => void) | null = null;
 
-function invalidateSnapshotCache() {
-  snapshotJson = '';
-}
-
-function readLayoutFromStorage(): { json: string; items: WidgetLayoutItem[] } {
+function readLayoutFromStorage(): WidgetLayoutItem[] {
   if (typeof window === 'undefined') {
-    return { json: '', items: createDefaultLayout() };
+    return createDefaultLayout();
   }
   try {
     let raw = window.localStorage.getItem(STORAGE_KEY_V2);
@@ -48,24 +47,10 @@ function readLayoutFromStorage(): { json: string; items: WidgetLayoutItem[] } {
       }
     }
     const json = raw ?? JSON.stringify(createDefaultLayout());
-    const parsed = JSON.parse(json) as unknown;
-    const items = normalizeLayoutPayload(parsed);
-    return { json, items };
+    return normalizeLayoutPayload(JSON.parse(json) as unknown);
   } catch {
-    return { json: JSON.stringify(createDefaultLayout()), items: createDefaultLayout() };
+    return createDefaultLayout();
   }
-}
-
-function getSnapshot(): WidgetLayoutItem[] {
-  const { json, items } = readLayoutFromStorage();
-  if (json === snapshotJson) return snapshotItems;
-  snapshotJson = json;
-  snapshotItems = items;
-  return snapshotItems;
-}
-
-function getServerSnapshot(): WidgetLayoutItem[] {
-  return SERVER_SNAPSHOT;
 }
 
 function notifyLayoutChanged() {
@@ -73,28 +58,8 @@ function notifyLayoutChanged() {
   window.dispatchEvent(new Event(LAYOUT_CHANGED));
 }
 
-function subscribe(onStoreChange: () => void) {
-  if (typeof window === 'undefined') return () => {};
-  const onStorage = (e: StorageEvent) => {
-    if (e.key === null || e.key === STORAGE_KEY_V2 || e.key === STORAGE_KEY_V1) {
-      invalidateSnapshotCache();
-      onStoreChange();
-    }
-  };
-  const onLocal = () => {
-    invalidateSnapshotCache();
-    onStoreChange();
-  };
-  window.addEventListener('storage', onStorage);
-  window.addEventListener(LAYOUT_CHANGED, onLocal);
-  return () => {
-    window.removeEventListener('storage', onStorage);
-    window.removeEventListener(LAYOUT_CHANGED, onLocal);
-  };
-}
-
-async function pullWidgetLayoutFromServer(): Promise<void> {
-  if (typeof window === 'undefined') return;
+async function pullWidgetLayoutFromServer(): Promise<WidgetLayoutItem[] | null> {
+  if (typeof window === 'undefined') return null;
   try {
     const r = await fetchBackendGraphql({
       query: `
@@ -108,20 +73,26 @@ async function pullWidgetLayoutFromServer(): Promise<void> {
       }
     `,
     });
-    if (!r.ok) return;
+    if (!r.ok) return null;
     const json = (await r.json()) as {
       data?: { widgetLayout?: { layoutJson?: unknown } | null };
     };
     const layout = json.data?.widgetLayout?.layoutJson;
-    if (Array.isArray(layout) && layout.length > 0) {
+    const hasLocalV2 = Boolean(window.localStorage.getItem(STORAGE_KEY_V2));
+    if (Array.isArray(layout) && layout.length > 0 && !hasLocalV2) {
       const normalized = normalizeLayoutPayload(layout);
-      window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(normalized));
-      invalidateSnapshotCache();
+      try {
+        window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(normalized));
+      } catch {
+        /* quota */
+      }
       notifyLayoutChanged();
+      return normalized;
     }
   } catch {
     /* offline */
   }
+  return null;
 }
 
 function pushWidgetLayoutToServer(layout: WidgetLayoutItem[]): void {
@@ -144,39 +115,71 @@ function pushWidgetLayoutToServer(layout: WidgetLayoutItem[]): void {
 }
 
 function schedulePushToServer(layout: WidgetLayoutItem[], delayMs = 300): void {
-  pushCancel?.();
-  pushCancel = () => {
-    if (typeof window !== 'undefined') window.clearTimeout(t);
-  };
   if (typeof window === 'undefined') return;
+  pushCancel?.();
   const t = window.setTimeout(() => pushWidgetLayoutToServer(layout), delayMs);
-  const prevCancel = pushCancel;
-  pushCancel = () => {
-    prevCancel();
-    window.clearTimeout(t);
-  };
+  pushCancel = () => window.clearTimeout(t);
 }
 
-export function useWidgetLayout() {
-  const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+type WidgetLayoutContextValue = {
+  items: WidgetLayoutItem[];
+  enabledCount: number;
+  setItems: (updater: (prev: WidgetLayoutItem[]) => WidgetLayoutItem[]) => void;
+  setEnabled: (id: string, enabled: boolean) => void;
+  setEnabledByType: (type: WidgetType, enabled: boolean) => void;
+  updatePosition: (id: string, position: WidgetPosition) => void;
+  bringToFront: (id: string) => void;
+  removeWidget: (id: string) => void;
+  resetLayout: () => void;
+};
 
-  useEffect(() => {
-    if (serverHydrated) return;
-    serverHydrated = true;
-    void pullWidgetLayoutFromServer();
-  }, []);
+const WidgetLayoutContext = createContext<WidgetLayoutContextValue | null>(null);
+
+export function WidgetLayoutProvider({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<WidgetLayoutItem[]>(createDefaultLayout);
 
   const persist = useCallback((updater: (prev: WidgetLayoutItem[]) => WidgetLayoutItem[]) => {
-    const prev = getSnapshot();
-    const next = normalizeLayoutPayload(updater(prev));
-    try {
-      window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(next));
-    } catch {
-      /* quota */
+    setItems((prev) => {
+      const next = normalizeLayoutPayload(updater(prev));
+      try {
+        window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(next));
+      } catch {
+        /* quota */
+      }
+      schedulePushToServer(next);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setItems(readLayoutFromStorage());
+    });
+
+    const syncFromStorage = () => {
+      setItems(readLayoutFromStorage());
+    };
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === null || e.key === STORAGE_KEY_V2 || e.key === STORAGE_KEY_V1) {
+        syncFromStorage();
+      }
+    };
+
+    window.addEventListener('storage', onStorage);
+    window.addEventListener(LAYOUT_CHANGED, syncFromStorage);
+
+    if (!serverHydrated) {
+      serverHydrated = true;
+      void pullWidgetLayoutFromServer().then((fromServer) => {
+        if (fromServer) setItems(fromServer);
+      });
     }
-    invalidateSnapshotCache();
-    notifyLayoutChanged();
-    schedulePushToServer(next);
+
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener(LAYOUT_CHANGED, syncFromStorage);
+    };
   }, []);
 
   const setEnabledByType = useCallback(
@@ -241,15 +244,38 @@ export function useWidgetLayout() {
 
   const enabledCount = items.filter((w) => w.enabled).length;
 
-  return {
-    items,
-    enabledCount,
-    setItems: persist,
-    setEnabled,
-    setEnabledByType,
-    updatePosition,
-    bringToFront,
-    removeWidget,
-    resetLayout,
-  };
+  const value = useMemo(
+    () => ({
+      items,
+      enabledCount,
+      setItems: persist,
+      setEnabled,
+      setEnabledByType,
+      updatePosition,
+      bringToFront,
+      removeWidget,
+      resetLayout,
+    }),
+    [
+      items,
+      enabledCount,
+      persist,
+      setEnabled,
+      setEnabledByType,
+      updatePosition,
+      bringToFront,
+      removeWidget,
+      resetLayout,
+    ]
+  );
+
+  return <WidgetLayoutContext.Provider value={value}>{children}</WidgetLayoutContext.Provider>;
+}
+
+export function useWidgetLayout() {
+  const ctx = useContext(WidgetLayoutContext);
+  if (!ctx) {
+    throw new Error('useWidgetLayout must be used within WidgetLayoutProvider');
+  }
+  return ctx;
 }

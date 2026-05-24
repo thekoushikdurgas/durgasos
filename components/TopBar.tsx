@@ -10,7 +10,7 @@ import {
   type MenuConfig,
   type MenuItemOption,
 } from '@/components/ui/desktop-menu-bar';
-import VaporizeTextCycle, { Tag } from '@/components/ui/vaporize-text-cycle';
+import { NeonBlinkBrand } from '@/components/ui/neon-blink-brand';
 import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { APPS } from '@/lib/apps';
 import { cn } from '@/lib/utils';
@@ -130,13 +130,13 @@ export function TopBar() {
     window.electronAPI
       ?.isMaximized()
       .then(setIsMaximized)
-      .catch(() => {});
+      .catch(() => { });
 
     const handleResize = () => {
       window.electronAPI
         ?.isMaximized()
         .then(setIsMaximized)
-        .catch(() => {});
+        .catch(() => { });
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -363,27 +363,8 @@ export function TopBar() {
       onMenuAction={handleMenuAction}
       activeAppName={activeApp?.name ?? null}
       brandSlot={
-        <div className="h-5 min-w-[4.5rem] max-w-[9rem] shrink">
-          <VaporizeTextCycle
-            className="h-full w-full"
-            texts={['Durgasos', 'Durgas OS']}
-            font={{
-              fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-              fontSize: '13px',
-              fontWeight: 700,
-            }}
-            color="rgb(248, 250, 252)"
-            alignment="left"
-            direction="left-to-right"
-            tag={Tag.P}
-            spread={3}
-            density={6}
-            animation={{
-              vaporizeDuration: 2.2,
-              fadeInDuration: 0.85,
-              waitDuration: 1.1,
-            }}
-          />
+        <div className="h-5 min-w-[4.5rem] max-w-[9rem] shrink overflow-visible">
+          <NeonBlinkBrand texts={['Durgasos', 'Durgas OS']} size="compact" />
         </div>
       }
       rightSlot={
