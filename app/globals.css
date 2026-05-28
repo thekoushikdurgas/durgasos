@@ -45,6 +45,7 @@
   --color-glass-panel: rgba(15, 23, 42, 0.6);
   --color-liquid-frost-tint: rgba(255, 255, 255, 0.12);
   --color-liquid-frost-tint-strong: rgba(255, 255, 255, 0.18);
+  --color-stretch-menu-liquid-frost: rgba(15, 23, 42, 0.55);
   /** AI chat bar: liquid tier z-10 tint overrides (see `liquid_glass_theme.md`). */
   --color-ai-chat-idle-liquid-frost: rgba(255, 255, 255, 0.52);
   --color-ai-chat-expanded-liquid-frost: rgba(15, 23, 42, 0.78);
@@ -349,16 +350,21 @@ body {
     --app-edge-angle: 135deg;
     --app-edge-strength: 0;
     --app-edge-sensitivity: 30;
-    --app-edge-opacity: clamp(0,
-        calc((var(--app-edge-strength) - var(--app-edge-sensitivity)) / (100 - var(--app-edge-sensitivity))),
-        1);
+    --app-edge-opacity: clamp(
+      0,
+      calc(
+        (var(--app-edge-strength) - var(--app-edge-sensitivity)) /
+          (100 - var(--app-edge-sensitivity))
+      ),
+      1
+    );
     --app-edge-glow-color: 190 95% 72%;
     isolation: isolate;
   }
 
   .app-glowing-edge-window::before,
   .app-glowing-edge-window::after,
-  .app-glowing-edge-window>.app-window-edge-glow {
+  .app-glowing-edge-window > .app-window-edge-glow {
     content: '';
     position: absolute;
     inset: 0;
@@ -380,11 +386,13 @@ body {
       radial-gradient(at 86% 85%, hsla(186, 100%, 74%, 1), transparent 48%) border-box,
       radial-gradient(at 82% 18%, hsla(52, 100%, 65%, 1), transparent 46%) border-box,
       radial-gradient(at 51% 4%, hsla(12, 100%, 72%, 1), transparent 46%) border-box;
-    mask-image: conic-gradient(from var(--app-edge-angle) at center,
-        black 20%,
-        transparent 38%,
-        transparent 62%,
-        black 80%);
+    mask-image: conic-gradient(
+      from var(--app-edge-angle) at center,
+      black 20%,
+      transparent 38%,
+      transparent 62%,
+      black 80%
+    );
   }
 
   .app-glowing-edge-window::after {
@@ -396,15 +404,17 @@ body {
       radial-gradient(at 41% 38%, hsla(192, 100%, 64%, 0.24), transparent 46%),
       radial-gradient(at 86% 85%, hsla(186, 100%, 74%, 0.22), transparent 48%),
       radial-gradient(at 82% 18%, hsla(52, 100%, 65%, 0.18), transparent 46%);
-    mask-image: conic-gradient(from var(--app-edge-angle) at center,
-        transparent 4%,
-        black 16%,
-        black 84%,
-        transparent 96%);
+    mask-image: conic-gradient(
+      from var(--app-edge-angle) at center,
+      transparent 4%,
+      black 16%,
+      black 84%,
+      transparent 96%
+    );
     mix-blend-mode: soft-light;
   }
 
-  .app-glowing-edge-window>.app-window-edge-glow {
+  .app-glowing-edge-window > .app-window-edge-glow {
     z-index: 3;
     box-shadow:
       inset 0 0 0 1px hsl(var(--app-edge-glow-color) / 0.75),
@@ -412,30 +422,31 @@ body {
       inset 0 0 22px hsl(var(--app-edge-glow-color) / 0.32),
       0 0 16px hsl(var(--app-edge-glow-color) / 0.36),
       0 0 36px hsl(var(--app-edge-glow-color) / 0.18);
-    mask-image: conic-gradient(from var(--app-edge-angle) at center,
-        black 3%,
-        transparent 12%,
-        transparent 88%,
-        black 97%);
+    mask-image: conic-gradient(
+      from var(--app-edge-angle) at center,
+      black 3%,
+      transparent 12%,
+      transparent 88%,
+      black 97%
+    );
     mix-blend-mode: plus-lighter;
   }
 
   .app-glowing-edge-window:hover::before,
   .app-glowing-edge-window:hover::after,
-  .app-glowing-edge-window:hover>.app-window-edge-glow {
+  .app-glowing-edge-window:hover > .app-window-edge-glow {
     opacity: var(--app-edge-opacity);
   }
 
-  .app-glowing-edge-window> :not(.app-window-edge-glow) {
+  .app-glowing-edge-window > :not(.app-window-edge-glow) {
     position: relative;
     z-index: 2;
   }
 
   @media (prefers-reduced-motion: reduce) {
-
     .app-glowing-edge-window::before,
     .app-glowing-edge-window::after,
-    .app-glowing-edge-window>.app-window-edge-glow {
+    .app-glowing-edge-window > .app-window-edge-glow {
       transition: none;
     }
   }
@@ -568,6 +579,39 @@ body {
   animation: neon-blink-flicker 220ms steps(2, end) 1;
 }
 
+@keyframes neon-blink-bar-flicker {
+  0% {
+    opacity: 1;
+    box-shadow:
+      0 0 2px var(--neon-blink-text),
+      0 0 6px var(--neon-blink),
+      0 0 10px var(--neon-blink-weak);
+  }
+
+  40% {
+    opacity: 0.35;
+    box-shadow: none;
+  }
+
+  55% {
+    opacity: 1;
+    box-shadow: 0 0 4px var(--neon-blink);
+  }
+
+  70% {
+    opacity: 0.5;
+    box-shadow: none;
+  }
+
+  100% {
+    opacity: 1;
+    box-shadow:
+      0 0 2px var(--neon-blink-text),
+      0 0 6px var(--neon-blink),
+      0 0 10px var(--neon-blink-weak);
+  }
+}
+
 @keyframes neon-blink-flicker {
   0% {
     opacity: 1;
@@ -598,16 +642,346 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   .neon-blink-brand,
   .neon-blink-brand__text {
     animation: none !important;
   }
 }
 
+/* ── Stretch bottom menu: neon-blink toggle (closed) + liquid glass panel (open) ── */
+.stretch-menu-root {
+  --stretch-menu-size: 60px;
+  overflow: visible;
+}
+
+.stretch-menu-box {
+  position: relative;
+  width: var(--stretch-menu-size);
+  min-height: var(--stretch-menu-size);
+  overflow: hidden;
+  transition:
+    width 0.4s var(--ease-liquid),
+    min-height 0.4s var(--ease-liquid),
+    border-radius 0.35s var(--ease-liquid);
+}
+
+.stretch-menu-box--closed {
+  border-radius: var(--stretch-menu-size);
+  cursor: pointer;
+}
+
+.stretch-menu-box--open {
+  width: var(--stretch-menu-size);
+  min-height: var(--stretch-menu-size);
+  border-radius: 50px;
+  cursor: default;
+  overflow: visible;
+  padding: 5px 0;
+}
+
+/* Hover-open panel: no bottom toggle, panel fills the glass shell */
+.stretch-menu-box--open
+  .stretch-menu-content:not(:has(.stretch-menu-toggle))
+  .stretch-menu-panel--open {
+  padding-bottom: 4px;
+}
+
+.stretch-menu-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  min-height: inherit;
+  flex-direction: column-reverse;
+  align-items: stretch;
+}
+
+.stretch-menu-glass {
+  pointer-events: none;
+}
+
+.stretch-menu-toggle {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--stretch-menu-size);
+  height: var(--stretch-menu-size);
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+.stretch-menu-toggle--neon {
+  color: var(--neon-blink);
+  filter: drop-shadow(0 0 12px var(--neon-blink)) drop-shadow(0 0 24px var(--neon-blink-weak));
+  transition:
+    filter 0.15s ease,
+    transform 0.15s ease;
+}
+
+.stretch-menu-toggle--neon.is-flicker {
+  animation: neon-blink-flicker 300ms steps(2, end) 1;
+}
+
+.stretch-menu-box--closed:has(.stretch-menu-toggle--neon) {
+  border: 1px solid rgba(125, 252, 255, 0.32);
+  background: rgba(5, 7, 17, 0.72);
+  /* box-shadow:
+    0 0 12px rgba(125, 252, 255, 0.12),
+    2px 3px 8px rgba(0, 0, 0, 0.4),
+    inset 0 0 24px rgba(125, 252, 255, 0.05); */
+  /* filter: drop-shadow(0 0 6px var(--neon-blink)) drop-shadow(0 0 16px var(--neon-blink-weak)); */
+}
+
+.group\/toggle:hover .stretch-menu-hamburger--neon span {
+  animation: neon-blink-bar-flicker 220ms steps(2, end) 1;
+}
+
+.stretch-menu-toggle--neon.is-flicker .stretch-menu-hamburger--neon span {
+  animation: neon-blink-bar-flicker 300ms steps(2, end) 1;
+}
+
+.stretch-menu-toggle:focus-visible {
+  outline: 2px solid rgba(125, 252, 255, 0.55);
+  outline-offset: 2px;
+  border-radius: 9999px;
+}
+
+.stretch-menu-hamburger {
+  position: relative;
+  width: 16px;
+  height: 16px;
+}
+
+.stretch-menu-hamburger span {
+  position: absolute;
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: var(--neon-blink-text);
+  border-radius: 10px;
+  box-shadow:
+    0 0 2px var(--neon-blink-text),
+    0 0 6px var(--neon-blink),
+    0 0 10px var(--neon-blink-weak);
+  transition: all 0.3s;
+}
+
+.stretch-menu-hamburger span:nth-child(1) {
+  top: 3px;
+}
+
+.stretch-menu-hamburger span:nth-child(2),
+.stretch-menu-hamburger span:nth-child(3) {
+  top: 8px;
+}
+
+.stretch-menu-hamburger span:nth-child(4) {
+  top: 13px;
+}
+
+.stretch-menu-hamburger--active span:nth-child(1) {
+  width: 0;
+  margin-left: 8px;
+}
+
+.stretch-menu-hamburger--active span:nth-child(2) {
+  transform: rotate(45deg);
+}
+
+.stretch-menu-hamburger--active span:nth-child(3) {
+  transform: rotate(-45deg);
+}
+
+.stretch-menu-hamburger--active span:nth-child(4) {
+  width: 0;
+  margin-left: 8px;
+}
+
+.stretch-menu-box--open .stretch-menu-hamburger span {
+  background: rgba(248, 250, 252, 0.92);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.stretch-menu-panel {
+  opacity: 0;
+  pointer-events: none;
+  width: 100%;
+  max-height: 0;
+  transition:
+    max-height 0.4s,
+    opacity 0.25s;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.stretch-menu-panel--open {
+  max-height: min(70vh, 520px);
+  opacity: 1;
+  pointer-events: auto;
+  overflow: visible;
+  /* padding-bottom: 4px; */
+}
+
+.stretch-menu-panel-scroll {
+  max-height: min(70vh, 520px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.stretch-menu-panel-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.stretch-menu-panel-scroll::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: rgba(125, 252, 255, 0.25);
+}
+
+.stretch-menu-box--open .stretch-menu-item {
+  color: rgba(248, 250, 252, 0.95);
+}
+
+.stretch-menu-item {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--neon-blink-text);
+  cursor: pointer;
+  outline: none;
+}
+
+.stretch-menu-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.stretch-menu-item::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  height: 0;
+  width: 3px;
+  background: var(--neon-blink);
+  box-shadow: 0 0 6px var(--neon-blink-weak);
+  transform: translateY(-50%);
+  transition: height 0.3s;
+}
+
+.stretch-menu-item--active::after {
+  height: 22px;
+}
+
+.stretch-menu-item__icon {
+  display: inline-flex;
+  width: 100%;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  color: var(--neon-blink);
+  filter: drop-shadow(0 0 4px var(--neon-blink-weak));
+  transform: scale(0.5);
+  opacity: 0;
+  transition:
+    transform 0.3s,
+    opacity 0.3s;
+}
+
+.stretch-menu-box--open .stretch-menu-item__icon {
+  color: var(--neon-blink);
+  /* filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35)); */
+}
+
+.stretch-menu-item__tooltip {
+  position: fixed;
+  z-index: 10050;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(125, 252, 255, 0.28);
+  background: rgba(5, 7, 17, 0.94);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: rgba(248, 250, 252, 0.95);
+  pointer-events: none;
+  box-shadow:
+    0 0 10px rgba(125, 252, 255, 0.12),
+    2px 4px 12px rgba(0, 0, 0, 0.45);
+  transform: translateY(-50%);
+}
+
+.stretch-menu-item__tooltip--fixed {
+  opacity: 1;
+  visibility: visible;
+}
+
+.stretch-menu-panel--open .stretch-menu-item__icon {
+  transform: scale(1.05);
+  opacity: 0.85;
+}
+
+.stretch-menu-item:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.stretch-menu-box--open .stretch-menu-item:hover,
+.stretch-menu-box--open .stretch-menu-item:focus-visible {
+  /* background: rgba(255, 255, 255, 0.1); */
+
+  color: var(--neon-blink);
+  filter: drop-shadow(0 0 12px var(--neon-blink)) drop-shadow(0 0 24px var(--neon-blink-weak));
+  transition:
+    filter 0.15s ease,
+    transform 0.15s ease;
+}
+
+.stretch-menu-box--open .stretch-menu-item--active::after {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+}
+
+.stretch-menu-panel--open .stretch-menu-item--visible .stretch-menu-item__icon {
+  transition:
+    all 0.5s calc(0.1s + (var(--stretch-menu-i, 0) * 0.05s)),
+    opacity 0.5s 0s,
+    transform 0.5s 0s;
+}
+
+.stretch-menu-box--reduce-motion .stretch-menu-panel,
+.stretch-menu-box--reduce-motion .stretch-menu-item__icon,
+.stretch-menu-box--reduce-motion .stretch-menu-item__tooltip {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stretch-menu-box,
+  .stretch-menu-panel,
+  .stretch-menu-item__icon,
+  .stretch-menu-item__tooltip,
+  .stretch-menu-hamburger span,
+  .stretch-menu-toggle--neon,
+  .group\/toggle:hover .stretch-menu-hamburger--neon span {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
 /* ── Neon glow pulse for active dock items ── */
 @keyframes neon-glow-pulse {
-
   0%,
   100% {
     box-shadow:
@@ -629,7 +1003,6 @@ body {
 
 /* macOS-style Dock Icon Bouncing */
 @keyframes macos-bounce {
-
   0%,
   100% {
     transform: translateY(0);

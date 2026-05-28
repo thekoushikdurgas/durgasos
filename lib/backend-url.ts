@@ -36,6 +36,9 @@ export function getBackendOrigin(): string {
  * `GET /files/...` signed URLs are proxied to ai.backend under `/files/:path*`.
  */
 export function getGraphqlHttpUrl(): string {
+  if (typeof window !== 'undefined') {
+    return '/api/graphql';
+  }
   const explicit = process.env.NEXT_PUBLIC_GRAPHQL_URL?.trim();
   if (explicit) return explicit;
   return `${getBackendOrigin()}/graphql`;

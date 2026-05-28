@@ -98,7 +98,7 @@ export const LiquidGlassSurface = React.forwardRef<HTMLDivElement, LiquidGlassSu
         <div
           ref={ref}
           className={cn(
-            'relative overflow-hidden rounded-[inherit] text-foreground',
+            'relative rounded-[inherit] text-foreground',
             'frost-glass-surface',
             className
           )}
@@ -113,14 +113,14 @@ export const LiquidGlassSurface = React.forwardRef<HTMLDivElement, LiquidGlassSu
       <div
         ref={ref}
         className={cn(
-          'relative flex overflow-hidden rounded-[inherit] text-slate-100',
+          'relative flex rounded-[inherit] text-slate-100',
           withLiquidShell && 'transition-all duration-liquid ease-liquid liquid-glass-shell',
           className
         )}
         {...props}
       >
         <div
-          className="absolute inset-0 z-0 overflow-hidden rounded-[inherit]"
+          className="absolute inset-0 z-0 rounded-[inherit]"
           style={{
             backdropFilter: 'blur(3px)',
             filter: `url(#${GLASS_DISTORTION_FILTER_ID})`,
@@ -135,10 +135,7 @@ export const LiquidGlassSurface = React.forwardRef<HTMLDivElement, LiquidGlassSu
           }}
         />
         <div
-          className={cn(
-            'absolute inset-0 z-20 h-full overflow-hidden rounded-[inherit]',
-            'liquid-glass-inset'
-          )}
+          className={cn('absolute inset-0 z-20 h-full rounded-[inherit]', 'liquid-glass-inset')}
         />
         <div className={cn('relative z-30 flex min-h-0 min-w-0 flex-1 flex-col', contentClassName)}>
           {children}

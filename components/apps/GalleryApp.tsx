@@ -27,7 +27,9 @@ import { configureGoogleLinkProvider, GOOGLE_SCOPES_GRANTED_STRING } from '@/lib
 import { readGoogleTokenPayload } from '@/lib/read-google-token-payload';
 import {
   GET_LINKED_GOOGLE_ACCOUNT_TOKEN,
-  GOOGLE_PHOTOS_LIST,
+  GOOGLE_PHOTOS_PICKER_CREATE,
+  GOOGLE_PHOTOS_PICKER_GET,
+  GOOGLE_PHOTOS_PICKER_LIST,
   LINKED_GOOGLE_ACCOUNTS,
   ME,
   REFRESH_LINKED_GOOGLE_ACCOUNT_TOKEN,
@@ -52,6 +54,22 @@ type GooglePhotosListPayload = {
   success?: boolean;
   mediaItems?: unknown[];
   nextPageToken?: string | null;
+};
+
+type GooglePhotosPickerSession = {
+  id: string;
+  pickerUri?: string;
+  mediaItemsSet?: boolean;
+  expireTime?: string;
+  pollingConfig?: {
+    pollInterval?: string;
+    timeoutIn?: string;
+  };
+};
+
+type GooglePhotosPickerSessionPayload = {
+  success?: boolean;
+  session?: unknown;
 };
 
 const IMAGE_EXT = /\.(jpe?g|png|gif|webp|svg|bmp|ico|avif|heic|tiff?|jxl|raw|cr2|nef|dng|psd)$/i;
@@ -98,14 +116,34 @@ function mapGoogleMediaItems(raw: unknown[] | undefined): MediaItemType[] {
   for (const row of raw) {
     if (!row || typeof row !== 'object') continue;
     const item = row as Record<string, unknown>;
+    const mediaFile =
+      item.mediaFile && typeof item.mediaFile === 'object'
+        ? (item.mediaFile as Record<string, unknown>)
+        : null;
     const id = typeof item.id === 'string' ? item.id : null;
-    const baseUrl = typeof item.baseUrl === 'string' ? item.baseUrl : '';
-    const mime = typeof item.mimeType === 'string' ? item.mimeType : '';
-    const filename = typeof item.filename === 'string' ? item.filename : (id ?? 'Media');
+    const baseUrl =
+      typeof item.baseUrl === 'string'
+        ? item.baseUrl
+        : typeof mediaFile?.baseUrl === 'string'
+          ? mediaFile.baseUrl
+          : '';
+    const mime =
+      typeof item.mimeType === 'string'
+        ? item.mimeType
+        : typeof mediaFile?.mimeType === 'string'
+          ? mediaFile.mimeType
+          : '';
+    const filename =
+      typeof item.filename === 'string'
+        ? item.filename
+        : typeof mediaFile?.filename === 'string'
+          ? mediaFile.filename
+          : (id ?? 'Media');
     if (!id || !baseUrl) continue;
     let type: 'image' | 'video' = 'image';
-    if (mime.startsWith('video/')) type = 'video';
-    else if (!mime.startsWith('image/')) continue;
+    const googleType = typeof item.type === 'string' ? item.type : '';
+    if (mime.startsWith('video/') || googleType === 'VIDEO') type = 'video';
+    else if (!mime.startsWith('image/') && googleType !== 'PHOTO') continue;
     const url = type === 'video' ? `${baseUrl}=dv` : `${baseUrl}=w1920-h1080`;
     out.push({
       id,
@@ -120,6 +158,38 @@ function mapGoogleMediaItems(raw: unknown[] | undefined): MediaItemType[] {
   return out;
 }
 
+function parsePickerSession(raw: unknown): GooglePhotosPickerSession | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const row = raw as Record<string, unknown>;
+  if (typeof row.id !== 'string' || row.id.length === 0) return null;
+  const pollingRaw =
+    row.pollingConfig && typeof row.pollingConfig === 'object'
+      ? (row.pollingConfig as Record<string, unknown>)
+      : null;
+  const pollingConfig = pollingRaw
+    ? {
+        pollInterval:
+          typeof pollingRaw.pollInterval === 'string' ? pollingRaw.pollInterval : undefined,
+        timeoutIn: typeof pollingRaw.timeoutIn === 'string' ? pollingRaw.timeoutIn : undefined,
+      }
+    : undefined;
+  return {
+    id: row.id,
+    pickerUri: typeof row.pickerUri === 'string' ? row.pickerUri : undefined,
+    mediaItemsSet: typeof row.mediaItemsSet === 'boolean' ? row.mediaItemsSet : undefined,
+    expireTime: typeof row.expireTime === 'string' ? row.expireTime : undefined,
+    pollingConfig,
+  };
+}
+
+function secondsFromGoogleDuration(value: string | undefined, fallback: number): number {
+  if (!value) return fallback;
+  const m = /^(\d+(?:\.\d+)?)s$/.exec(value.trim());
+  if (!m) return fallback;
+  const n = Number(m[1]);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
 type SourceTab = 'workspace' | 'google';
 type GalleryShellView = 'face' | 'bento' | 'viewer';
 
@@ -128,7 +198,7 @@ export function GalleryApp() {
   const launch = useWindowLaunch();
   const driveSrc = useGoogleDriveLaunchSource(launch);
   const { openApp } = useOS();
-  const [sourceTab, setSourceTab] = useState<SourceTab>('workspace');
+  const [sourceTab, setSourceTab] = useState<SourceTab>('google');
   const [view, setView] = useState<GalleryShellView>('face');
   const [viewerFocusId, setViewerFocusId] = useState<string | null>(null);
   const [launchImages, setLaunchImages] = useState<PortfolioImage[]>([]);
@@ -140,6 +210,8 @@ export function GalleryApp() {
   const [gpItems, setGpItems] = useState<MediaItemType[]>([]);
   const [gpNext, setGpNext] = useState<string | null>(null);
   const [gpLoadingMore, setGpLoadingMore] = useState(false);
+  const [pickerSession, setPickerSession] = useState<GooglePhotosPickerSession | null>(null);
+  const [pickerStatus, setPickerStatus] = useState<string | null>(null);
 
   const meQ = useQuery(ME);
   const authed = Boolean(meQ.data?.me?.id);
@@ -153,6 +225,16 @@ export function GalleryApp() {
     () => parseLinkedGoogleAccounts(linkedQ.data?.linkedGoogleAccounts),
     [linkedQ.data?.linkedGoogleAccounts]
   );
+
+  const selectedGoogleAccount = useMemo(
+    () => linkedAccounts.find((a) => a.googleUserId === selectedGoogleUserId) ?? null,
+    [linkedAccounts, selectedGoogleUserId]
+  );
+
+  const hasGooglePhotosPickerScope = useMemo(() => {
+    const scopes = selectedGoogleAccount?.scopesGranted ?? '';
+    return scopes.includes('photospicker.mediaitems.readonly');
+  }, [selectedGoogleAccount?.scopesGranted]);
 
   useEffect(() => {
     if (linkedAccounts.length === 0) {
@@ -173,6 +255,10 @@ export function GalleryApp() {
     queueMicrotask(() => {
       setGoogleAccessToken(null);
       setGoogleTokenExpiresAt(null);
+      setGpItems([]);
+      setGpNext(null);
+      setPickerSession(null);
+      setPickerStatus(null);
     });
   }, [selectedGoogleUserId]);
 
@@ -219,12 +305,6 @@ export function GalleryApp() {
   const listQ = useQuery(STORAGE_LIST, {
     skip: !authed || sourceTab !== 'workspace',
     variables: { params: { bucket_type: BUCKET_TYPE, limit: LIST_LIMIT, offset: 0 } },
-    fetchPolicy: 'network-only',
-  });
-
-  const gpQ = useQuery(GOOGLE_PHOTOS_LIST, {
-    skip: !authed || sourceTab !== 'google' || !googlePhotosReady,
-    variables: { params: { access_token: googleAccessToken, page_size: 100 } },
     fetchPolicy: 'network-only',
   });
 
@@ -370,21 +450,14 @@ export function GalleryApp() {
   }, [previewImages, launchImages]);
 
   useEffect(() => {
-    if (sourceTab !== 'google' || !googlePhotosReady) {
-      queueMicrotask(() => {
-        setGpItems([]);
-        setGpNext(null);
-      });
-      return;
-    }
-    const payload = gpQ.data?.googlePhotosList as GooglePhotosListPayload | undefined;
-    if (!payload || gpQ.loading) return;
-    if (!payload.success) return;
+    if (sourceTab === 'google' && googlePhotosReady) return;
     queueMicrotask(() => {
-      setGpItems(mapGoogleMediaItems(payload.mediaItems));
-      setGpNext(payload.nextPageToken ?? null);
+      setGpItems([]);
+      setGpNext(null);
+      setPickerSession(null);
+      setPickerStatus(null);
     });
-  }, [sourceTab, googlePhotosReady, gpQ.data, gpQ.loading]);
+  }, [sourceTab, googlePhotosReady]);
 
   const googlePreviewImages: PortfolioImage[] | undefined = useMemo(() => {
     const imgs: PortfolioImage[] = [];
@@ -470,26 +543,58 @@ export function GalleryApp() {
     });
   }, [galleryViewerAutoOpenKey, launch, launchImages]);
 
-  const loadMoreGoogle = useCallback(async () => {
-    if (!gpNext || !googleAccessToken || !googlePhotosReady || gpLoadingMore || !authed) return;
-    setGpLoadingMore(true);
-    try {
+  const loadPickedGooglePhotos = useCallback(
+    async (sessionId: string, pageToken?: string | null, append = false) => {
+      if (!googleAccessToken || !googlePhotosReady || !authed) return false;
       const { data } = await client.query({
-        query: GOOGLE_PHOTOS_LIST,
+        query: GOOGLE_PHOTOS_PICKER_LIST,
         variables: {
-          params: { access_token: googleAccessToken, page_token: gpNext, page_size: 100 },
+          params: {
+            access_token: googleAccessToken,
+            session_id: sessionId,
+            page_token: pageToken,
+            page_size: 100,
+          },
         },
         fetchPolicy: 'network-only',
       });
-      const p = data?.googlePhotosList as GooglePhotosListPayload | undefined;
-      if (p?.success) {
-        setGpItems((prev) => [...prev, ...mapGoogleMediaItems(p.mediaItems)]);
-        setGpNext(p.nextPageToken ?? null);
-      }
+      const p = data?.googlePhotosPickerList as GooglePhotosListPayload | undefined;
+      if (!p?.success) return false;
+      const mapped = mapGoogleMediaItems(p.mediaItems);
+      setGpItems((prev) => (append ? [...prev, ...mapped] : mapped));
+      setGpNext(p.nextPageToken ?? null);
+      setPickerStatus(mapped.length > 0 || append ? null : 'No media selected.');
+      return true;
+    },
+    [googleAccessToken, googlePhotosReady, authed, client]
+  );
+
+  const loadMoreGoogle = useCallback(async () => {
+    if (
+      !pickerSession?.id ||
+      !gpNext ||
+      !googleAccessToken ||
+      !googlePhotosReady ||
+      gpLoadingMore ||
+      !authed
+    ) {
+      return;
+    }
+    setGpLoadingMore(true);
+    try {
+      await loadPickedGooglePhotos(pickerSession.id, gpNext, true);
     } finally {
       setGpLoadingMore(false);
     }
-  }, [gpNext, googleAccessToken, googlePhotosReady, gpLoadingMore, authed, client]);
+  }, [
+    pickerSession?.id,
+    gpNext,
+    googleAccessToken,
+    googlePhotosReady,
+    gpLoadingMore,
+    authed,
+    loadPickedGooglePhotos,
+  ]);
 
   const handleGoogleReauth = useCallback(async () => {
     if (!selectedGoogleUserId) return;
@@ -525,6 +630,10 @@ export function GalleryApp() {
         },
       });
       await tokenQ.refetch();
+      setPickerSession(null);
+      setPickerStatus(null);
+      setGpItems([]);
+      setGpNext(null);
       setView('face');
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Re-authentication failed.';
@@ -534,12 +643,154 @@ export function GalleryApp() {
     }
   }, [selectedGoogleUserId, refreshGoogleTokenMut, tokenQ]);
 
+  const handleStartGooglePicker = useCallback(async () => {
+    if (!googleAccessToken || !googlePhotosReady || !authed) return;
+    if (!hasGooglePhotosPickerScope) {
+      setGoogleError(
+        'Google Photos needs the new Picker permission. Re-authenticate this account.'
+      );
+      return;
+    }
+    setGoogleBusy(true);
+    setGoogleError(null);
+    setPickerStatus('Opening Google Photos picker...');
+    const pickerWindow = window.open(
+      '',
+      'durgasos-google-photos-picker',
+      'popup=yes,width=960,height=720'
+    );
+    try {
+      const requestId =
+        typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+          ? crypto.randomUUID()
+          : undefined;
+      const { data } = await client.query({
+        query: GOOGLE_PHOTOS_PICKER_CREATE,
+        variables: {
+          params: {
+            access_token: googleAccessToken,
+            max_item_count: 2000,
+            request_id: requestId,
+          },
+        },
+        fetchPolicy: 'network-only',
+      });
+      const payload = data?.googlePhotosPickerCreate as
+        | GooglePhotosPickerSessionPayload
+        | undefined;
+      const session = parsePickerSession(payload?.session);
+      if (!payload?.success || !session) {
+        setGoogleError('Google Photos Picker did not return a usable session.');
+        setPickerStatus(null);
+        return;
+      }
+      setPickerSession(session);
+      setGpItems([]);
+      setGpNext(null);
+      const pickerUri = session.pickerUri;
+      if (pickerUri) {
+        const autocloseUri = pickerUri.endsWith('/autoclose')
+          ? pickerUri
+          : `${pickerUri.replace(/\/$/, '')}/autoclose`;
+        if (pickerWindow) {
+          pickerWindow.location.href = autocloseUri;
+        } else {
+          window.open(
+            autocloseUri,
+            'durgasos-google-photos-picker',
+            'popup=yes,width=960,height=720'
+          );
+        }
+      } else if (pickerWindow) {
+        pickerWindow.close();
+      }
+      setPickerStatus('Waiting for selection in Google Photos...');
+    } catch (e: unknown) {
+      if (pickerWindow) pickerWindow.close();
+      const msg = e instanceof Error ? e.message : 'Google Photos Picker failed.';
+      setGoogleError(msg);
+      setPickerStatus(null);
+    } finally {
+      setGoogleBusy(false);
+    }
+  }, [googleAccessToken, googlePhotosReady, authed, hasGooglePhotosPickerScope, client]);
+
+  useEffect(() => {
+    if (
+      sourceTab !== 'google' ||
+      !googleAccessToken ||
+      !googlePhotosReady ||
+      !pickerSession?.id ||
+      pickerSession.mediaItemsSet
+    ) {
+      return;
+    }
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const started = Date.now();
+
+    const poll = async () => {
+      try {
+        const { data } = await client.query({
+          query: GOOGLE_PHOTOS_PICKER_GET,
+          variables: {
+            params: { access_token: googleAccessToken, session_id: pickerSession.id },
+          },
+          fetchPolicy: 'network-only',
+        });
+        if (cancelled) return;
+        const payload = data?.googlePhotosPickerGet as GooglePhotosPickerSessionPayload | undefined;
+        const nextSession = parsePickerSession(payload?.session);
+        if (nextSession) setPickerSession(nextSession);
+        if (nextSession?.mediaItemsSet) {
+          setPickerStatus('Loading selected media...');
+          await loadPickedGooglePhotos(nextSession.id);
+          if (!cancelled) setView('face');
+          return;
+        }
+        const timeoutSec = secondsFromGoogleDuration(
+          nextSession?.pollingConfig?.timeoutIn ?? pickerSession.pollingConfig?.timeoutIn,
+          300
+        );
+        if (Date.now() - started > timeoutSec * 1000) {
+          setPickerStatus('Picker session timed out. Start a new selection.');
+          return;
+        }
+        const intervalSec = secondsFromGoogleDuration(
+          nextSession?.pollingConfig?.pollInterval ?? pickerSession.pollingConfig?.pollInterval,
+          3
+        );
+        timer = setTimeout(poll, Math.max(1000, intervalSec * 1000));
+      } catch (e: unknown) {
+        if (cancelled) return;
+        const msg = e instanceof Error ? e.message : 'Could not poll Google Photos Picker.';
+        setGoogleError(msg);
+        setPickerStatus(null);
+      }
+    };
+
+    timer = setTimeout(poll, 1000);
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [
+    sourceTab,
+    googleAccessToken,
+    googlePhotosReady,
+    pickerSession?.id,
+    pickerSession?.mediaItemsSet,
+    pickerSession?.pollingConfig?.pollInterval,
+    pickerSession?.pollingConfig?.timeoutIn,
+    client,
+    loadPickedGooglePhotos,
+  ]);
+
   const goToAccountsSettings = useCallback(() => {
     openApp('settings', { settingsTab: 'Accounts' });
   }, [openApp]);
 
   const listError = listQ.error;
-  const gpError = gpQ.error;
 
   const tabBtn =
     'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors border border-transparent';
@@ -664,18 +915,19 @@ export function GalleryApp() {
               Loading linked accounts…
             </p>
           ) : linkedAccounts.length === 0 ? (
-            <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-6">
-              <p className="max-w-md text-center text-sm text-slate-400">
-                No Google accounts linked. Add one in Settings → Accounts (Photos read-only), then
-                open Gallery again.
+            <div className="flex min-h-0 flex-1 flex-col p-2">
+              <p className="mx-auto mb-2 max-w-lg text-center text-xs text-slate-400">
+                No Google accounts linked. Link a Google account under Settings → Accounts (Photos
+                read-only) to access your media.
               </p>
-              <button
-                type="button"
-                onClick={() => goToAccountsSettings()}
-                className="rounded-full bg-white px-6 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100"
-              >
-                Go to Accounts settings
-              </button>
+              <PortfolioGallery
+                title="Connect Google Photos"
+                primaryCta={{ text: 'Link Google Account' }}
+                images={undefined}
+                onPrimaryClick={goToAccountsSettings}
+                onImageClick={goToAccountsSettings}
+                className="min-h-0 flex-1"
+              />
             </div>
           ) : (
             <>
@@ -748,29 +1000,54 @@ export function GalleryApp() {
                     {googleBusy ? 'Opening Google…' : 'Re-authenticate'}
                   </button>
                 </div>
+              ) : !hasGooglePhotosPickerScope ? (
+                <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-6">
+                  <p className="max-w-md text-center text-sm text-slate-400">
+                    Google Photos now requires Picker permission. Re-authenticate this account to
+                    select media.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={googleBusy || !isFirebaseConfigured()}
+                    onClick={() => void handleGoogleReauth()}
+                    className="rounded-full bg-white px-6 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {googleBusy ? 'Opening Google...' : 'Re-authenticate'}
+                  </button>
+                </div>
               ) : view === 'face' ? (
                 <div className="flex min-h-0 flex-1 flex-col p-2">
-                  <div className="mx-auto mb-2 max-w-4xl px-1">
+                  <div className="mx-auto mb-2 flex w-full max-w-4xl items-center gap-2 px-1">
                     <p className="text-xs text-slate-500">
-                      Using linked account · URLs expire (~60m); use Re-authenticate in Settings if
-                      previews break.
+                      Using Google Photos Picker - selected media URLs expire.
                     </p>
+                    {gpItems.length > 0 ? (
+                      <button
+                        type="button"
+                        disabled={googleBusy}
+                        onClick={() => void handleStartGooglePicker()}
+                        className="ml-auto rounded-lg border border-white/15 px-2 py-1 text-[11px] text-slate-300 hover:bg-white/10 disabled:opacity-50"
+                      >
+                        Choose again
+                      </button>
+                    ) : null}
                   </div>
-                  {authed && gpQ.loading ? (
-                    <p className="mx-auto mb-2 text-center text-xs text-slate-500">
-                      Loading Google Photos…
-                    </p>
-                  ) : null}
-                  {authed && gpError ? (
-                    <p className="mx-auto mb-2 max-w-lg text-center text-xs text-red-300/90">
-                      {gpError.message}
+                  {pickerStatus ? (
+                    <p className="mx-auto mb-2 max-w-lg text-center text-xs text-slate-400">
+                      {pickerStatus}
                     </p>
                   ) : null}
                   <PortfolioGallery
                     title="Google Photos"
-                    primaryCta={{ text: 'Browse library' }}
+                    primaryCta={{ text: gpItems.length > 0 ? 'Browse selected' : 'Choose photos' }}
                     images={googlePreviewImages}
-                    onPrimaryClick={() => setView('bento')}
+                    onPrimaryClick={() => {
+                      if (gpItems.length > 0) {
+                        setView('bento');
+                        return;
+                      }
+                      void handleStartGooglePicker();
+                    }}
                     onImageClick={(index) => {
                       const imgs = googlePreviewImages ?? [];
                       const img = imgs[index];
@@ -801,7 +1078,7 @@ export function GalleryApp() {
                       onBack={() => setView('face')}
                       mediaItems={gpItems}
                       title="Google Photos"
-                      description="From Google Photos Library API · drag tiles to reorder (local only)"
+                      description="Selected in Google Photos Picker - drag tiles to reorder (local only)"
                     />
                   </div>
                 </div>

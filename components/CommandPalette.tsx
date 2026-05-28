@@ -13,6 +13,7 @@ import { useAiChatGateway } from '@/hooks/use-ai-chat-gateway';
 import { useGlobalCommandPaletteShortcut } from '@/hooks/use-command-palette';
 import { useInstalledApps } from '@/hooks/use-installed-apps';
 import { APPS, type AppId } from '@/lib/apps';
+import { swallowStorageError } from '@/lib/safe-client-storage';
 import { cn } from '@/lib/utils';
 import { SHELL_Z } from '@/lib/shell-z-index';
 
@@ -37,8 +38,8 @@ function pushRecent(cmd: string) {
   const next = [t, ...prev].slice(0, 8);
   try {
     window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-  } catch {
-    /* ignore */
+  } catch (err) {
+    swallowStorageError('command-palette.recent', err);
   }
 }
 

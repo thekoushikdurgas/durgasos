@@ -61,7 +61,7 @@ export function VisionApp() {
   }, [paramsJson, run]);
 
   return (
-    <ModuleAppShell title="Vision" subtitle="analyzeImage mutation (JSON params per backend)">
+    <ModuleAppShell>
       <textarea
         value={paramsJson}
         onChange={(e) => setParamsJson(e.target.value)}

@@ -1,55 +1,3 @@
-scalar JSON
-
-"""
-Mirrors Strawberry schema in ai.backend/app/graphql/schema.py (camelCase field names).
-"""
-type Query {
-  me: GqlUser
-  emailRegistered(email: String!): Boolean!
-  chatProviders: JSON
-  chatConversations(limit: Int = 50): JSON
-  chatConversation(conversationId: String!): JSON
-  listAgents: JSON
-  ragDocuments(collectionName: String, limit: Int = 100, offset: Int = 0): JSON
-  ragQuery(query: String!, k: Int = 5, collectionName: String): JSON
-  ragList(collectionName: String, limit: Int = 100, offset: Int = 0): JSON
-  ragStats(collectionName: String): JSON
-  storageList(params: JSON): JSON
-  storageBuckets(params: JSON): JSON
-  googlePhotosList(params: JSON): JSON
-  gmailListMessages(params: JSON): JSON
-  gmailGetMessage(params: JSON): JSON
-  gmailListThreads(params: JSON): JSON
-  gmailGetThread(params: JSON): JSON
-  googleCalendarListEvents(params: JSON): JSON
-  googlePeopleListContacts(params: JSON): JSON
-  googleDriveListFiles(params: JSON): JSON
-  googleTasksListTasklists(params: JSON): JSON
-  googleTasksEnsureKanbanLists(params: JSON): JSON
-  googleTasksListTasks(params: JSON): JSON
-  metricsSummary(params: JSON): JSON
-  metricsProviders(params: JSON): JSON
-  metricsCouncil(params: JSON): JSON
-  listModels(providerName: String!): JSON
-  systemHealth(params: JSON): JSON
-  systemReady(params: JSON): JSON
-  weatherForecast(params: JSON): JSON
-  workflowDefinitions: [WorkflowDefinition!]!
-  workflowRuns(workflowId: String): [WorkflowRun!]!
-  widgetLayout: WidgetLayout
-  installedApps: InstalledApps
-  linkedGoogleAccounts: JSON
-  getLinkedGoogleAccountToken(googleUserId: String!): JSON
-  linkedGithubAccounts: JSON
-  githubUser(username: String!, githubUserId: String): JSON
-  githubRepos(username: String!, sort: String, githubUserId: String): JSON
-  githubStarred(username: String!, githubUserId: String): JSON
-  githubReadme(username: String!, githubUserId: String): JSON
-  todoWorkspaces(googleUserId: String!): [TodoWorkspace!]!
-  todoTasks(workspaceId: String!): [TodoTask!]!
-  jobStatus(jobId: String!): AsyncJobStatus
-}
-
 type AsyncJobStatus {
   jobId: String!
   status: String!
@@ -58,103 +6,19 @@ type AsyncJobStatus {
   updatedAt: Float!
 }
 
-type Mutation {
-  signUp(email: String!, password: String!, metadata: JSON): AuthPayload!
-  signIn(email: String!, password: String!): AuthPayload!
-  refreshSession(refreshToken: String): RefreshPayload!
-
-  chatCompletion(params: JSON!): JSON!
-  deleteConversation(conversationId: String!): JSON!
-
-  analyzeAgent(agentType: String!, pageData: JSON!, query: String, options: JSON): JSON!
-  autoAnalyze(pageData: JSON!, query: String!): JSON!
-  batchAnalyze(params: JSON!): JSON!
-  agentsQuickSeo(params: JSON!): JSON!
-  agentsSummarize(params: JSON!): JSON!
-
-  ragIngest(params: JSON!): JSON!
-  ragDelete(documentId: String!): JSON!
-  ragUpload(params: JSON!): JSON!
-  ragChat(params: JSON!): JSON!
-
-  storageUpload(params: JSON!): JSON!
-  storageDelete(params: JSON!): JSON!
-  storageMove(params: JSON!): JSON!
-  storageMkdir(params: JSON!): JSON!
-  storageGetUrl(params: JSON!): JSON!
-  storageCreateSignedUrl(params: JSON!): JSON!
-  storageBucketsCreate(params: JSON!): JSON!
-  storageBucketsDelete(params: JSON!): JSON!
-
-  analyzeImage(params: JSON!): JSON!
-  visionNvidia(params: JSON!): JSON!
-
-  textToImage(params: JSON!): JSON!
-  imageToText(params: JSON!): JSON!
-  speechToText(params: JSON!): JSON!
-  textToSpeech(params: JSON!): JSON!
-  objectDetection(params: JSON!): JSON!
-
-  runCouncil(params: JSON!): JSON!
-
-  providerChat(providerName: String!, params: JSON!): JSON!
-
-  generateImage(params: JSON!): JSON!
-  generateAudio(params: JSON!): JSON!
-  generateVideo(params: JSON!): JSON!
-  elevenlabsTextToSpeech(params: JSON!): JSON!
-  deepgramTranscribe(params: JSON!): JSON!
-  imagenGenerate(params: JSON!): JSON!
-  veoGenerate(params: JSON!): JSON!
-
-  processNlp(params: JSON!): JSON!
-  scrape(params: JSON!): JSON!
-  runBenchmark(params: JSON!): JSON!
-  batchProcess(params: JSON!): JSON!
-  embeddingsGemini(params: JSON!): JSON!
-  cohereSummarize(params: JSON!): JSON!
-  cohereEmbed(params: JSON!): JSON!
-  cohereClassify(params: JSON!): JSON!
-
-  createWorkflowDefinition(name: String!, spec: JSON!): WorkflowDefinition!
-  startWorkflowRun(workflowId: String!): WorkflowRun!
-  saveWidgetLayout(layoutJson: JSON!): WidgetLayout!
-  saveInstalledApps(appIds: [String!]!): InstalledApps!
-  saveFileAssociations(associations: JSON!): InstalledApps!
-
-  addLinkedGoogleAccount(params: JSON!): JSON!
-  removeLinkedGoogleAccount(googleUserId: String!): JSON!
-  refreshLinkedGoogleAccountToken(
-    googleUserId: String!
-    accessToken: String!
-    expiresAt: Float!
-    scopesGranted: String
-  ): JSON!
-
-  addLinkedGithubAccount(params: JSON!): JSON!
-  removeLinkedGithubAccount(githubUserId: String!): JSON!
-
-  googleTasksInsertTask(params: JSON): JSON!
-  googleTasksUpdateTask(params: JSON): JSON!
-  googleTasksDeleteTask(params: JSON): JSON!
-  googleTasksMoveTask(params: JSON): JSON!
-
-  createTodoWorkspace(googleUserId: String!, name: String!, params: JSON): TodoWorkspace!
-  renameTodoWorkspace(workspaceId: String!, name: String!): TodoWorkspace!
-  deleteTodoWorkspace(workspaceId: String!): Boolean!
-
-  createTodoTask(workspaceId: String!, column: String!, title: String!): TodoTask!
-  moveTodoTask(taskId: String!, column: String!, previousTaskId: String): TodoTask!
-  deleteTodoTask(taskId: String!): Boolean!
+type AuthPayload {
+  success: Boolean!
+  requiresConfirmation: Boolean!
+  user: GqlUser
+  session: GqlSession
 }
 
-type GqlUserProfile {
-  username: String
-  avatarUrl: String
-  bio: String
-  preferences: JSON
-  createdAt: String
-  updatedAt: String
+type GqlSession {
+  accessToken: String!
+  refreshToken: String!
+  expiresIn: Int!
+  expiresAt: Float
+  tokenType: String!
 }
 
 type GqlUser {
@@ -169,19 +33,173 @@ type GqlUser {
   profile: GqlUserProfile
 }
 
-type GqlSession {
-  accessToken: String!
-  refreshToken: String!
-  expiresIn: Int!
-  expiresAt: Float
-  tokenType: String!
+type GqlUserProfile {
+  username: String
+  avatarUrl: String
+  bio: String
+  preferences: JSON
+  createdAt: String
+  updatedAt: String
 }
 
-type AuthPayload {
-  success: Boolean!
-  requiresConfirmation: Boolean!
-  user: GqlUser
-  session: GqlSession
+type InstalledApps {
+  id: ID!
+  ownerId: String!
+  appIds: [String!]!
+  fileAssociations: JSON!
+  updatedAt: String!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
+"""
+scalar JSON
+  @specifiedBy(
+    url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf"
+  )
+
+type Mutation {
+  signUp(email: String!, password: String!, metadata: JSON = null): AuthPayload!
+  signIn(email: String!, password: String!): AuthPayload!
+  refreshSession(refreshToken: String = null): RefreshPayload!
+  establishSession(
+    accessToken: String!
+    refreshToken: String!
+    expiresIn: Int = null
+  ): SessionCookieMutationResult!
+  clearSession: SessionCookieMutationResult!
+  chatCompletion(params: JSON!): JSON!
+  deleteConversation(conversationId: String!): JSON!
+  analyzeAgent(
+    agentType: String!
+    pageData: JSON!
+    query: String = null
+    options: JSON = null
+  ): JSON!
+  autoAnalyze(pageData: JSON!, query: String!): JSON!
+  batchAnalyze(params: JSON!): JSON!
+  agentsQuickSeo(params: JSON!): JSON!
+  agentsSummarize(params: JSON!): JSON!
+  ragIngest(params: JSON!): JSON!
+  ragDelete(documentId: String!): JSON!
+  ragUpload(params: JSON!): JSON!
+  ragChat(params: JSON!): JSON!
+  storageUpload(params: JSON!): JSON!
+  storageDelete(params: JSON!): JSON!
+  storageMove(params: JSON!): JSON!
+  storageMkdir(params: JSON!): JSON!
+  storageGetUrl(params: JSON!): JSON!
+  storageCreateSignedUrl(params: JSON!): JSON!
+  storageBucketsCreate(params: JSON!): JSON!
+  storageBucketsDelete(params: JSON!): JSON!
+  analyzeImage(params: JSON!): JSON!
+  visionNvidia(params: JSON!): JSON!
+  textToImage(params: JSON!): JSON!
+  imageToText(params: JSON!): JSON!
+  speechToText(params: JSON!): JSON!
+  textToSpeech(params: JSON!): JSON!
+  objectDetection(params: JSON!): JSON!
+  runCouncil(params: JSON!): JSON!
+  providerChat(providerName: String!, params: JSON!): JSON!
+  generateImage(params: JSON!): JSON!
+  generateAudio(params: JSON!): JSON!
+  generateVideo(params: JSON!): JSON!
+  elevenlabsTextToSpeech(params: JSON!): JSON!
+  deepgramTranscribe(params: JSON!): JSON!
+  imagenGenerate(params: JSON!): JSON!
+  veoGenerate(params: JSON!): JSON!
+  processNlp(params: JSON!): JSON!
+  scrape(params: JSON!): JSON!
+  runBenchmark(params: JSON!): JSON!
+  batchProcess(params: JSON!): JSON!
+  embeddingsGemini(params: JSON!): JSON!
+  cohereSummarize(params: JSON!): JSON!
+  cohereEmbed(params: JSON!): JSON!
+  cohereClassify(params: JSON!): JSON!
+  createWorkflowDefinition(name: String!, spec: JSON!): WorkflowDefinition!
+  startWorkflowRun(workflowId: String!): WorkflowRun!
+  saveWidgetLayout(layoutJson: JSON!): WidgetLayout!
+  saveInstalledApps(appIds: [String!]!): InstalledApps!
+  saveFileAssociations(associations: JSON!): InstalledApps!
+  addLinkedGoogleAccount(params: JSON!): JSON!
+  removeLinkedGoogleAccount(googleUserId: String!): JSON!
+  refreshLinkedGoogleAccountToken(
+    googleUserId: String!
+    accessToken: String!
+    expiresAt: Float!
+    scopesGranted: String = null
+  ): JSON!
+  addLinkedGithubAccount(params: JSON!): JSON!
+  removeLinkedGithubAccount(githubUserId: String!): JSON!
+  updateAiProviderSettings(updates: JSON!): JSON!
+  googleTasksInsertTask(params: JSON = null): JSON!
+  googleTasksUpdateTask(params: JSON = null): JSON!
+  googleTasksDeleteTask(params: JSON = null): JSON!
+  googleTasksMoveTask(params: JSON = null): JSON!
+  createTodoWorkspace(googleUserId: String!, name: String!, params: JSON = null): TodoWorkspace!
+  renameTodoWorkspace(workspaceId: String!, name: String!): TodoWorkspace!
+  deleteTodoWorkspace(workspaceId: String!): Boolean!
+  createTodoTask(workspaceId: String!, column: String!, title: String!): TodoTask!
+  moveTodoTask(taskId: String!, column: String!, previousTaskId: String = null): TodoTask!
+  deleteTodoTask(taskId: String!): Boolean!
+  createTodoComment(taskId: String!, content: String!): TodoComment!
+  deleteTodoComment(commentId: String!): Boolean!
+}
+
+type Query {
+  me: GqlUser
+  emailRegistered(email: String!): Boolean!
+  chatProviders: JSON!
+  chatConversations(limit: Int! = 50): JSON!
+  chatConversation(conversationId: String!): JSON!
+  listAgents: JSON!
+  ragDocuments(collectionName: String = null, limit: Int! = 100, offset: Int! = 0): JSON!
+  ragQuery(query: String!, k: Int! = 5, collectionName: String = null): JSON!
+  ragList(collectionName: String = null, limit: Int! = 100, offset: Int! = 0): JSON!
+  ragStats(collectionName: String = null): JSON!
+  storageSignedHttpUrl(bucket: String!, filePath: String!, expiresIn: Int! = 3600): String
+  storageList(params: JSON = null): JSON!
+  storageBuckets(params: JSON = null): JSON!
+  googlePhotosList(params: JSON = null): JSON!
+  googlePhotosPickerCreate(params: JSON = null): JSON!
+  googlePhotosPickerGet(params: JSON = null): JSON!
+  googlePhotosPickerList(params: JSON = null): JSON!
+  gmailListMessages(params: JSON = null): JSON!
+  gmailGetMessage(params: JSON = null): JSON!
+  gmailListThreads(params: JSON = null): JSON!
+  gmailGetThread(params: JSON = null): JSON!
+  googleCalendarListEvents(params: JSON = null): JSON!
+  googlePeopleListContacts(params: JSON = null): JSON!
+  googleDriveListFiles(params: JSON = null): JSON!
+  googleTasksListTasklists(params: JSON = null): JSON!
+  googleTasksEnsureKanbanLists(params: JSON = null): JSON!
+  googleTasksListTasks(params: JSON = null): JSON!
+  todoWorkspaces(googleUserId: String!): [TodoWorkspace!]!
+  todoTasks(workspaceId: String!): [TodoTask!]!
+  todoComments(taskId: String!): [TodoComment!]!
+  metricsSummary(params: JSON = null): JSON!
+  metricsProviders(params: JSON = null): JSON!
+  metricsCouncil(params: JSON = null): JSON!
+  listModels(providerName: String!): JSON!
+  systemHealth(params: JSON = null): JSON!
+  systemReady(params: JSON = null): JSON!
+  websocketGatewayStatus: JSON!
+  apiDiscovery: JSON!
+  hostStats: JSON!
+  weatherForecast(params: JSON = null): JSON!
+  workflowDefinitions: [WorkflowDefinition!]!
+  workflowRuns(workflowId: String = null): [WorkflowRun!]!
+  widgetLayout: WidgetLayout
+  installedApps: InstalledApps
+  linkedGoogleAccounts: JSON!
+  getLinkedGoogleAccountToken(googleUserId: String!): JSON!
+  linkedGithubAccounts: JSON!
+  githubUser(username: String!, githubUserId: String = null): JSON!
+  githubRepos(username: String!, sort: String = null, githubUserId: String = null): JSON!
+  githubStarred(username: String!, githubUserId: String = null): JSON!
+  githubReadme(username: String!, githubUserId: String = null): JSON!
+  aiProviderSettings: JSON!
+  jobStatus(jobId: String!): AsyncJobStatus
 }
 
 type RefreshPayload {
@@ -189,11 +207,26 @@ type RefreshPayload {
   session: GqlSession
 }
 
-type WorkflowDefinition {
+type SessionCookieMutationResult {
+  ok: Boolean!
+  error: String
+}
+
+type TodoComment {
   id: ID!
-  name: String!
-  ownerId: String
-  spec: JSON!
+  taskId: String!
+  ownerId: String!
+  content: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type TodoTask {
+  id: ID!
+  title: String!
+  column: String!
+  sortOrder: Float!
+  workspaceId: ID!
   createdAt: String!
   updatedAt: String!
 }
@@ -211,12 +244,18 @@ type TodoWorkspace {
   updatedAt: String!
 }
 
-type TodoTask {
+type WidgetLayout {
   id: ID!
-  title: String!
-  column: String!
-  sortOrder: Float!
-  workspaceId: ID!
+  ownerId: String!
+  layoutJson: JSON!
+  updatedAt: String!
+}
+
+type WorkflowDefinition {
+  id: ID!
+  name: String!
+  ownerId: String
+  spec: JSON!
   createdAt: String!
   updatedAt: String!
 }
@@ -227,20 +266,5 @@ type WorkflowRun {
   ownerId: String
   status: String!
   createdAt: String!
-  updatedAt: String!
-}
-
-type WidgetLayout {
-  id: ID!
-  ownerId: String!
-  layoutJson: JSON!
-  updatedAt: String!
-}
-
-type InstalledApps {
-  id: ID!
-  ownerId: String!
-  appIds: [String!]!
-  fileAssociations: JSON
   updatedAt: String!
 }

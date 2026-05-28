@@ -1,0 +1,382 @@
+/* Road Rash — 3D arcade cockpit theme (scoped under .rr-shell) */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@500;600;700&display=swap');
+
+.rr-shell {
+  font-family: 'Rajdhani', system-ui, sans-serif;
+  --rr-depth-1: 4px;
+  --rr-depth-2: 8px;
+  --rr-depth-3: 14px;
+  --rr-asphalt: #0f172a;
+  --rr-asphalt-mid: #1e293b;
+  --rr-accent-rose: #f43f5e;
+  --rr-accent-amber: #f59e0b;
+  --rr-bevel-light: rgba(255, 255, 255, 0.12);
+  --rr-bevel-dark: rgba(0, 0, 0, 0.45);
+  perspective: 1200px;
+}
+
+.rr-parallax-bg {
+  background:
+    linear-gradient(180deg, rgba(30, 27, 75, 0.9) 0%, transparent 40%),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 80px,
+      rgba(255, 255, 255, 0.02) 80px,
+      rgba(255, 255, 255, 0.02) 82px
+    ),
+    linear-gradient(180deg, #1e1b4b 0%, var(--rr-asphalt) 45%, #0c4a6e 100%);
+  background-size:
+    100% 100%,
+    100% 100%,
+    100% 200%;
+  animation: rr-road-drift 24s linear infinite;
+}
+
+.rr-hub-main {
+  position: relative;
+}
+
+.rr-menu-hero {
+  padding: 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  background: linear-gradient(
+    135deg,
+    rgba(190, 24, 93, 0.2) 0%,
+    rgba(15, 23, 42, 0.85) 45%,
+    rgba(180, 83, 9, 0.15) 100%
+  );
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.rr-arcade-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(0.65rem, 2vw, 0.85rem);
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  background: linear-gradient(90deg, #fda4af, #fbbf24, #fb923c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+}
+
+.rr-btn-arcade {
+  background: linear-gradient(180deg, #ff7373 0%, #e11d48 100%) !important;
+  border: none !important;
+  box-shadow: 0 5px 0 #9f1239 !important;
+  border-radius: 8px !important;
+  font-family: 'Rajdhani', sans-serif !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.rr-btn-arcade:active:not(:disabled) {
+  transform: translateY(4px) !important;
+  box-shadow: 0 1px 0 #9f1239 !important;
+}
+
+@keyframes rr-road-drift {
+  0% {
+    background-position: 0% 0%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rr-parallax-bg {
+    animation: none;
+  }
+
+  .rr-btn-3d:active {
+    transform: none;
+  }
+
+  .rr-card-3d:hover {
+    transform: none;
+  }
+}
+
+.rr-panel-3d {
+  transform-style: preserve-3d;
+  box-shadow:
+    inset 0 1px 0 var(--rr-bevel-light),
+    0 var(--rr-depth-2) var(--rr-depth-3) var(--rr-bevel-dark);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rr-card-3d {
+  transform-style: preserve-3d;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.rr-card-3d:hover {
+  transform: rotateX(2deg) translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 var(--rr-bevel-light),
+    0 12px 28px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(244, 63, 94, 0.15);
+}
+
+.rr-card-3d.rr-card-selected {
+  transform: rotateX(1deg) scale(1.02);
+  box-shadow:
+    inset 0 1px 0 var(--rr-bevel-light),
+    0 0 0 2px rgba(244, 63, 94, 0.5),
+    0 16px 32px rgba(244, 63, 94, 0.2);
+}
+
+.rr-btn-3d {
+  box-shadow:
+    0 var(--rr-depth-1) 0 var(--rr-bevel-dark),
+    inset 0 1px 0 var(--rr-bevel-light);
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.rr-btn-3d:active:not(:disabled) {
+  transform: translateY(var(--rr-depth-1));
+  box-shadow:
+    0 1px 0 var(--rr-bevel-dark),
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.rr-sidebar-nav:focus-visible {
+  outline: 2px solid var(--rr-accent-rose);
+  outline-offset: 2px;
+}
+
+/* In-race viewport + cockpit HUD */
+.rr-game-viewport {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(ellipse at 50% 100%, #1e293b 0%, #020617 70%);
+  overflow: hidden;
+}
+
+.rr-game-viewport canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+}
+
+.rr-shell-header--racing {
+  height: 2.75rem !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.75)) !important;
+  border-bottom-color: rgba(244, 63, 94, 0.25) !important;
+}
+
+.rr-shell-header--racing h1 {
+  font-size: 0.8rem !important;
+  letter-spacing: 0.12em !important;
+}
+
+.rr-game-vignette {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  box-shadow:
+    inset 0 0 120px rgba(0, 0, 0, 0.65),
+    inset 0 24px 48px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.35) 0%,
+    transparent 22%,
+    transparent 78%,
+    rgba(2, 6, 23, 0.5) 100%
+  );
+}
+
+.rr-hud-cockpit {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.75rem 1rem 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.rr-hud-cockpit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 2px solid rgba(244, 63, 94, 0.15);
+  border-radius: 2px;
+  margin: 0.35rem;
+}
+
+.rr-hud-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.rr-hud-speedo {
+  min-width: 11rem;
+  padding: 0.75rem 1rem 0.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.75));
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 24px rgba(244, 63, 94, 0.12);
+}
+
+.rr-hud-speedo-label {
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(244, 63, 94, 0.9);
+  margin-bottom: 0.25rem;
+}
+
+.rr-hud-stats {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.rr-hud-stat {
+  min-width: 5.5rem;
+  padding: 0.65rem 1rem;
+  text-align: center;
+  border-radius: 0.875rem;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.7));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.rr-hud-stat-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.rr-hud-stat-value {
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1.2;
+  margin-top: 0.15rem;
+}
+
+.rr-hud-stat-value--time {
+  color: #34d399;
+  text-shadow: 0 0 12px rgba(52, 211, 153, 0.45);
+}
+
+.rr-hud-stat-value--rank {
+  color: #fbbf24;
+  text-shadow: 0 0 12px rgba(251, 191, 36, 0.35);
+}
+
+.rr-hud-bottom {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.rr-hud-bars {
+  flex: 1;
+  display: flex;
+  gap: 0.75rem;
+  max-width: 28rem;
+}
+
+.rr-hud-bar-panel {
+  flex: 1;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.875rem;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.72));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.rr-hud-retreat {
+  pointer-events: auto;
+  flex-shrink: 0;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  background: linear-gradient(180deg, #b91c1c, #7f1d1d);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #fff;
+  box-shadow:
+    0 6px 0 #450a0a,
+    0 8px 24px rgba(0, 0, 0, 0.4);
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.rr-hud-retreat:hover {
+  background: linear-gradient(180deg, #dc2626, #991b1b);
+}
+
+.rr-hud-retreat:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 2px 0 #450a0a,
+    0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.rr-countdown-overlay {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.75));
+}
+
+.rr-countdown-digit {
+  font-size: clamp(4rem, 18vw, 7rem);
+  font-weight: 900;
+  color: #f43f5e;
+  text-shadow:
+    0 0 40px rgba(244, 63, 94, 0.8),
+    0 4px 0 #881337,
+    0 8px 24px rgba(0, 0, 0, 0.6);
+  animation: rr-countdown-pulse 0.65s ease-out;
+}
+
+@keyframes rr-countdown-pulse {
+  0% {
+    transform: scale(1.4);
+    opacity: 0.3;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

@@ -7,9 +7,14 @@ export function googleScopeBadgeLabels(scopesGranted: string | null | undefined)
     if (!part) continue;
     const suf = part.split('/').pop() ?? part;
     const base = suf.replace('.readonly', '');
-    const key = base.includes('.') ? (base.split('.').pop() ?? base) : base;
+    const key = base.startsWith('photospicker.')
+      ? 'photospicker'
+      : base.includes('.')
+        ? (base.split('.').pop() ?? base)
+        : base;
     const map: Record<string, string> = {
       photoslibrary: 'Photos',
+      photospicker: 'Photos',
       gmail: 'Gmail',
       calendar: 'Calendar',
       contacts: 'Contacts',

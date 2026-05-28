@@ -358,6 +358,25 @@ const MOCK_TREE: Record<string, MockFsEntry[]> = {
 
 /** Cloud-backed folder under This PC — listing is driven by storage API in FileExplorer. */
 export function isUserStoragePath(segments: PathSegments): boolean {
+  if (typeof window !== 'undefined') {
+    const auth =
+      window.localStorage.getItem('durgasos_auth_access') ||
+      window.sessionStorage.getItem('durgasos_ss_auth_access');
+    if (auth) {
+      if (segments.length >= 2 && segments[0] === 'This PC') {
+        const folder = segments[1];
+        return (
+          folder === 'My Storage' ||
+          folder === 'Documents' ||
+          folder === 'Pictures' ||
+          folder === 'Downloads' ||
+          folder === 'Music' ||
+          folder === 'Videos'
+        );
+      }
+      return false;
+    }
+  }
   return segments.length >= 2 && segments[0] === 'This PC' && segments[1] === 'My Storage';
 }
 

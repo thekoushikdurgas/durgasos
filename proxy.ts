@@ -4,8 +4,16 @@ import { ACCESS_TOKEN_COOKIE } from '@/lib/auth-cookies';
 
 const PUBLIC_FILES = ['/favicon.ico'];
 
+/**
+ * Routes that must work before an access-token cookie exists (welcome sign-in/up).
+ * Without `/api/graphql`, Apollo auth calls are redirected to `/` (HTML), which breaks
+ * login and looks like a page reload.
+ */
 function sessionOptionalPath(pathname: string): boolean {
-  return pathname === '/' || pathname === '/api/auth/session';
+  if (pathname === '/') return true;
+  if (pathname === '/api/graphql') return true;
+  if (pathname.startsWith('/api/auth/session')) return true;
+  return false;
 }
 
 export function proxy(request: NextRequest) {

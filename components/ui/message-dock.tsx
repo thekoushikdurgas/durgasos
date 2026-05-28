@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils';
 import { Presence } from '@/components/motion/PresenceList';
 import { SpringBox } from '@/components/motion/SpringBox';
+import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { overlaySpring, pressSpring } from '@/lib/motion/spring-presets';
 import { useReducedMotionStyle } from '@/lib/motion/use-reduced-motion-style';
 import { usePrefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
@@ -122,7 +123,7 @@ function CharacterDockAvatar({
           !isExpanded && 'hover:-translate-y-1.5 hover:scale-110',
           isSelected && isExpanded
             ? 'bg-white/90 ring-2 ring-white/40'
-            : (character.backgroundColor ?? 'bg-white/15 ring-1 ring-white/15')
+            : (character.backgroundColor ?? 'bg-white/10 ring-1 ring-white/20')
         )}
         onClick={onClick}
         aria-label={`Message ${character.name}`}
@@ -247,18 +248,15 @@ export function MessageDock({
         : 'fixed bottom-6 left-1/2 z-[55] -translate-x-1/2'
       : 'relative z-[55]';
 
-  const shellBorder = isDark ? 'border-white/20' : 'border-gray-200/50';
   const sepClass = isDark ? 'bg-white/15' : 'bg-gray-300';
   const ink = isDark ? 'text-slate-100' : 'text-gray-700';
   const mutedInk = isDark ? 'text-slate-400' : 'text-gray-600';
   const strokeIcon = isDark ? 'text-slate-300' : 'text-gray-600';
 
-  const collapsedBg = isDark ? 'rgba(15, 23, 42, 0.72)' : '#ffffff';
-
   const shellBackground =
     isExpanded && selectedCharacter
       ? `linear-gradient(to right, ${getGradientColors(selectedCharacter)})`
-      : collapsedBg;
+      : undefined;
 
   return (
     <SpringBox
@@ -274,19 +272,23 @@ export function MessageDock({
     >
       <div ref={dockRef}>
         <SpringBox
-          className={cn(
-            'rounded-full px-3 py-2 shadow-2xl backdrop-blur-md transition-[background] duration-200',
-            shellBorder,
-            'border bg-white/10',
-            !isExpanded && 'w-fit'
-          )}
+          className={cn('rounded-[50px]', !isExpanded && 'w-fit')}
           style={shellWidthStyle}
           mapStyle={(s) => ({
             width: isExpanded ? s.width : 'fit-content',
-            background: shellBackground,
           })}
         >
-          <div className="relative flex items-center gap-2">
+          <LiquidGlassSurface
+            variant="liquid"
+            className={cn(
+              'h-fit shrink-0 rounded-[50px] border border-white/20 px-[10px] transition-[background] duration-200',
+              !isExpanded && 'w-fit',
+              isExpanded && 'w-full min-w-0'
+            )}
+            style={shellBackground ? { background: shellBackground } : undefined}
+            liquidFrostStyle={shellBackground ? { background: 'transparent' } : undefined}
+            contentClassName="relative flex flex-row flex-nowrap items-center justify-center gap-[5px] py-[5px]"
+          >
             {showSparkleButton && (
               <div
                 className={cn(
@@ -308,30 +310,32 @@ export function MessageDock({
 
             <div
               className={cn(
-                '-ml-2 mr-2 h-6 w-px origin-center transition-all duration-200',
+                'mx-0.5 h-10 w-px shrink-0 origin-center transition-all duration-200',
                 sepClass,
-                isExpanded ? 'scale-y-0 opacity-0' : 'scale-y-100 opacity-100'
+                isExpanded ? 'scale-x-0 opacity-0' : 'scale-x-100 opacity-100'
               )}
               aria-hidden
             />
 
-            {characters.map((character, index) => {
-              const isSelected = expandedCharacter === index;
+            <div className="flex flex-row flex-nowrap items-center justify-center gap-[5px]">
+              {characters.map((character, index) => {
+                const isSelected = expandedCharacter === index;
 
-              return (
-                <CharacterDockAvatar
-                  key={character.id ?? `${character.name}-${index}`}
-                  character={character}
-                  index={index}
-                  isExpanded={isExpanded}
-                  isSelected={isSelected}
-                  onClick={() => handleCharacterClick(index)}
-                  buttonRef={(el) => {
-                    characterButtonRefs.current[index] = el;
-                  }}
-                />
-              );
-            })}
+                return (
+                  <CharacterDockAvatar
+                    key={character.id ?? `${character.name}-${index}`}
+                    character={character}
+                    index={index}
+                    isExpanded={isExpanded}
+                    isSelected={isSelected}
+                    onClick={() => handleCharacterClick(index)}
+                    buttonRef={(el) => {
+                      characterButtonRefs.current[index] = el;
+                    }}
+                  />
+                );
+              })}
+            </div>
 
             <Presence show={isExpanded} presenceKey="dock-input">
               <input
@@ -361,9 +365,9 @@ export function MessageDock({
 
             <div
               className={cn(
-                '-mr-2 ml-2 h-6 w-px origin-center transition-all duration-200',
+                'mx-0.5 h-10 w-px shrink-0 origin-center transition-all duration-200',
                 sepClass,
-                isExpanded ? 'scale-y-0 opacity-0' : 'scale-y-100 opacity-100'
+                isExpanded ? 'scale-x-0 opacity-0' : 'scale-x-100 opacity-100'
               )}
               aria-hidden
             />
@@ -422,7 +426,7 @@ export function MessageDock({
                 </Presence>
               </div>
             )}
-          </div>
+          </LiquidGlassSurface>
         </SpringBox>
       </div>
     </SpringBox>

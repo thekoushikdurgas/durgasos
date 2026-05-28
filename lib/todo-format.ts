@@ -1,3 +1,5 @@
+import { swallowStorageError } from '@/lib/safe-client-storage';
+
 export type TodoColumn = 'backlog' | 'todo' | 'doing' | 'done';
 
 export const TODO_COLUMNS: readonly TodoColumn[] = ['backlog', 'todo', 'doing', 'done'] as const;
@@ -42,8 +44,8 @@ export function writeTodoAccountPicker(googleUserId: string | null) {
   try {
     if (googleUserId) window.localStorage.setItem(TODO_ACCOUNT_PICKER_KEY, googleUserId);
     else window.localStorage.removeItem(TODO_ACCOUNT_PICKER_KEY);
-  } catch {
-    /* ignore */
+  } catch (err) {
+    swallowStorageError('todo-format.writeAccountPicker', err);
   }
 }
 

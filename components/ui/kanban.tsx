@@ -21,6 +21,8 @@ export type KanbanProps = {
   onAddCard: (column: TodoColumn, title: string) => void | Promise<void>;
   onDeleteCard: (card: TodoCard) => void | Promise<void>;
   disabled?: boolean;
+  onCardClick?: (card: TodoCard) => void;
+  selectedCardId?: string | null;
 };
 
 export function Kanban({
@@ -30,6 +32,8 @@ export function Kanban({
   onAddCard,
   onDeleteCard,
   disabled = false,
+  onCardClick,
+  selectedCardId = null,
 }: KanbanProps) {
   return (
     <div className={cn('flex h-full min-h-0 w-full flex-col bg-slate-950 text-white/90')}>
@@ -40,6 +44,8 @@ export function Kanban({
         onAddCard={onAddCard}
         onDeleteCard={onDeleteCard}
         disabled={disabled}
+        onCardClick={onCardClick}
+        selectedCardId={selectedCardId}
       />
     </div>
   );
@@ -54,6 +60,8 @@ const Board = ({
   onAddCard,
   onDeleteCard,
   disabled,
+  onCardClick,
+  selectedCardId,
 }: BoardProps) => {
   return (
     <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto overflow-y-hidden p-4 md:p-8">
@@ -68,6 +76,8 @@ const Board = ({
           onCardsChange={onCardsChange}
           onAddCard={onAddCard}
           disabled={disabled}
+          onCardClick={onCardClick}
+          selectedCardId={selectedCardId}
         />
       ))}
       <BurnBarrel cards={cards} onDeleteCard={onDeleteCard} disabled={disabled} />
@@ -84,6 +94,8 @@ type ColumnProps = {
   onCardsChange: (next: TodoCard[], movedCardId: string) => void | Promise<void>;
   onAddCard: (column: TodoColumn, title: string) => void | Promise<void>;
   disabled?: boolean;
+  onCardClick?: (card: TodoCard) => void;
+  selectedCardId?: string | null;
 };
 
 const Column = ({
@@ -95,6 +107,8 @@ const Column = ({
   onCardsChange,
   onAddCard,
   disabled,
+  onCardClick,
+  selectedCardId,
 }: ColumnProps) => {
   const [active, setActive] = useState(false);
 
@@ -193,7 +207,14 @@ const Column = ({
           <AnimatePresence mode="popLayout">
             {filteredCards.map((c) => {
               return (
-                <Card key={c.id} card={c} handleDragStart={handleDragStart} disabled={disabled} />
+                <Card
+                  key={c.id}
+                  card={c}
+                  handleDragStart={handleDragStart}
+                  disabled={disabled}
+                  onClick={onCardClick}
+                  selected={c.id === selectedCardId}
+                />
               );
             })}
           </AnimatePresence>
@@ -209,9 +230,11 @@ type CardProps = {
   card: TodoCard;
   handleDragStart: (e: DragEvent<HTMLDivElement>, card: TodoCard) => void;
   disabled?: boolean;
+  onClick?: (card: TodoCard) => void;
+  selected?: boolean;
 };
 
-const Card = ({ card, handleDragStart, disabled }: CardProps) => {
+const Card = ({ card, handleDragStart, disabled, onClick, selected }: CardProps) => {
   const { title, id, column } = card;
   return (
     <>
@@ -225,8 +248,12 @@ const Card = ({ card, handleDragStart, disabled }: CardProps) => {
         draggable={!disabled}
         onDragStart={(e) => handleDragStart(e as unknown as DragEvent<HTMLDivElement>, card)}
         onDragOver={(e) => e.preventDefault()}
+        onClick={() => !disabled && onClick?.(card)}
         className={cn(
-          'mb-1 cursor-grab rounded-lg border border-white/10 bg-white/5 p-3 active:cursor-grabbing hover:border-white/20 transition-all duration-200 shadow-sm hover:shadow-md',
+          'mb-1 cursor-grab rounded-lg border p-3 active:cursor-grabbing transition-all duration-200 shadow-sm hover:shadow-md',
+          selected
+            ? 'border-violet-500 bg-violet-600/10 shadow-violet-500/15'
+            : 'border-white/10 bg-white/5 hover:border-white/20',
           disabled && 'cursor-not-allowed opacity-60'
         )}
         whileDrag={{

@@ -1,7 +1,7 @@
 {
-  "score": 90,
+  "score": 100,
   "threshold": 80,
-  "passed": 9,
+  "passed": 10,
   "total": 10,
   "checks": [
     {
@@ -34,7 +34,7 @@
     },
     {
       "name": "No committed Next build output",
-      "pass": false
+      "pass": true
     },
     {
       "name": "Package has CI script",
@@ -45,5 +45,5 @@
       "pass": true
     }
   ],
-  "generatedAt": "2026-05-24T06:35:14.522Z"
+  "generatedAt": "2026-05-28T05:06:35.003Z"
 }

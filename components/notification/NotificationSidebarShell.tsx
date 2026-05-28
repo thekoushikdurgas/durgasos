@@ -110,7 +110,7 @@ export function NotificationSidebarShell({
       >
         <ul className="flex h-full min-h-0 flex-col text-slate-400">
           <div className="flex h-[54px] w-full shrink-0 items-center border-b border-white/10 p-2">
-            <div className="flex w-full items-center gap-1">
+            <div className="flex w-full items-center gap-1 justify-between">
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button

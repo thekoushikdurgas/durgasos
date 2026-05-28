@@ -6,7 +6,7 @@ import { WidgetLayoutProvider } from '@/hooks/use-widget-layout';
 import { InstalledAppsProvider } from '@/hooks/use-installed-apps';
 import { OsLogsProvider } from '@/hooks/use-os-logs';
 import { NotificationsProvider } from '@/hooks/use-notifications';
-import { TopBar } from '@/components/TopBar';
+import { BottomMenuBar } from '@/components/BottomMenuBar';
 import { Dock } from '@/components/Dock';
 import { Launcher } from '@/components/Launcher';
 import { NotificationCenter } from '@/components/NotificationCenter';
@@ -83,10 +83,6 @@ export default function Home({ params, searchParams }: HomePageProps) {
                 <DesktopNoticeHost />
                 <WsPushNotificationBridge />
                 <GlobalShellContextMenu>
-                  <header className="relative z-[100] w-full shrink-0">
-                    <TopBar />
-                  </header>
-
                   <div className="relative z-10 flex h-full min-h-0 w-full flex-1">
                     <WidgetSidebar />
 
@@ -102,6 +98,8 @@ export default function Home({ params, searchParams }: HomePageProps) {
                     <Launcher />
                     <CommandPalette />
                   </div>
+
+                  <BottomMenuBar />
 
                   <Dock />
 

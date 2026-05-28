@@ -2,954 +2,1245 @@
 
 import '@xyflow/react/dist/style.css';
 
-import { useCallback, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, type CSSProperties } from 'react';
 import {
-  addEdge,
   Background,
+  BaseEdge,
   Controls,
+  EdgeLabelRenderer,
   Handle,
-  type Connection,
-  type Edge,
-  type Node,
-  type NodeProps,
   Position,
   ReactFlow,
   ReactFlowProvider,
-  useEdgesState,
-  useNodesState,
-  useOnSelectionChange,
+  getSmoothStepPath,
   useReactFlow,
+  type Connection,
+  type Edge,
+  type EdgeChange,
+  type EdgeProps,
+  type NodeChange,
+  type NodeProps,
 } from '@xyflow/react';
-import { useMutation, useQuery } from '@apollo/client/react';
 import {
-  Brain,
-  Database,
+  Bot,
+  Boxes,
+  CheckCircle2,
+  ChevronDown,
+  Code2,
+  Compass,
+  FileCode2,
+  FileInput,
+  FileSearch,
+  FolderOpen,
   GitBranch,
-  Globe,
-  MessageCircle,
+  Hand,
+  ListRestart,
+  Monitor,
+  Pause,
   Play,
-  Share2,
-  TableProperties,
-  UserCheck,
-  Waypoints,
+  Plus,
+  RefreshCw,
+  Save,
+  SquareTerminal,
+  Square,
+  Trash2,
+  Wand2,
+  X,
+  XCircle,
+  type LucideIcon,
 } from 'lucide-react';
 
-import {
-  CREATE_WORKFLOW_DEFINITION,
-  START_WORKFLOW_RUN,
-  WORKFLOW_DEFINITIONS,
-} from '@/lib/graphql-modules';
-import { useWorkflowRunner } from '@/hooks/use-workflow';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import {
+  ORBIT_NODE_TYPES,
+  ORBIT_TEMPLATES,
+  type OrbitFlowEdge,
+  type OrbitFlowNode,
+  type OrbitLogLine,
+  type OrbitNodeType,
+  type OrbitRunStatus,
+  useOrbitAgentRunner,
+} from '@/hooks/use-orbit-agent-runner';
 
-const SPEC_SCHEMA = 'durgasos.workflow.v1' as const;
+type OrbitUiContextValue = {
+  nodeStatuses: Record<string, OrbitRunStatus>;
+  nodeLogs: Record<string, OrbitLogLine[]>;
+  openLog: (id: string) => void;
+};
 
-export type WfKind =
-  | 'start'
-  | 'end'
-  | 'llm'
-  | 'transform'
-  | 'vectordb'
-  | 'kafka'
-  | 'http'
-  | 'dbquery'
-  | 'branch'
-  | 'human';
+const OrbitUiContext = createContext<OrbitUiContextValue | null>(null);
 
-const PALETTE: { kind: WfKind; label: string; group: string }[] = [
-  { kind: 'start', label: 'Start', group: 'Control' },
-  { kind: 'end', label: 'End', group: 'Control' },
-  { kind: 'llm', label: 'LLM', group: 'AI' },
-  { kind: 'vectordb', label: 'Vector DB', group: 'AI' },
-  { kind: 'transform', label: 'Transform', group: 'Data' },
-  { kind: 'http', label: 'HTTP Request', group: 'Data' },
-  { kind: 'dbquery', label: 'DB Query', group: 'Data' },
-  { kind: 'kafka', label: 'Kafka', group: 'Messaging' },
-  { kind: 'branch', label: 'Branch', group: 'Control' },
-  { kind: 'human', label: 'Human Loop', group: 'Control' },
-];
+function useOrbitUi() {
+  const value = useContext(OrbitUiContext);
+  if (!value) throw new Error('OrbitUiContext missing');
+  return value;
+}
 
-const NODE_META: Record<
-  WfKind,
-  { icon: typeof Brain; color: string; bg: string; subtitle: string }
+const TYPE_META: Record<
+  OrbitNodeType,
+  { icon: LucideIcon; color: string; bg: string; subtitle: string }
 > = {
-  start: { icon: Waypoints, color: 'text-emerald-400', bg: 'bg-emerald-400/10', subtitle: 'Entry' },
-  end: { icon: Waypoints, color: 'text-rose-400', bg: 'bg-rose-400/10', subtitle: 'Exit' },
-  llm: { icon: Brain, color: 'text-fuchsia-400', bg: 'bg-fuchsia-400/10', subtitle: 'LLM' },
-  transform: {
-    icon: GitBranch,
-    color: 'text-orange-400',
-    bg: 'bg-orange-400/10',
-    subtitle: 'Transform',
+  Navigate: {
+    icon: Compass,
+    color: 'text-emerald-500',
+    bg: 'bg-emerald-500/10',
+    subtitle: 'Open URL',
   },
-  vectordb: { icon: Database, color: 'text-cyan-400', bg: 'bg-cyan-400/10', subtitle: 'Vector DB' },
-  kafka: { icon: Share2, color: 'text-emerald-400', bg: 'bg-emerald-400/10', subtitle: 'Stream' },
-  http: { icon: Globe, color: 'text-sky-400', bg: 'bg-sky-400/10', subtitle: 'HTTP' },
-  dbquery: {
-    icon: TableProperties,
-    color: 'text-amber-400',
-    bg: 'bg-amber-400/10',
-    subtitle: 'SQL',
+  Do: { icon: Wand2, color: 'text-blue-500', bg: 'bg-blue-500/10', subtitle: 'Browser action' },
+  Check: { icon: GitBranch, color: 'text-amber-500', bg: 'bg-amber-500/10', subtitle: 'Branch' },
+  Fill: {
+    icon: FileInput,
+    color: 'text-violet-500',
+    bg: 'bg-violet-500/10',
+    subtitle: 'Form fill',
   },
-  branch: {
-    icon: MessageCircle,
-    color: 'text-violet-400',
-    bg: 'bg-violet-400/10',
-    subtitle: 'Branch',
+  Read: { icon: FileSearch, color: 'text-cyan-500', bg: 'bg-cyan-500/10', subtitle: 'Extract' },
+  Code: { icon: Code2, color: 'text-slate-500', bg: 'bg-slate-500/10', subtitle: 'Python' },
+  Agent: { icon: Bot, color: 'text-fuchsia-500', bg: 'bg-fuchsia-500/10', subtitle: 'Custom verb' },
+  ForEach: {
+    icon: ListRestart,
+    color: 'text-orange-500',
+    bg: 'bg-orange-500/10',
+    subtitle: 'Loop',
   },
-  human: { icon: UserCheck, color: 'text-pink-400', bg: 'bg-pink-400/10', subtitle: 'Human loop' },
+  Bootstrap: { icon: Boxes, color: 'text-stone-500', bg: 'bg-stone-500/10', subtitle: 'Packages' },
 };
 
-export type WfNodeData = {
-  wfKind: WfKind;
-  title: string;
-  // Per-kind config
-  llmConfig?: { model: string; prompt: string; provider: string };
-  vectordbConfig?: { collection: string; topK: number };
-  kafkaConfig?: { topic: string };
-  transformConfig?: { code: string };
-  httpConfig?: { method: string; url: string; headers: string };
-  dbqueryConfig?: { sql: string; connection: string };
-  branchConfig?: { condition: string };
-  humanConfig?: { prompt: string; timeoutSec: number };
-  // Live execution state
-  execStatus?: 'pending' | 'running' | 'done' | 'error';
+const STATUS_DOT: Record<OrbitRunStatus, string> = {
+  idle: 'bg-slate-300',
+  running: 'animate-pulse bg-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,0.2)]',
+  success: 'bg-emerald-500',
+  error: 'bg-red-500',
 };
 
-export type FlowNode = Node<WfNodeData, 'wfNode'>;
+function configPreview(node: OrbitFlowNode): string {
+  const cfg = node.data.config ?? {};
+  const raw =
+    cfg.target ??
+    cfg.task ??
+    cfg.condition ??
+    cfg.items_expr ??
+    cfg.code ??
+    cfg.class_name ??
+    cfg.packages ??
+    '';
+  const text = String(raw).replace(/\s+/g, ' ').trim();
+  return text.length > 58 ? `${text.slice(0, 56)}...` : text;
+}
 
-function WfNode({ data, selected }: NodeProps<FlowNode>) {
-  const kind = data.wfKind;
-  const meta = NODE_META[kind] ?? NODE_META.llm;
+function OrbitNode({ id, data, selected }: NodeProps<OrbitFlowNode>) {
+  const { nodeStatuses, nodeLogs, openLog } = useOrbitUi();
+  const meta = TYPE_META[data.nodeType];
   const Icon = meta.icon;
-
-  const statusRing =
-    data.execStatus === 'running'
-      ? 'ring-2 ring-yellow-400/60 border-yellow-400/30'
-      : data.execStatus === 'done'
-        ? 'ring-2 ring-emerald-400/60 border-emerald-400/30'
-        : data.execStatus === 'error'
-          ? 'ring-2 ring-red-400/60 border-red-400/30'
-          : '';
-
-  const statusDot =
-    data.execStatus === 'running'
-      ? 'bg-yellow-400 animate-pulse'
-      : data.execStatus === 'done'
-        ? 'bg-emerald-400'
-        : data.execStatus === 'error'
-          ? 'bg-red-400'
-          : null;
+  const status = nodeStatuses[id] ?? 'idle';
+  const logs = nodeLogs[id] ?? [];
+  const preview = configPreview({ id, data, position: { x: 0, y: 0 }, type: 'orbitNode' });
 
   return (
     <div
       className={cn(
-        'relative min-w-[200px] max-w-[260px] rounded-xl border p-3 shadow-lg backdrop-blur-md',
+        'relative min-w-[184px] max-w-[244px] rounded-lg border bg-white p-3 text-slate-950 shadow-sm transition',
         selected
-          ? 'border-cyan-500/50 bg-slate-900/95 ring-2 ring-cyan-500/30'
-          : cn('border-white/10 bg-slate-900/90 hover:border-white/20', statusRing)
+          ? 'border-slate-950 ring-2 ring-slate-950/10'
+          : 'border-slate-200 hover:border-slate-300',
+        status === 'success' && 'border-emerald-400 ring-2 ring-emerald-500/15',
+        status === 'error' && 'border-red-400 ring-2 ring-red-500/15'
       )}
     >
-      {statusDot && (
-        <span
-          className={cn('absolute right-2 top-2 h-2 w-2 rounded-full', statusDot)}
-          aria-hidden
-        />
-      )}
-      {kind !== 'start' ? (
-        <Handle
-          type="target"
-          position={Position.Left}
-          className="!h-2.5 !w-2.5 !border-2 !border-white/30 !bg-slate-800"
-        />
-      ) : null}
-      <div className="flex items-center gap-2">
-        <div className={cn('rounded-lg border border-white/10 p-2', meta.bg)}>
-          <Icon className={cn('h-4 w-4', meta.color)} aria-hidden />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-white/90">{data.title}</p>
-          <p className="text-[10px] uppercase tracking-wide text-white/40">{meta.subtitle}</p>
-        </div>
-      </div>
-      {/* Branch nodes get true/false output handles */}
-      {kind === 'branch' ? (
+      <Handle
+        type="target"
+        id="handle-in"
+        position={Position.Left}
+        className="!h-2.5 !w-2.5 !border-slate-400 !bg-white"
+      />
+      {data.nodeType === 'Check' ? (
         <>
           <Handle
             type="source"
-            position={Position.Right}
             id="true"
-            style={{ top: '33%' }}
-            className="!h-2.5 !w-2.5 !border-2 !border-emerald-400/70 !bg-emerald-950"
+            position={Position.Right}
+            style={{ top: '34%' }}
+            className="!h-2.5 !w-2.5 !border-emerald-500 !bg-white"
           />
           <Handle
             type="source"
-            position={Position.Right}
             id="false"
-            style={{ top: '67%' }}
-            className="!h-2.5 !w-2.5 !border-2 !border-red-400/70 !bg-red-950"
+            position={Position.Right}
+            style={{ top: '70%' }}
+            className="!h-2.5 !w-2.5 !border-red-500 !bg-white"
           />
-          <div className="mt-1 flex justify-end gap-3 text-[9px] text-white/30">
-            <span className="text-emerald-400/60">T</span>
-            <span className="text-red-400/60">F</span>
-          </div>
         </>
-      ) : kind !== 'end' ? (
+      ) : data.nodeType === 'ForEach' ? (
+        <>
+          <Handle
+            type="source"
+            id="handle-out"
+            position={Position.Right}
+            style={{ top: '34%' }}
+            className="!h-2.5 !w-2.5 !border-blue-500 !bg-white"
+          />
+          <Handle
+            type="source"
+            id="handle-foreach-done"
+            position={Position.Right}
+            style={{ top: '70%' }}
+            className="!h-2.5 !w-2.5 !border-orange-500 !bg-white"
+          />
+        </>
+      ) : (
         <Handle
           type="source"
+          id="handle-out"
           position={Position.Right}
-          className="!h-2.5 !w-2.5 !border-2 !border-white/30 !bg-slate-800"
+          className="!h-2.5 !w-2.5 !border-slate-400 !bg-white"
         />
+      )}
+
+      <div className="flex items-start gap-2">
+        <div className={cn('relative rounded-md border border-slate-200 p-2', meta.bg)}>
+          <Icon className={cn('h-4 w-4', meta.color)} aria-hidden />
+          <span
+            className={cn(
+              'absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border border-white',
+              STATUS_DOT[status]
+            )}
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-semibold text-slate-950">{data.label}</p>
+          <p className="text-[10px] uppercase tracking-wide text-slate-400">{meta.subtitle}</p>
+        </div>
+      </div>
+
+      {preview ? (
+        <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-slate-500">{preview}</p>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          openLog(id);
+        }}
+        className="nodrag mt-3 flex w-full items-center justify-between rounded-md border border-slate-200 px-2 py-1 text-[10px] font-medium text-slate-500 hover:bg-slate-50"
+      >
+        <span>Logs</span>
+        <span className="font-mono">{logs.length}</span>
+      </button>
+    </div>
+  );
+}
+
+function OrbitEdge({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  style,
+  label,
+  data,
+}: EdgeProps) {
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+  const onDelete = (data as { onDelete?: (id: string) => void } | undefined)?.onDelete;
+
+  return (
+    <>
+      <BaseEdge path={edgePath} style={style as CSSProperties | undefined} />
+      <EdgeLabelRenderer>
+        <div
+          className="nodrag nopan flex items-center gap-1"
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+            pointerEvents: 'all',
+          }}
+        >
+          {typeof label === 'string' ? (
+            <span className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] text-slate-500 shadow-sm">
+              {label}
+            </span>
+          ) : null}
+          <button
+            type="button"
+            title="Delete edge"
+            className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm hover:border-red-300 hover:text-red-500"
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete?.(id);
+            }}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+}
+
+const nodeTypes = { orbitNode: OrbitNode };
+const edgeTypes = { orbitEdge: OrbitEdge };
+
+function OrbitCanvas({
+  nodes,
+  edges,
+  onNodesChange,
+  onEdgesChange,
+  onConnect,
+  onSelect,
+  onEdgeDelete,
+}: {
+  nodes: OrbitFlowNode[];
+  edges: OrbitFlowEdge[];
+  onNodesChange: (changes: NodeChange<OrbitFlowNode>[]) => void;
+  onEdgesChange: (changes: EdgeChange[]) => void;
+  onConnect: (connection: Connection | Edge) => void;
+  onSelect: (id: string) => void;
+  onEdgeDelete: (id: string) => void;
+}) {
+  const mappedEdges = useMemo(
+    () =>
+      edges.map((edge) => ({
+        ...edge,
+        type: 'orbitEdge',
+        data: { ...(edge.data ?? { orbitType: 'sequential' as const }), onDelete: onEdgeDelete },
+        style: {
+          stroke: edge.data?.orbitType === 'loop_back' ? '#f59e0b' : '#64748b',
+          strokeWidth: 1.6,
+        },
+      })),
+    [edges, onEdgeDelete]
+  );
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={mappedEdges}
+      nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      onConnect={onConnect}
+      onNodeClick={(_, node) => onSelect(node.id)}
+      deleteKeyCode={['Delete', 'Backspace']}
+      fitView
+      className="bg-[radial-gradient(circle_at_1px_1px,rgba(15,23,42,0.10)_1px,transparent_0)] bg-[length:22px_22px]"
+      defaultEdgeOptions={{ type: 'orbitEdge' }}
+    >
+      <Background gap={22} size={1} />
+      <Controls className="!border-slate-200 !bg-white" />
+    </ReactFlow>
+  );
+}
+
+function WorkflowSelector({
+  definitions,
+  selectedWorkflowId,
+  workflowName,
+  setWorkflowName,
+  onSelect,
+  onNew,
+}: {
+  definitions: Array<{ id: string; name: string }>;
+  selectedWorkflowId: string | null;
+  workflowName: string;
+  setWorkflowName: (value: string) => void;
+  onSelect: (id: string) => void;
+  onNew: () => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div className="relative flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1 text-left hover:bg-white"
+      >
+        <FolderOpen className="h-4 w-4 shrink-0 text-slate-500" />
+        <span className="truncate text-sm font-semibold text-slate-950">
+          {workflowName || 'Untitled'}
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+      </button>
+      <Input
+        value={workflowName}
+        onChange={(event) => setWorkflowName(event.target.value)}
+        className="h-8 w-48 border-slate-200 bg-white text-xs text-slate-900"
+      />
+      <button
+        type="button"
+        title="New workflow"
+        onClick={onNew}
+        className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
+      {open ? (
+        <div className="absolute left-3 top-11 z-40 max-h-64 w-72 overflow-auto rounded-lg border border-slate-200 bg-white p-1 shadow-xl">
+          {definitions.length === 0 ? (
+            <p className="px-3 py-2 text-xs text-slate-500">No saved Orbit workflows yet.</p>
+          ) : (
+            definitions.map((definition) => (
+              <button
+                key={definition.id}
+                type="button"
+                onClick={() => {
+                  onSelect(definition.id);
+                  setOpen(false);
+                }}
+                className={cn(
+                  'block w-full truncate rounded-md px-3 py-2 text-left text-xs',
+                  selectedWorkflowId === definition.id
+                    ? 'bg-slate-950 text-white'
+                    : 'text-slate-700 hover:bg-slate-100'
+                )}
+              >
+                {definition.name}
+              </button>
+            ))
+          )}
+        </div>
       ) : null}
     </div>
   );
 }
 
-const nodeTypes = { wfNode: WfNode };
-
-const defaultNodes: FlowNode[] = [
-  {
-    id: 'n-start',
-    type: 'wfNode',
-    position: { x: 40, y: 120 },
-    data: { wfKind: 'start', title: 'Start' },
-  },
-  {
-    id: 'n-end',
-    type: 'wfNode',
-    position: { x: 420, y: 120 },
-    data: { wfKind: 'end', title: 'End' },
-  },
-];
-
-const defaultEdges: Edge[] = [];
-
-let nid = 0;
-
-/** Right-panel node config form, shown when a node is selected on the canvas. */
-function NodeInspectorPanel({
-  selectedNode,
-  onUpdateNode,
+function GlobalConfigBar({
+  llm,
+  humanInLoop,
+  onLlm,
+  onHumanInLoop,
 }: {
-  selectedNode: FlowNode | null;
-  onUpdateNode: (id: string, patch: Partial<WfNodeData>) => void;
+  llm: string;
+  humanInLoop: boolean;
+  onLlm: (value: string) => void;
+  onHumanInLoop: (value: boolean) => void;
 }) {
-  if (!selectedNode) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center p-4">
-        <div className="rounded-xl border border-white/10 bg-white/4 px-4 py-6 text-center">
-          <p className="text-xs text-white/35">Select a node to configure it</p>
+  return (
+    <div className="flex items-center gap-3 border-b border-slate-200 bg-white px-3 py-2">
+      <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Global</span>
+      <Input
+        value={llm}
+        onChange={(event) => onLlm(event.target.value)}
+        className="h-8 w-56 border-slate-200 text-xs"
+      />
+      <label className="flex items-center gap-2 text-xs text-slate-600">
+        <input
+          type="checkbox"
+          checked={humanInLoop}
+          onChange={(event) => onHumanInLoop(event.target.checked)}
+        />
+        Human review
+      </label>
+    </div>
+  );
+}
+
+function Toolbar({
+  onAddNode,
+  onSave,
+  onPreview,
+  onRun,
+  running,
+  status,
+}: {
+  onAddNode: (type: OrbitNodeType, position: { x: number; y: number }) => void;
+  onSave: () => void;
+  onPreview: () => void;
+  onRun: () => void;
+  running: boolean;
+  status: string;
+}) {
+  const rf = useReactFlow();
+  const addAtCenter = useCallback(
+    (type: OrbitNodeType) => {
+      const p = rf.screenToFlowPosition({
+        x: typeof window !== 'undefined' ? window.innerWidth / 2 : 500,
+        y: typeof window !== 'undefined' ? window.innerHeight / 2 : 320,
+      });
+      onAddNode(type, p);
+    },
+    [onAddNode, rf]
+  );
+
+  return (
+    <div className="border-b border-slate-200 bg-white px-3 py-2">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Nodes</span>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={onSave}
+            className="flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
+          >
+            <Save className="h-3.5 w-3.5" />
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={onPreview}
+            className="flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
+          >
+            <FileCode2 className="h-3.5 w-3.5" />
+            Preview
+          </button>
+          <button
+            type="button"
+            disabled={running}
+            onClick={onRun}
+            className="flex items-center gap-1 rounded-md bg-slate-950 px-3 py-1 text-xs font-semibold text-white disabled:opacity-50"
+          >
+            <Play className="h-3.5 w-3.5" />
+            Run
+          </button>
         </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {ORBIT_NODE_TYPES.map((type) => {
+          const meta = TYPE_META[type];
+          const Icon = meta.icon;
+          return (
+            <button
+              key={type}
+              type="button"
+              onClick={() => addAtCenter(type)}
+              className="flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-700 hover:bg-slate-50"
+            >
+              <Icon className={cn('h-3.5 w-3.5', meta.color)} />
+              {type}
+            </button>
+          );
+        })}
+        <span className="ml-auto truncate text-[11px] text-slate-500">{status}</span>
+      </div>
+    </div>
+  );
+}
+
+function TextArea({
+  value,
+  onChange,
+  rows = 3,
+  mono,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  rows?: number;
+  mono?: boolean;
+}) {
+  return (
+    <textarea
+      value={value}
+      rows={rows}
+      onChange={(event) => onChange(event.target.value)}
+      className={cn(
+        'w-full resize-none rounded-md border border-slate-200 bg-white p-2 text-xs text-slate-900 outline-none focus:border-slate-400',
+        mono && 'font-mono'
+      )}
+    />
+  );
+}
+
+function JsonTextArea({
+  value,
+  onValid,
+  rows = 5,
+}: {
+  value: unknown;
+  onValid: (value: unknown) => void;
+  rows?: number;
+}) {
+  const [draft, setDraft] = React.useState(() => JSON.stringify(value, null, 2));
+  const [valid, setValid] = React.useState(true);
+
+  return (
+    <textarea
+      value={draft}
+      rows={rows}
+      onChange={(event) => {
+        const next = event.target.value;
+        setDraft(next);
+        try {
+          onValid(JSON.parse(next));
+          setValid(true);
+        } catch {
+          setValid(false);
+        }
+      }}
+      className={cn(
+        'w-full resize-none rounded-md border bg-white p-2 font-mono text-xs text-slate-900 outline-none focus:border-slate-400',
+        valid ? 'border-slate-200' : 'border-red-300'
+      )}
+    />
+  );
+}
+
+function ConfigPanel({
+  node,
+  updateSelected,
+  updateSelectedConfig,
+  deleteSelectedNode,
+}: {
+  node: OrbitFlowNode | null;
+  updateSelected: (patch: Partial<OrbitFlowNode['data']>) => void;
+  updateSelectedConfig: (patch: Record<string, unknown>) => void;
+  deleteSelectedNode: () => void;
+}) {
+  if (!node) {
+    return (
+      <div className="flex h-full items-center justify-center p-8 text-center text-xs text-slate-400">
+        Select a node to edit its configuration.
       </div>
     );
   }
 
-  const { data, id } = selectedNode;
-  const kind = data.wfKind;
-  const meta = NODE_META[kind];
-  const Icon = meta.icon;
+  const cfg = node.data.config ?? {};
+  const get = (key: string) => (cfg[key] == null ? '' : String(cfg[key]));
+  const setNumber = (key: string, value: string) =>
+    updateSelectedConfig({ [key]: value.trim() ? Number(value) : null });
 
   return (
-    <div className="flex flex-col gap-3 overflow-y-auto p-3">
-      {/* Node identity card */}
-      <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-3">
-        <div className={cn('rounded-lg border border-white/10 p-2', meta.bg)}>
-          <Icon className={cn('h-4 w-4', meta.color)} aria-hidden />
-        </div>
+    <div className="h-full overflow-auto p-3">
+      <div className="mb-3 flex items-center justify-between gap-2">
         <div>
-          <p className="text-sm font-semibold text-white/90">{data.title}</p>
-          <p className="text-[10px] uppercase tracking-wide text-white/40">{meta.subtitle}</p>
+          <span
+            className={cn(
+              'inline-flex rounded-md px-2 py-1 text-[10px] font-bold text-white',
+              TYPE_META[node.data.nodeType].color.replace('text-', 'bg-')
+            )}
+          >
+            {node.data.nodeType}
+          </span>
+          <p className="mt-1 font-mono text-[10px] text-slate-400">{node.id}</p>
         </div>
-      </div>
-
-      {/* Label edit */}
-      <div>
-        <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-          Label
-        </label>
-        <Input
-          value={data.title}
-          onChange={(e) => onUpdateNode(id, { title: e.target.value })}
-          className="border-white/10 bg-black/30 text-sm text-white"
-          placeholder="Node label"
-        />
-      </div>
-
-      {/* LLM config */}
-      {kind === 'llm' && (
-        <>
-          <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-              Provider
-            </label>
-            <Input
-              value={data.llmConfig?.provider ?? 'ollama'}
-              onChange={(e) =>
-                onUpdateNode(id, {
-                  llmConfig: {
-                    provider: e.target.value,
-                    model: data.llmConfig?.model ?? '',
-                    prompt: data.llmConfig?.prompt ?? '',
-                  },
-                })
-              }
-              className="border-white/10 bg-black/30 text-sm text-white"
-              placeholder="ollama / openai / anthropic"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-              Model
-            </label>
-            <Input
-              value={data.llmConfig?.model ?? ''}
-              onChange={(e) =>
-                onUpdateNode(id, {
-                  llmConfig: {
-                    model: e.target.value,
-                    provider: data.llmConfig?.provider ?? 'ollama',
-                    prompt: data.llmConfig?.prompt ?? '',
-                  },
-                })
-              }
-              className="border-white/10 bg-black/30 text-sm text-white"
-              placeholder="e.g. llama3.2, gpt-4o"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-              Prompt template
-            </label>
-            <textarea
-              value={data.llmConfig?.prompt ?? ''}
-              onChange={(e) =>
-                onUpdateNode(id, {
-                  llmConfig: {
-                    prompt: e.target.value,
-                    model: data.llmConfig?.model ?? '',
-                    provider: data.llmConfig?.provider ?? 'ollama',
-                  },
-                })
-              }
-              className="h-24 w-full resize-none rounded-md border border-white/10 bg-black/30 p-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
-              placeholder="You are a helpful assistant...\n\n{input}"
-            />
-          </div>
-        </>
-      )}
-
-      {/* VectorDB config */}
-      {kind === 'vectordb' && (
-        <>
-          <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-              Collection
-            </label>
-            <Input
-              value={data.vectordbConfig?.collection ?? ''}
-              onChange={(e) =>
-                onUpdateNode(id, {
-                  vectordbConfig: {
-                    collection: e.target.value,
-                    topK: data.vectordbConfig?.topK ?? 5,
-                  },
-                })
-              }
-              className="border-white/10 bg-black/30 text-sm text-white"
-              placeholder="e.g. my-docs"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-              Top-K results
-            </label>
-            <Input
-              type="number"
-              min={1}
-              max={50}
-              value={data.vectordbConfig?.topK ?? 5}
-              onChange={(e) =>
-                onUpdateNode(id, {
-                  vectordbConfig: {
-                    topK: Number(e.target.value),
-                    collection: data.vectordbConfig?.collection ?? '',
-                  },
-                })
-              }
-              className="border-white/10 bg-black/30 text-sm text-white"
-            />
-          </div>
-        </>
-      )}
-
-      {/* Kafka config */}
-      {kind === 'kafka' && (
-        <div>
-          <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-            Topic
-          </label>
-          <Input
-            value={data.kafkaConfig?.topic ?? ''}
-            onChange={(e) => onUpdateNode(id, { kafkaConfig: { topic: e.target.value } })}
-            className="border-white/10 bg-black/30 text-sm text-white"
-            placeholder="e.g. workflow.run.requested"
-          />
-        </div>
-      )}
-
-      {/* Transform config */}
-      {kind === 'transform' && (
-        <div>
-          <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-            Transform code (JS)
-          </label>
-          <textarea
-            value={data.transformConfig?.code ?? ''}
-            onChange={(e) => onUpdateNode(id, { transformConfig: { code: e.target.value } })}
-            className="h-28 w-full resize-none rounded-md border border-white/10 bg-black/30 p-2 font-mono text-xs text-emerald-200 placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
-            placeholder={'// input available as `data`\nreturn { ...data, processed: true };'}
-          />
-        </div>
-      )}
-
-      {/* HTTP config */}
-      {kind === 'http' && (
-        <>
-          <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-              Method
-            </label>
-            <select
-              value={data.httpConfig?.method ?? 'GET'}
-              onChange={(e) =>
-                onUpdateNode(id, {
-                  httpConfig: {
-                    method: e.target.value,
-                    url: data.httpConfig?.url ?? '',
-                    headers: data.httpConfig?.headers ?? '',
-                  },
-                })
-              }
-              className="w-full rounded-md border border-white/10 bg-black/30 p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
-            >
-              {['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map((m) => (
-                <option key={m} value={m} className="bg-slate-900">
-                  {m}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-              URL
-            </label>
-            <Input
-              value={data.httpConfig?.url ?? ''}
-              onChange={(e) =>
-                onUpdateNode(id, {
-                  httpConfig: {
-                    method: data.httpConfig?.method ?? 'GET',
-                    url: e.target.value,
-                    headers: data.httpConfig?.headers ?? '',
-                  },
-                })
-              }
-              className="border-white/10 bg-black/30 font-mono text-xs text-white"
-              placeholder="https://api.example.com/v1/..."
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-              Headers (JSON)
-            </label>
-            <textarea
-              value={data.httpConfig?.headers ?? ''}
-              onChange={(e) =>
-                onUpdateNode(id, {
-                  httpConfig: {
-                    method: data.httpConfig?.method ?? 'GET',
-                    url: data.httpConfig?.url ?? '',
-                    headers: e.target.value,
-                  },
-                })
-              }
-              className="h-16 w-full resize-none rounded-md border border-white/10 bg-black/30 p-2 font-mono text-xs text-white placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
-              placeholder='{"Authorization": "Bearer {{token}}"}'
-            />
-          </div>
-        </>
-      )}
-
-      {/* DB Query config */}
-      {kind === 'dbquery' && (
-        <>
-          <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-              Connection alias
-            </label>
-            <Input
-              value={data.dbqueryConfig?.connection ?? 'postgres'}
-              onChange={(e) =>
-                onUpdateNode(id, {
-                  dbqueryConfig: {
-                    connection: e.target.value,
-                    sql: data.dbqueryConfig?.sql ?? '',
-                  },
-                })
-              }
-              className="border-white/10 bg-black/30 text-sm text-white"
-              placeholder="postgres / redis / mysql"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-              SQL statement
-            </label>
-            <textarea
-              value={data.dbqueryConfig?.sql ?? ''}
-              onChange={(e) =>
-                onUpdateNode(id, {
-                  dbqueryConfig: {
-                    connection: data.dbqueryConfig?.connection ?? 'postgres',
-                    sql: e.target.value,
-                  },
-                })
-              }
-              className="h-24 w-full resize-none rounded-md border border-white/10 bg-black/30 p-2 font-mono text-xs text-amber-200 placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
-              placeholder="SELECT * FROM documents WHERE ...;"
-            />
-          </div>
-        </>
-      )}
-
-      {/* Branch config */}
-      {kind === 'branch' && (
-        <>
-          <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 p-2.5">
-            <p className="mb-2 text-[10px] text-violet-300/80">
-              Connect <span className="font-mono">true</span> handle (top) for the truthy path and
-              <span className="font-mono"> false</span> handle (bottom) for the falsy path.
-            </p>
-          </div>
-          <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-              Condition (JS)
-            </label>
-            <textarea
-              value={data.branchConfig?.condition ?? ''}
-              onChange={(e) => onUpdateNode(id, { branchConfig: { condition: e.target.value } })}
-              className="h-20 w-full resize-none rounded-md border border-white/10 bg-black/30 p-2 font-mono text-xs text-violet-200 placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-violet-500/40"
-              placeholder="// 'data' is the upstream output\nreturn data.score > 0.8;"
-            />
-          </div>
-        </>
-      )}
-
-      {/* Human-in-the-loop config */}
-      {kind === 'human' && (
-        <>
-          <div className="rounded-lg border border-pink-500/20 bg-pink-500/5 p-2.5">
-            <p className="text-[10px] text-pink-300/80">
-              Pauses the workflow and waits for a human to approve or reject before continuing.
-            </p>
-          </div>
-          <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-              Prompt / instructions
-            </label>
-            <textarea
-              value={data.humanConfig?.prompt ?? ''}
-              onChange={(e) =>
-                onUpdateNode(id, {
-                  humanConfig: {
-                    prompt: e.target.value,
-                    timeoutSec: data.humanConfig?.timeoutSec ?? 3600,
-                  },
-                })
-              }
-              className="h-20 w-full resize-none rounded-md border border-white/10 bg-black/30 p-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-pink-500/40"
-              placeholder="Please review the generated report and approve to continue."
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">
-              Timeout (seconds)
-            </label>
-            <Input
-              type="number"
-              min={60}
-              max={86400}
-              value={data.humanConfig?.timeoutSec ?? 3600}
-              onChange={(e) =>
-                onUpdateNode(id, {
-                  humanConfig: {
-                    prompt: data.humanConfig?.prompt ?? '',
-                    timeoutSec: Number(e.target.value),
-                  },
-                })
-              }
-              className="border-white/10 bg-black/30 text-sm text-white"
-            />
-          </div>
-        </>
-      )}
-
-      {/* Exec status badge */}
-      {data.execStatus && (
-        <div
-          className={cn(
-            'rounded-lg border px-3 py-2 text-xs font-medium',
-            data.execStatus === 'running' && 'border-yellow-400/20 bg-yellow-400/5 text-yellow-300',
-            data.execStatus === 'done' && 'border-emerald-400/20 bg-emerald-400/5 text-emerald-300',
-            data.execStatus === 'error' && 'border-red-400/20 bg-red-400/5 text-red-300',
-            data.execStatus === 'pending' && 'border-white/10 bg-white/5 text-white/40'
-          )}
+        <button
+          type="button"
+          onClick={deleteSelectedNode}
+          className="flex h-8 w-8 items-center justify-center rounded-md border border-red-200 text-red-500 hover:bg-red-50"
         >
-          Status: {data.execStatus}
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+
+      <label className="mb-3 block">
+        <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+          Label
+        </span>
+        <Input
+          value={node.data.label}
+          onChange={(event) => updateSelected({ label: event.target.value })}
+          className="h-8 border-slate-200 text-xs"
+        />
+      </label>
+
+      {node.data.nodeType === 'Navigate' ? (
+        <label className="mb-3 block">
+          <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            Target URL
+          </span>
+          <Input
+            value={get('target')}
+            onChange={(event) => updateSelectedConfig({ target: event.target.value })}
+            className="h-8 border-slate-200 text-xs"
+          />
+        </label>
+      ) : null}
+
+      {node.data.nodeType === 'Do' || node.data.nodeType === 'Read' ? (
+        <label className="mb-3 block">
+          <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            Task
+          </span>
+          <TextArea
+            value={get('task')}
+            onChange={(value) => updateSelectedConfig({ task: value })}
+            rows={4}
+          />
+        </label>
+      ) : null}
+
+      {node.data.nodeType === 'Check' ? (
+        <label className="mb-3 block">
+          <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            Condition
+          </span>
+          <TextArea
+            value={get('condition')}
+            onChange={(value) => updateSelectedConfig({ condition: value })}
+            rows={4}
+          />
+        </label>
+      ) : null}
+
+      {node.data.nodeType === 'Fill' ? (
+        <>
+          <label className="mb-3 block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              Form target
+            </span>
+            <TextArea
+              value={get('target')}
+              onChange={(value) => updateSelectedConfig({ target: value })}
+              rows={3}
+            />
+          </label>
+          <label className="mb-3 block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              Data JSON
+            </span>
+            <JsonTextArea
+              key={`${node.id}-data`}
+              value={cfg.data ?? {}}
+              onValid={(value) => updateSelectedConfig({ data: value })}
+            />
+          </label>
+        </>
+      ) : null}
+
+      {node.data.nodeType === 'Code' ? (
+        <label className="mb-3 block">
+          <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            Python code
+          </span>
+          <TextArea
+            value={get('code')}
+            onChange={(value) => updateSelectedConfig({ code: value })}
+            rows={8}
+            mono
+          />
+        </label>
+      ) : null}
+
+      {node.data.nodeType === 'ForEach' ? (
+        <>
+          <label className="mb-3 block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              Items expression
+            </span>
+            <TextArea
+              value={get('items_expr')}
+              onChange={(value) => updateSelectedConfig({ items_expr: value })}
+              rows={4}
+              mono
+            />
+          </label>
+          <label className="mb-3 block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              Loop variable
+            </span>
+            <Input
+              value={get('loop_var')}
+              onChange={(event) => updateSelectedConfig({ loop_var: event.target.value })}
+              className="h-8 border-slate-200 text-xs"
+            />
+          </label>
+        </>
+      ) : null}
+
+      {node.data.nodeType === 'Agent' ? (
+        <>
+          <label className="mb-3 block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              Class name
+            </span>
+            <Input
+              value={get('class_name')}
+              onChange={(event) => updateSelectedConfig({ class_name: event.target.value })}
+              className="h-8 border-slate-200 text-xs"
+            />
+          </label>
+          <label className="mb-3 block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              Task
+            </span>
+            <Input
+              value={get('task')}
+              onChange={(event) => updateSelectedConfig({ task: event.target.value })}
+              className="h-8 border-slate-200 text-xs"
+            />
+          </label>
+          <label className="mb-3 block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              Prompt template
+            </span>
+            <TextArea
+              value={get('prompt_template')}
+              onChange={(value) => updateSelectedConfig({ prompt_template: value })}
+              rows={5}
+            />
+          </label>
+        </>
+      ) : null}
+
+      {node.data.nodeType === 'Bootstrap' ? (
+        <label className="mb-3 block">
+          <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            Packages
+          </span>
+          <TextArea
+            value={get('packages')}
+            onChange={(value) => updateSelectedConfig({ packages: value })}
+            rows={5}
+            mono
+          />
+        </label>
+      ) : null}
+
+      {node.data.nodeType !== 'Code' &&
+      node.data.nodeType !== 'ForEach' &&
+      node.data.nodeType !== 'Bootstrap' ? (
+        <div className="mt-4 border-t border-slate-200 pt-3">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            Advanced
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <label>
+              <span className="mb-1 block text-[10px] text-slate-400">Max steps</span>
+              <Input
+                value={get('max_steps')}
+                onChange={(event) => setNumber('max_steps', event.target.value)}
+                className="h-8 border-slate-200 text-xs"
+              />
+            </label>
+            <label>
+              <span className="mb-1 block text-[10px] text-slate-400">Timeout</span>
+              <Input
+                value={get('timeout')}
+                onChange={(event) => setNumber('timeout', event.target.value)}
+                className="h-8 border-slate-200 text-xs"
+              />
+            </label>
+          </div>
+          <label className="mt-3 block">
+            <span className="mb-1 block text-[10px] text-slate-400">LLM override</span>
+            <Input
+              value={get('llm')}
+              onChange={(event) => updateSelectedConfig({ llm: event.target.value || null })}
+              className="h-8 border-slate-200 text-xs"
+            />
+          </label>
+          {node.data.nodeType === 'Do' || node.data.nodeType === 'Navigate' ? (
+            <label className="mt-3 block">
+              <span className="mb-1 block text-[10px] text-slate-400">Extra info</span>
+              <TextArea
+                value={get('extra_info')}
+                onChange={(value) => updateSelectedConfig({ extra_info: value })}
+                rows={3}
+              />
+            </label>
+          ) : null}
+        </div>
+      ) : null}
+
+      {node.data.nodeType === 'Read' ||
+      node.data.nodeType === 'Do' ||
+      node.data.nodeType === 'Agent' ? (
+        <label className="mt-4 block border-t border-slate-200 pt-3">
+          <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            Output schema fields JSON
+          </span>
+          <JsonTextArea
+            key={`${node.id}-schema`}
+            value={node.data.output_schema?.fields ?? []}
+            onValid={(fields) =>
+              updateSelected({
+                output_schema: Array.isArray(fields) && fields.length ? { fields } : null,
+              })
+            }
+          />
+        </label>
+      ) : null}
+    </div>
+  );
+}
+
+function DesktopPanel({
+  paused,
+  running,
+  togglePause,
+  requestStop,
+}: {
+  paused: boolean;
+  running: boolean;
+  togglePause: () => void;
+  requestStop: () => void;
+}) {
+  const base =
+    process.env.NEXT_PUBLIC_ORBIT_VNC_URL?.trim() ||
+    'http://127.0.0.1:6080/vnc.html?autoconnect=true&resize=scale';
+  const src = `${base}${base.includes('?') ? '&' : '?'}view_only=${paused ? '0' : '1'}`;
+  return (
+    <div className="flex h-full min-w-0 flex-col bg-white">
+      <div className="flex h-11 shrink-0 items-center justify-between border-b border-slate-200 px-3">
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              'h-2 w-2 rounded-full',
+              paused ? 'bg-amber-500' : running ? 'bg-emerald-500' : 'bg-slate-300'
+            )}
+          />
+          <div>
+            <p className="text-xs font-semibold text-slate-950">
+              {paused ? "You're in control" : running ? 'Agent running' : 'Idle'}
+            </p>
+            <p className="text-[10px] text-slate-400">
+              {paused ? 'Desktop accepts input' : 'Desktop is view-only'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={togglePause}
+            className="flex items-center gap-1.5 rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
+          >
+            {paused ? <Play className="h-3.5 w-3.5" /> : <Hand className="h-3.5 w-3.5" />}
+            {paused ? 'Hand Back' : 'Take Over'}
+          </button>
+          <button
+            type="button"
+            disabled={!running}
+            onClick={requestStop}
+            className="flex items-center gap-1.5 rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-40"
+          >
+            <Square className="h-3.5 w-3.5" />
+            Stop
+          </button>
+        </div>
+      </div>
+      <iframe title="Orbit desktop" src={src} className="min-h-0 flex-1 border-0 bg-slate-950" />
+    </div>
+  );
+}
+
+function BottomPanel({
+  previewCode,
+  feed,
+  runs,
+}: {
+  previewCode: string;
+  feed: string[];
+  runs: Array<{ id: string; status: string; createdAt?: string; updatedAt?: string }>;
+}) {
+  const [tab, setTab] = React.useState<'preview' | 'runs' | 'feed'>('preview');
+  return (
+    <div className="flex h-44 shrink-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-slate-950">
+      <div className="flex h-8 shrink-0 items-center gap-1 border-b border-slate-800 bg-slate-900 px-2">
+        {(['preview', 'runs', 'feed'] as const).map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => setTab(item)}
+            className={cn(
+              'rounded px-2 py-1 text-[11px] capitalize',
+              tab === item ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+            )}
+          >
+            {item === 'preview' ? 'workflow.py' : item}
+          </button>
+        ))}
+      </div>
+      {tab === 'preview' ? (
+        <pre className="m-0 min-h-0 flex-1 overflow-auto p-3 font-mono text-[10px] leading-relaxed text-slate-200">
+          {previewCode}
+        </pre>
+      ) : tab === 'runs' ? (
+        <div className="min-h-0 flex-1 overflow-auto p-2">
+          {runs.length ? (
+            runs.map((run) => (
+              <div
+                key={run.id}
+                className="flex items-center gap-2 rounded px-2 py-1 font-mono text-[10px] text-slate-300 hover:bg-slate-900"
+              >
+                <span
+                  className={cn(
+                    'h-2 w-2 rounded-full',
+                    run.status === 'running'
+                      ? 'bg-blue-400'
+                      : run.status === 'error'
+                        ? 'bg-red-400'
+                        : 'bg-emerald-400'
+                  )}
+                />
+                <span className="flex-1">{run.status}</span>
+                <span className="text-slate-500">{run.id.slice(0, 8)}</span>
+              </div>
+            ))
+          ) : (
+            <p className="p-3 text-xs text-slate-500">No runs yet.</p>
+          )}
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1 overflow-auto p-3 font-mono text-[10px] leading-relaxed text-emerald-200">
+          {feed.length ? (
+            feed.map((line, index) => <div key={`${index}-${line}`}>{line}</div>)
+          ) : (
+            <span className="text-slate-500">No events yet.</span>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function FlowWorkspace({
-  workflowName,
-  setWorkflowName,
-  selectedWorkflowId,
-  setSelectedWorkflowId,
-  onSave,
-  onRun,
-  saving,
-  running,
-  log,
-  definitions,
-  saveError,
-}: {
-  workflowName: string;
-  setWorkflowName: (v: string) => void;
-  selectedWorkflowId: string | null;
-  setSelectedWorkflowId: (id: string | null) => void;
-  onSave: (nodes: FlowNode[], edges: Edge[]) => void;
-  onRun: (workflowId: string) => void;
-  saving: boolean;
-  running: boolean;
-  log: string[];
-  definitions: { id: string; name: string; spec: unknown }[];
-  saveError: string | null;
-}) {
-  const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>(defaultNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(defaultEdges);
-  const { screenToFlowPosition } = useReactFlow();
-  const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null);
-
-  // Track canvas selection
-  useOnSelectionChange({
-    onChange: ({ nodes: sel }) => {
-      setSelectedNode(sel.length > 0 ? (sel[0] as FlowNode) : null);
-    },
-  });
-
-  const onUpdateNode = useCallback(
-    (id: string, patch: Partial<WfNodeData>) => {
-      setNodes((prev) =>
-        prev.map((n) => (n.id === id ? ({ ...n, data: { ...n.data, ...patch } } as FlowNode) : n))
-      );
-      // Keep selectedNode in sync
-      setSelectedNode((prev) =>
-        prev && prev.id === id ? ({ ...prev, data: { ...prev.data, ...patch } } as FlowNode) : prev
-      );
-    },
-    [setNodes]
-  );
-
-  const addPalette = useCallback(
-    (kind: WfKind) => {
-      nid += 1;
-      const id = `n-${kind}-${nid}`;
-      const label = PALETTE.find((p) => p.kind === kind)?.label ?? kind;
-      const pos = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-      setNodes((nds) =>
-        nds.concat({
-          id,
-          type: 'wfNode',
-          position: { x: pos.x - 100, y: pos.y - 80 },
-          data: { wfKind: kind, title: `New ${label}` },
-        } as FlowNode)
-      );
-    },
-    [screenToFlowPosition, setNodes]
-  );
-
-  const onConnect = useCallback(
-    (params: Connection | Edge) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
-    [setEdges]
-  );
-
-  const loadDefinition = useCallback(
-    (id: string | null) => {
-      setSelectedWorkflowId(id);
-      if (!id) return;
-      const def = definitions.find((d) => d.id === id);
-      if (!def) return;
-      setWorkflowName(def.name);
-      const spec = def.spec;
-      if (!spec || typeof spec !== 'object' || Array.isArray(spec)) return;
-      const s = spec as Record<string, unknown>;
-      if (s.schema !== SPEC_SCHEMA && s.schema !== undefined) {
-        /* still try nodes/edges */
-      }
-      const rawNodes = s.nodes;
-      const rawEdges = s.edges;
-      if (Array.isArray(rawNodes) && rawNodes.length > 0) {
-        const normalized: FlowNode[] = (rawNodes as Node[]).map((n) => {
-          const d = (n.data ?? {}) as Partial<WfNodeData>;
-          const wfKind = (d.wfKind as WfKind | undefined) ?? 'llm';
-          return {
-            ...n,
-            type: 'wfNode',
-            position: n.position ?? { x: 0, y: 0 },
-            data: {
-              wfKind,
-              title: d.title ?? String(n.id),
-            },
-          } as FlowNode;
-        });
-        setNodes(normalized);
-        setEdges(Array.isArray(rawEdges) ? (rawEdges as Edge[]) : []);
-      }
-    },
-    [definitions, setEdges, setNodes, setWorkflowName, setSelectedWorkflowId]
-  );
-
+function TemplatePicker({ onLoad }: { onLoad: (name: string) => void }) {
   return (
-    <div className="absolute inset-0 flex bg-slate-950/95 text-slate-100">
-      <aside className="flex w-52 shrink-0 flex-col gap-2 border-r border-white/10 p-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-white/45">Palette</p>
-        {/* Group palette by category */}
-        {['Control', 'AI', 'Data', 'Messaging'].map((group) => {
-          const items = PALETTE.filter((p) => p.group === group);
-          if (!items.length) return null;
+    <div className="grid grid-cols-2 gap-2 p-3">
+      {ORBIT_TEMPLATES.map((template) => (
+        <button
+          key={template.name}
+          type="button"
+          onClick={() => onLoad(template.name)}
+          className="rounded-lg border border-slate-200 bg-white p-3 text-left hover:border-slate-950"
+        >
+          <p className="text-xs font-semibold text-slate-950">{template.name}</p>
+          <p className="mt-1 text-[11px] leading-snug text-slate-500">{template.desc}</p>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function DocsPanel() {
+  return (
+    <div className="h-full overflow-auto bg-white p-6 text-sm text-slate-700">
+      <h2 className="text-lg font-semibold text-slate-950">Orbit workflow model</h2>
+      <p className="mt-2 max-w-3xl">
+        Durgas Agent now stores Orbit-shaped graphs in ai.backend and asks ai.backend to compile the
+        graph into workflow.py. Runs go through the existing ai.backend workflow channel.
+      </p>
+      <div className="mt-6 grid max-w-4xl grid-cols-2 gap-3">
+        {ORBIT_NODE_TYPES.map((type) => {
+          const meta = TYPE_META[type];
+          const Icon = meta.icon;
           return (
-            <div key={group}>
-              <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-white/25">
-                {group}
-              </p>
-              <div className="space-y-1">
-                {items.map((p) => {
-                  const meta = NODE_META[p.kind];
-                  const Icon = meta.icon;
-                  return (
-                    <button
-                      key={p.kind}
-                      type="button"
-                      className="flex w-full items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-sm hover:border-cyan-500/40 hover:bg-white/10"
-                      onClick={() => addPalette(p.kind)}
-                    >
-                      <Icon className={cn('h-3.5 w-3.5 shrink-0', meta.color)} aria-hidden />
-                      {p.label}
-                    </button>
-                  );
-                })}
+            <div key={type} className="rounded-lg border border-slate-200 p-3">
+              <div className="flex items-center gap-2">
+                <Icon className={cn('h-4 w-4', meta.color)} />
+                <span className="text-sm font-semibold text-slate-950">{type}</span>
               </div>
+              <p className="mt-1 text-xs text-slate-500">{meta.subtitle}</p>
             </div>
           );
         })}
-        <div className="mt-4 border-t border-white/10 pt-3">
-          <p className="mb-1 text-[10px] font-semibold uppercase text-white/40">Saved</p>
-          <div className="max-h-40 space-y-1 overflow-y-auto">
-            {definitions.map((d) => (
-              <button
-                key={d.id}
-                type="button"
-                onClick={() => loadDefinition(d.id)}
-                className={cn(
-                  'block w-full truncate rounded-md px-2 py-1.5 text-left text-xs',
-                  selectedWorkflowId === d.id
-                    ? 'bg-cyan-600/25 text-cyan-100'
-                    : 'text-white/70 hover:bg-white/10'
-                )}
-              >
-                {d.name}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            className="mt-2 w-full text-[11px] text-white/45 hover:text-white/70"
-            onClick={() => {
-              setSelectedWorkflowId(null);
-              setWorkflowName(`Workflow ${new Date().toISOString().slice(0, 16)}`);
-              setNodes(defaultNodes);
-              setEdges(defaultEdges);
-            }}
-          >
-            New canvas
-          </button>
-        </div>
-      </aside>
-
-      <div className="relative min-h-0 min-w-0 flex-1">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          fitView
-          colorMode="dark"
-          className="bg-[radial-gradient(circle_at_1px_1px,rgba(148,163,184,0.12)_1px,transparent_0)] bg-[length:24px_24px]"
-          defaultEdgeOptions={{ style: { stroke: 'rgba(34, 211, 238, 0.45)' } }}
-        >
-          <Background gap={24} size={1} style={{ opacity: 0.06 }} />
-          <Controls className="!border-white/10 !bg-slate-900/90" />
-        </ReactFlow>
       </div>
-
-      <aside className="flex w-72 shrink-0 flex-col border-l border-white/10">
-        {/* Inspector panel fills top portion */}
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <p className="border-b border-white/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-white/40">
-            Inspector
-          </p>
-          <NodeInspectorPanel selectedNode={selectedNode} onUpdateNode={onUpdateNode} />
-        </div>
-
-        {/* Controls section — workflow name, save/run, log */}
-        <div className="shrink-0 border-t border-white/10 p-3 flex flex-col gap-3">
-          <div>
-            <label className="mb-1 block text-[10px] uppercase text-white/45">Workflow name</label>
-            <Input
-              value={workflowName}
-              onChange={(e) => setWorkflowName(e.target.value)}
-              className="border-white/10 bg-black/30 text-sm text-white"
-            />
-          </div>
-          {saveError ? <p className="text-xs text-red-300">{saveError}</p> : null}
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled={saving || !workflowName.trim()}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-40"
-              onClick={() => onSave(nodes, edges)}
-            >
-              Save
-            </button>
-            <button
-              type="button"
-              disabled={running || !selectedWorkflowId}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-cyan-500/40 bg-cyan-950/50 px-3 py-2 text-sm text-cyan-100 disabled:opacity-40"
-              onClick={() => selectedWorkflowId && onRun(selectedWorkflowId)}
-            >
-              <Play className="h-4 w-4" aria-hidden />
-              Run
-            </button>
-          </div>
-          <div className="max-h-36 overflow-auto rounded-lg border border-white/10 bg-black/50 p-2 font-mono text-[10px] text-emerald-200/90">
-            {log.length === 0 ? (
-              <span className="text-white/35">Stream log…</span>
-            ) : (
-              log.map((l, i) => <div key={i}>{l}</div>)
-            )}
-          </div>
-        </div>
-      </aside>
     </div>
   );
 }
 
-function WorkflowAppInner() {
-  const { data, refetch } = useQuery(WORKFLOW_DEFINITIONS);
-  const [createWf] = useMutation(CREATE_WORKFLOW_DEFINITION);
-  const [startRun] = useMutation(START_WORKFLOW_RUN);
-  const { runWorkflow } = useWorkflowRunner();
-
-  const definitions = useMemo(() => data?.workflowDefinitions ?? [], [data?.workflowDefinitions]);
-
-  const [workflowName, setWorkflowName] = useState(
-    `Workflow ${new Date().toISOString().slice(0, 16)}`
+function LogModal({
+  nodeId,
+  logs,
+  onClose,
+}: {
+  nodeId: string;
+  logs: OrbitLogLine[];
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 p-6"
+      role="dialog"
+      aria-modal
+      onClick={onClose}
+    >
+      <div
+        className="flex max-h-[72vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-slate-700 bg-slate-950 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+          <p className="font-mono text-xs text-slate-300">node log: {nodeId}</p>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <pre className="m-0 overflow-auto p-4 font-mono text-[11px] leading-relaxed text-emerald-100">
+          {logs.length
+            ? logs.map((log) => `${log.t} ${log.msg}`).join('\n')
+            : 'No logs for this node yet.'}
+        </pre>
+      </div>
+    </div>
   );
-  const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
-  const [log, setLog] = useState<string[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [running, setRunning] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+}
 
-  const handleSave = useCallback(
-    async (nodes: FlowNode[], edges: Edge[]) => {
-      setSaveError(null);
-      setSaving(true);
-      try {
-        const spec = {
-          schema: SPEC_SCHEMA,
-          version: 1,
-          nodes,
-          edges,
-        };
-        const result = await createWf({
-          variables: { name: workflowName.trim() || 'Untitled', spec },
-        });
-        if (result.error) {
-          setSaveError(result.error.message);
-          return;
-        }
-        const created = result.data?.createWorkflowDefinition;
-        if (created?.id) {
-          setSelectedWorkflowId(String(created.id));
-        }
-        await refetch();
-        setLog((l) => [...l, `saved: ${JSON.stringify(created)}`]);
-      } catch (e) {
-        setSaveError(e instanceof Error ? e.message : String(e));
-      } finally {
-        setSaving(false);
-      }
-    },
-    [createWf, workflowName, refetch]
-  );
+function WorkflowAppShell() {
+  const [activeTab, setActiveTab] = React.useState<'Tasks' | 'Desktop' | 'Docs'>('Desktop');
+  const [logModalId, setLogModalId] = React.useState<string | null>(null);
+  const runner = useOrbitAgentRunner();
 
-  const handleRun = useCallback(
-    async (workflowId: string) => {
-      setRunning(true);
-      setLog([]);
-      try {
-        await startRun({ variables: { workflowId } });
-        await runWorkflow(workflowId, {
-          onMessage: (msg) => setLog((l) => [...l, JSON.stringify(msg)]),
-          onDone: (summary) => setLog((l) => [...l, `done: ${JSON.stringify(summary)}`]),
-          onError: (err) => setLog((l) => [...l, `error: ${err}`]),
-        });
-      } catch (e) {
-        setLog((l) => [...l, `catch: ${e instanceof Error ? e.message : String(e)}`]);
-      } finally {
-        setRunning(false);
-      }
-    },
-    [runWorkflow, startRun]
+  const ui = useMemo(
+    () => ({
+      nodeStatuses: runner.nodeStatuses,
+      nodeLogs: runner.nodeLogs,
+      openLog: setLogModalId,
+    }),
+    [runner.nodeLogs, runner.nodeStatuses]
   );
 
   return (
-    <FlowWorkspace
-      workflowName={workflowName}
-      setWorkflowName={setWorkflowName}
-      selectedWorkflowId={selectedWorkflowId}
-      setSelectedWorkflowId={setSelectedWorkflowId}
-      onSave={handleSave}
-      onRun={handleRun}
-      saving={saving}
-      running={running}
-      log={log}
-      definitions={definitions}
-      saveError={saveError}
-    />
+    <OrbitUiContext.Provider value={ui}>
+      <div className="absolute inset-0 flex flex-col bg-slate-100 text-slate-950">
+        <header className="flex h-11 shrink-0 items-center border-b border-slate-200 bg-white px-4">
+          <div className="mr-6 flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-950 text-white">
+              <Bot className="h-4 w-4" />
+            </div>
+            <span className="text-sm font-semibold">Durgas Agent</span>
+          </div>
+          <div className="flex h-full items-center gap-1">
+            {(['Tasks', 'Desktop', 'Docs'] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  'flex h-full items-center gap-1.5 border-b-2 px-3 text-xs font-medium',
+                  activeTab === tab
+                    ? 'border-slate-950 text-slate-950'
+                    : 'border-transparent text-slate-500 hover:text-slate-950'
+                )}
+              >
+                {tab === 'Tasks' ? (
+                  <SquareTerminal className="h-3.5 w-3.5" />
+                ) : tab === 'Desktop' ? (
+                  <Monitor className="h-3.5 w-3.5" />
+                ) : (
+                  <FileCode2 className="h-3.5 w-3.5" />
+                )}
+                {tab}
+              </button>
+            ))}
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-[11px] text-slate-500">{runner.status}</span>
+            {runner.running ? <RefreshCw className="h-4 w-4 animate-spin text-blue-500" /> : null}
+          </div>
+        </header>
+
+        {activeTab === 'Docs' ? (
+          <DocsPanel />
+        ) : (
+          <div className="flex min-h-0 flex-1">
+            <section
+              className={cn(
+                'min-w-0 flex-1 border-r border-slate-200',
+                activeTab === 'Tasks' && 'hidden'
+              )}
+            >
+              <DesktopPanel
+                paused={runner.paused}
+                running={runner.running}
+                togglePause={runner.togglePause}
+                requestStop={runner.requestStop}
+              />
+            </section>
+
+            <section
+              className={cn(
+                'flex min-w-[420px] flex-col bg-white',
+                activeTab === 'Tasks' ? 'w-full' : 'w-[48%] max-w-[760px]'
+              )}
+            >
+              <WorkflowSelector
+                definitions={runner.definitions.map((definition) => ({
+                  id: String(definition.id),
+                  name: definition.name,
+                }))}
+                selectedWorkflowId={runner.selectedWorkflowId}
+                workflowName={runner.workflowName}
+                setWorkflowName={runner.setWorkflowName}
+                onSelect={runner.loadDefinition}
+                onNew={runner.newWorkflow}
+              />
+              <GlobalConfigBar
+                llm={runner.globalConfig.llm}
+                humanInLoop={runner.globalConfig.human_in_the_loop}
+                onLlm={(llm) => runner.setGlobalConfig({ ...runner.globalConfig, llm })}
+                onHumanInLoop={(human_in_the_loop) =>
+                  runner.setGlobalConfig({ ...runner.globalConfig, human_in_the_loop })
+                }
+              />
+              <Toolbar
+                onAddNode={runner.addNode}
+                onSave={() => void runner.saveGraph()}
+                onPreview={() => void runner.generatePreview()}
+                onRun={() => void runner.runGraph()}
+                running={runner.running}
+                status={runner.status}
+              />
+              <TemplatePicker onLoad={runner.loadTemplate} />
+              <div className="flex min-h-0 flex-1 border-t border-slate-200">
+                <div className="min-w-0 flex-1 p-3">
+                  <div className="h-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                    <OrbitCanvas
+                      nodes={runner.nodes}
+                      edges={runner.edges}
+                      onNodesChange={runner.onNodesChange}
+                      onEdgesChange={runner.onEdgesChange}
+                      onConnect={runner.onConnect}
+                      onSelect={runner.setSelectedId}
+                      onEdgeDelete={runner.onEdgeDelete}
+                    />
+                  </div>
+                </div>
+                <aside className="w-72 shrink-0 border-l border-slate-200">
+                  <ConfigPanel
+                    node={runner.selectedNode}
+                    updateSelected={runner.updateSelected}
+                    updateSelectedConfig={runner.updateSelectedConfig}
+                    deleteSelectedNode={runner.deleteSelectedNode}
+                  />
+                </aside>
+              </div>
+              <div className="p-3 pt-0">
+                <BottomPanel
+                  previewCode={runner.previewCode}
+                  feed={runner.feed}
+                  runs={runner.runs}
+                />
+              </div>
+            </section>
+          </div>
+        )}
+
+        {logModalId ? (
+          <LogModal
+            nodeId={logModalId}
+            logs={runner.nodeLogs[logModalId] ?? []}
+            onClose={() => setLogModalId(null)}
+          />
+        ) : null}
+
+        <div className="pointer-events-none absolute left-3 top-14 flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-3 py-1 text-[11px] text-slate-500 shadow-sm">
+          {runner.running ? (
+            <CheckCircle2 className="h-3.5 w-3.5 text-blue-500" />
+          ) : runner.status.toLowerCase().includes('error') ? (
+            <XCircle className="h-3.5 w-3.5 text-red-500" />
+          ) : (
+            <Pause className="h-3.5 w-3.5 text-slate-400" />
+          )}
+          ai.backend: GraphQL + WebSocket
+        </div>
+      </div>
+    </OrbitUiContext.Provider>
   );
 }
 
 export function WorkflowApp() {
   return (
     <ReactFlowProvider>
-      <WorkflowAppInner />
+      <WorkflowAppShell />
     </ReactFlowProvider>
   );
 }

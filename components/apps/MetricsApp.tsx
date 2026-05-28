@@ -9,7 +9,7 @@ export function MetricsApp() {
   const metrics = useQuery(METRICS_SUMMARY, { variables: { params: null } });
 
   return (
-    <ModuleAppShell title="Metrics" subtitle="systemHealth + metricsSummary">
+    <ModuleAppShell>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"

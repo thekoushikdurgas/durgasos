@@ -7,6 +7,7 @@ import { SpringBox } from '@/components/motion/SpringBox';
 import { overlaySpring } from '@/lib/motion/spring-presets';
 import { useReducedMotionStyle } from '@/lib/motion/use-reduced-motion-style';
 import { cn } from '@/lib/utils';
+import { RemoteImage } from '@/components/ui/remote-image';
 
 export type PortfolioImage = {
   src: string;
@@ -105,13 +106,11 @@ function PortfolioStackImage({
                       `,
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <RemoteImage
             src={image.src || '/placeholder.svg'}
             alt={image.alt}
             className="h-full w-full object-cover object-left-top"
-            loading="lazy"
-            decoding="async"
+            fill
           />
         </div>
       </div>
@@ -214,13 +213,11 @@ export function PortfolioGallery({
                         `,
                       }}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <RemoteImage
                         src={image.src || '/placeholder.svg'}
                         alt={image.alt}
                         className="h-full w-full object-cover object-left-top"
-                        loading="lazy"
-                        decoding="async"
+                        fill
                       />
                     </div>
                   </div>

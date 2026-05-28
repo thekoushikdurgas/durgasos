@@ -1,9 +1,10 @@
 'use client';
 
 import { useQuery } from '@apollo/client/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { BoardTab } from '@/components/apps/todo/BoardTab';
+import { TodoCommentsPanel } from '@/components/apps/todo/TodoCommentsPanel';
 import { TodoHeader } from '@/components/apps/todo/TodoHeader';
 import { TodoSidebar } from '@/components/apps/todo/TodoSidebar';
 import { useOS } from '@/components/os-context';
@@ -22,6 +23,7 @@ import {
   LOCAL_GOOGLE_USER_ID,
   readTodoAccountPicker,
   writeTodoAccountPicker,
+  type TodoCard,
 } from '@/lib/todo-format';
 
 export function TodoApp() {
@@ -42,6 +44,8 @@ export function TodoApp() {
   const pickerAccounts = useMemo(() => [localPickerRow, ...accounts], [localPickerRow, accounts]);
 
   const [pickedTodoAccountId, setPickedTodoAccountId] = useState<string | null>(null);
+  const [selectedCard, setSelectedCard] = useState<TodoCard | null>(null);
+  const [prevWorkspaceId, setPrevWorkspaceId] = useState<string | null>(null);
 
   const defaultTodoAccountId = useMemo(() => {
     if (!authed) return null;
@@ -84,6 +88,11 @@ export function TodoApp() {
   }, []);
 
   const ws = useTodoWorkspaces(todoAccountId, accessTokenForTodo);
+
+  if (ws.activeWorkspaceId !== prevWorkspaceId) {
+    setPrevWorkspaceId(ws.activeWorkspaceId);
+    setSelectedCard(null);
+  }
   const googleBoard = useTodoBoard(
     isLocalMode ? null : accessTokenForTodo,
     isLocalMode ? null : ws.activeWorkspaceId,
@@ -167,76 +176,83 @@ export function TodoApp() {
           </div>
         ) : null}
 
-        <div className="flex-1 min-h-0 overflow-hidden">
-          {!isLocalMode && !accessTokenForTodo && tokenQ.loading ? (
-            <div className="flex h-full items-center justify-center p-6 text-sm text-white/50">
-              Loading account token…
-            </div>
-          ) : !isLocalMode && !accessTokenForTodo ? (
-            <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-amber-200/90">
-              <p>No access token. Re-link your Google account in Settings.</p>
-              <div className="flex flex-wrap items-center justify-center gap-2">
+        <div className="flex-1 min-h-0 overflow-hidden flex">
+          <div className="flex-1 min-w-0 overflow-hidden flex flex-col">
+            {!isLocalMode && !accessTokenForTodo && tokenQ.loading ? (
+              <div className="flex h-full items-center justify-center p-6 text-sm text-white/50">
+                Loading account token…
+              </div>
+            ) : !isLocalMode && !accessTokenForTodo ? (
+              <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-amber-200/90">
+                <p>No access token. Re-link your Google account in Settings.</p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    className="rounded-full border border-white/20 px-4 py-2 text-xs text-white hover:bg-white/10"
+                    onClick={openAccounts}
+                  >
+                    Open Settings → Accounts
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-violet-400/40 px-4 py-2 text-xs text-violet-200 hover:bg-violet-500/10"
+                    onClick={switchToLocalDevice}
+                  >
+                    Use On this device
+                  </button>
+                </div>
+              </div>
+            ) : !hasTasksScope ? (
+              <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center text-sm text-white/60">
+                <p>
+                  Google Tasks access is required. Re-link your account in Settings → Accounts to
+                  grant the Tasks scope.
+                </p>
                 <button
                   type="button"
-                  className="rounded-full border border-white/20 px-4 py-2 text-xs text-white hover:bg-white/10"
+                  className="rounded-full border border-white/20 px-4 py-2 text-xs text-white/90 hover:bg-white/10"
                   onClick={openAccounts}
                 >
                   Open Settings → Accounts
                 </button>
-                <button
-                  type="button"
-                  className="rounded-full border border-violet-400/40 px-4 py-2 text-xs text-violet-200 hover:bg-violet-500/10"
-                  onClick={switchToLocalDevice}
-                >
-                  Use On this device
-                </button>
               </div>
-            </div>
-          ) : !hasTasksScope ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center text-sm text-white/60">
-              <p>
-                Google Tasks access is required. Re-link your account in Settings → Accounts to
-                grant the Tasks scope.
-              </p>
-              <button
-                type="button"
-                className="rounded-full border border-white/20 px-4 py-2 text-xs text-white/90 hover:bg-white/10"
-                onClick={openAccounts}
-              >
-                Open Settings → Accounts
-              </button>
-            </div>
-          ) : !ws.activeWorkspaceId && ws.loading ? (
-            <div className="flex h-full items-center justify-center p-6 text-sm text-white/50">
-              Loading workspaces…
-            </div>
-          ) : !board.listIds && board.busy ? (
-            <div className="flex h-full items-center justify-center p-6 text-sm text-white/50">
-              {isLocalMode ? 'Loading tasks…' : 'Syncing with Google Tasks…'}
-            </div>
-          ) : board.listIds ? (
-            <BoardTab
-              listIds={board.listIds}
-              busy={board.busy}
-              cards={board.cards}
-              onCardsChange={board.onCardsChange}
-              onAddCard={board.onAddCard}
-              onDeleteCard={board.onDeleteCard}
-            />
-          ) : !isLocalMode && ws.activeWorkspaceId ? (
-            <div className="flex h-full items-center justify-center p-6 text-sm text-white/50">
-              Could not load task lists.
-            </div>
-          ) : (
-            <BoardTab
-              listIds={null}
-              busy={board.busy}
-              cards={board.cards}
-              onCardsChange={board.onCardsChange}
-              onAddCard={board.onAddCard}
-              onDeleteCard={board.onDeleteCard}
-            />
-          )}
+            ) : !ws.activeWorkspaceId && ws.loading ? (
+              <div className="flex h-full items-center justify-center p-6 text-sm text-white/50">
+                Loading workspaces…
+              </div>
+            ) : !board.listIds && board.busy ? (
+              <div className="flex h-full items-center justify-center p-6 text-sm text-white/50">
+                {isLocalMode ? 'Loading tasks…' : 'Syncing with Google Tasks…'}
+              </div>
+            ) : board.listIds ? (
+              <BoardTab
+                listIds={board.listIds}
+                busy={board.busy}
+                cards={board.cards}
+                onCardsChange={board.onCardsChange}
+                onAddCard={board.onAddCard}
+                onDeleteCard={board.onDeleteCard}
+                onCardClick={(card) => setSelectedCard(card)}
+                selectedCardId={selectedCard?.id}
+              />
+            ) : !isLocalMode && ws.activeWorkspaceId ? (
+              <div className="flex h-full items-center justify-center p-6 text-sm text-white/50">
+                Could not load task lists.
+              </div>
+            ) : (
+              <BoardTab
+                listIds={null}
+                busy={board.busy}
+                cards={board.cards}
+                onCardsChange={board.onCardsChange}
+                onAddCard={board.onAddCard}
+                onDeleteCard={board.onDeleteCard}
+                onCardClick={(card) => setSelectedCard(card)}
+                selectedCardId={selectedCard?.id}
+              />
+            )}
+          </div>
+          <TodoCommentsPanel card={selectedCard} onClose={() => setSelectedCard(null)} />
         </div>
       </div>
     </div>

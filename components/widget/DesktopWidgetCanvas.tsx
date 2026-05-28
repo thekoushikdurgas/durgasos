@@ -11,7 +11,7 @@ import { useIsMobile } from '@/lib/use-is-mobile';
 import { cn } from '@/lib/utils';
 import { snapToGrid, findNearestNonOverlappingPos } from '@/lib/widget-layout-utils';
 import { getWidgetDefinition, type WidgetType } from '@/lib/widget-registry';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { DESKTOP_SCREENS_COUNT, ScreenSliderHUD } from '@/components/widget/ScreenSliderHUD';
 
 function WidgetGridOverlay() {
   const { isWidgetEditMode } = useOS();
@@ -100,95 +100,6 @@ function WidgetGridOverlay() {
   );
 }
 
-const SCREENS = [
-  { id: 0, title: 'Dashboard', desc: 'Home & Productivity' },
-  { id: 1, title: 'Workspaces', desc: 'Apps & Communication' },
-  { id: 2, title: 'Diagnostics', desc: 'System & Status Info' },
-];
-const SCREENS_COUNT = SCREENS.length;
-
-function ScreenSliderHUD({
-  activeScreen,
-  onChange,
-}: {
-  activeScreen: number;
-  onChange: (idx: number) => void;
-}) {
-  return (
-    <div className="hud-panel absolute right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-5 z-50 pointer-events-auto select-none bg-slate-950/20 border border-white/15 backdrop-blur-2xl px-3.5 py-6 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-white/25 hover:bg-slate-950/30">
-      {/* Up Arrow */}
-      <button
-        type="button"
-        onClick={() => onChange(Math.max(activeScreen - 1, 0))}
-        disabled={activeScreen === 0}
-        className={cn(
-          'p-1.5 rounded-xl border border-white/10 bg-white/5 text-white/70 transition-all duration-300 focus:outline-none disabled:opacity-10 disabled:pointer-events-none',
-          'hover:text-cyan-400 hover:bg-white/10 hover:border-cyan-500/30 hover:-translate-y-1 active:translate-y-0'
-        )}
-        aria-label="Previous screen"
-      >
-        <ChevronUp className="h-4 w-4 transition-transform duration-300" />
-      </button>
-
-      {/* Dots */}
-      <div className="flex flex-col gap-5 py-2">
-        {SCREENS.map((screen) => {
-          const isActive = screen.id === activeScreen;
-          return (
-            <div
-              key={screen.id}
-              className="relative flex items-center justify-center group h-5 w-5"
-            >
-              {/* Tooltip */}
-              <div
-                className={cn(
-                  'absolute right-8 opacity-0 scale-90 translate-x-3 pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-right',
-                  'group-hover:opacity-100 group-hover:scale-100 group-hover:translate-x-0',
-                  'bg-slate-950/85 border border-cyan-500/20 backdrop-blur-xl px-4 py-2.5 rounded-2xl text-right whitespace-nowrap shadow-[0_12px_40px_rgba(0,0,0,0.6)]'
-                )}
-              >
-                <div className="text-xs font-bold text-cyan-300 tracking-wide">{screen.title}</div>
-                <div className="text-[10px] text-white/50 mt-0.5 font-medium">{screen.desc}</div>
-              </div>
-
-              {/* Dot */}
-              <button
-                type="button"
-                onClick={() => onChange(screen.id)}
-                className={cn(
-                  'rounded-full transition-all duration-300 relative focus:outline-none flex items-center justify-center',
-                  isActive
-                    ? 'w-2.5 h-2.5 bg-cyan-400 scale-[2.1] shadow-[0_0_12px_rgba(34,211,238,0.8),inset_0_1px_2px_rgba(255,255,255,0.4)]'
-                    : 'w-2.5 h-2.5 bg-white/25 hover:bg-white/70 hover:scale-[1.5]'
-                )}
-                aria-label={`Go to screen ${screen.id + 1}`}
-              >
-                {isActive && (
-                  <span className="absolute inset-0 rounded-full animate-ping bg-cyan-400/40 opacity-75 animate-duration-2000" />
-                )}
-              </button>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Down Arrow */}
-      <button
-        type="button"
-        onClick={() => onChange(Math.min(activeScreen + 1, SCREENS_COUNT - 1))}
-        disabled={activeScreen === SCREENS_COUNT - 1}
-        className={cn(
-          'p-1.5 rounded-xl border border-white/10 bg-white/5 text-white/70 transition-all duration-300 focus:outline-none disabled:opacity-10 disabled:pointer-events-none',
-          'hover:text-cyan-400 hover:bg-white/10 hover:border-cyan-500/30 hover:translate-y-1 active:translate-y-0'
-        )}
-        aria-label="Next screen"
-      >
-        <ChevronDown className="h-4 w-4 transition-transform duration-300" />
-      </button>
-    </div>
-  );
-}
-
 export function DesktopWidgetCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { isLauncherOpen, isWidgetEditMode } = useOS();
@@ -254,7 +165,7 @@ export function DesktopWidgetCanvas() {
       if (now - lastScrollTimeRef.current < 600) return;
 
       if (e.deltaY > 30) {
-        setActiveScreen((prev) => Math.min(prev + 1, SCREENS_COUNT - 1));
+        setActiveScreen((prev) => Math.min(prev + 1, DESKTOP_SCREENS_COUNT - 1));
         lastScrollTimeRef.current = now;
       } else if (e.deltaY < -30) {
         setActiveScreen((prev) => Math.max(prev - 1, 0));
@@ -282,7 +193,7 @@ export function DesktopWidgetCanvas() {
       }
 
       if (e.key === 'ArrowDown') {
-        setActiveScreen((prev) => Math.min(prev + 1, SCREENS_COUNT - 1));
+        setActiveScreen((prev) => Math.min(prev + 1, DESKTOP_SCREENS_COUNT - 1));
       } else if (e.key === 'ArrowUp') {
         setActiveScreen((prev) => Math.max(prev - 1, 0));
       }
@@ -423,7 +334,7 @@ export function DesktopWidgetCanvas() {
       // Elastic limits
       if (activeScreen === 0 && deltaY > 0) {
         deltaY = Math.pow(deltaY, 0.85);
-      } else if (activeScreen === SCREENS_COUNT - 1 && deltaY < 0) {
+      } else if (activeScreen === DESKTOP_SCREENS_COUNT - 1 && deltaY < 0) {
         deltaY = -Math.pow(-deltaY, 0.85);
       }
 
@@ -450,7 +361,7 @@ export function DesktopWidgetCanvas() {
       if (deltaY > ih / 5 || velocity > 0.4) {
         setActiveScreen((prev) => Math.max(prev - 1, 0));
       } else if (deltaY < -ih / 5 || velocity < -0.4) {
-        setActiveScreen((prev) => Math.min(prev + 1, SCREENS_COUNT - 1));
+        setActiveScreen((prev) => Math.min(prev + 1, DESKTOP_SCREENS_COUNT - 1));
       }
     },
     [isDraggingBg]
@@ -468,28 +379,22 @@ export function DesktopWidgetCanvas() {
       if (nearTop && activeScreen > 0) {
         if (!boundaryScrollTimeoutRef.current) {
           boundaryScrollTimeoutRef.current = setTimeout(() => {
-            setActiveScreen((prev) => {
-              const nextScreen = Math.max(prev - 1, 0);
-              // Reassign widget screen immediately
-              setItems((prevItems) =>
-                prevItems.map((w) => (w.id === widgetId ? { ...w, screen: nextScreen } : w))
-              );
-              return nextScreen;
-            });
+            const nextScreen = Math.max(activeScreen - 1, 0);
+            setActiveScreen(nextScreen);
+            setItems((prevItems) =>
+              prevItems.map((w) => (w.id === widgetId ? { ...w, screen: nextScreen } : w))
+            );
             boundaryScrollTimeoutRef.current = null;
           }, 800);
         }
-      } else if (nearBottom && activeScreen < SCREENS_COUNT - 1) {
+      } else if (nearBottom && activeScreen < DESKTOP_SCREENS_COUNT - 1) {
         if (!boundaryScrollTimeoutRef.current) {
           boundaryScrollTimeoutRef.current = setTimeout(() => {
-            setActiveScreen((prev) => {
-              const nextScreen = Math.min(prev + 1, SCREENS_COUNT - 1);
-              // Reassign widget screen immediately
-              setItems((prevItems) =>
-                prevItems.map((w) => (w.id === widgetId ? { ...w, screen: nextScreen } : w))
-              );
-              return nextScreen;
-            });
+            const nextScreen = Math.min(activeScreen + 1, DESKTOP_SCREENS_COUNT - 1);
+            setActiveScreen(nextScreen);
+            setItems((prevItems) =>
+              prevItems.map((w) => (w.id === widgetId ? { ...w, screen: nextScreen } : w))
+            );
             boundaryScrollTimeoutRef.current = null;
           }, 800);
         }
@@ -551,7 +456,7 @@ export function DesktopWidgetCanvas() {
                 transform: `translate3d(0, calc(-${activeScreen * 100}% + ${dragOffset}px), 0)`,
               }}
             >
-              {Array.from({ length: SCREENS_COUNT }).map((_, screenIdx) => {
+              {Array.from({ length: DESKTOP_SCREENS_COUNT }).map((_, screenIdx) => {
                 const screenWidgets = enabled.filter((w) => (w.screen ?? 0) === screenIdx);
                 return (
                   <div key={screenIdx} className="h-screen w-full relative shrink-0">

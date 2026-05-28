@@ -4,8 +4,8 @@ import { isUserStoragePath } from '@/lib/file-explorer-mock';
 
 export const STORAGE_BUCKET_UPLOADS = 'uploads';
 
-/** Guard GraphQL body size; tune if your proxy allows more. */
-export const STORAGE_UPLOAD_MAX_BYTES = 20 * 1024 * 1024;
+/** Guard GraphQL body size / chunk limit; up to 10 GB uploads in chunks. */
+export const STORAGE_UPLOAD_MAX_BYTES = 10 * 1024 * 1024 * 1024;
 
 /**
  * Join cloud-relative prefix segments with a relative file path (e.g. `Photos/a.jpg` from
@@ -91,9 +91,18 @@ export function storageListParamsForPath(
   userSub: string | undefined
 ): Record<string, unknown> | null {
   if (!isUserStoragePath(segments) || !userSub) return null;
-  const rel = segments.slice(2);
-  if (rel.length === 0) return { bucket_type: STORAGE_BUCKET_UPLOADS };
-  return { bucket_type: STORAGE_BUCKET_UPLOADS, folder_path: [userSub, ...rel].join('/') };
+  const folder = segments[1];
+  if (folder === 'My Storage') {
+    const rel = segments.slice(2);
+    if (rel.length === 0) return { bucket_type: STORAGE_BUCKET_UPLOADS };
+    return { bucket_type: STORAGE_BUCKET_UPLOADS, folder_path: [userSub, ...rel].join('/') };
+  } else {
+    const rel = segments.slice(2);
+    return {
+      bucket_type: STORAGE_BUCKET_UPLOADS,
+      folder_path: [userSub, folder, ...rel].join('/'),
+    };
+  }
 }
 
 /** GraphQL `storageList.folder_path` for a folder under My Storage (includes `userId/` prefix). */
@@ -102,8 +111,14 @@ export function storageFolderPathFromExplorerPath(
   userSub: string | undefined
 ): string | null {
   if (!isUserStoragePath(folderSegments) || !userSub) return null;
-  const rel = folderSegments.slice(2);
-  return [userSub, ...rel].join('/');
+  const folder = folderSegments[1];
+  if (folder === 'My Storage') {
+    const rel = folderSegments.slice(2);
+    return [userSub, ...rel].join('/');
+  } else {
+    const rel = folderSegments.slice(2);
+    return [userSub, folder, ...rel].join('/');
+  }
 }
 
 function storageListRowIsDirectory(row: StorageListFileRow): boolean {

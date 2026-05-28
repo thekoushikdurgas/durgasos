@@ -3,6 +3,7 @@
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
+    // skipLibCheck: faster CI; third-party .d.ts mismatches are not application code.
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -18,6 +19,7 @@
         "name": "next"
       }
     ],
+    // baseUrl deprecated in TS 6; paths-only migration pending. Suppress until Next/tsconfig preset updates.
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {

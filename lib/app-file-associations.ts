@@ -107,6 +107,7 @@ export const APP_SUPPORTED_EXTENSIONS: Record<AppId, readonly string[]> = {
   workflow: ['json', 'yaml', 'yml'],
   vectordb: [],
   resume: ['pdf', 'doc', 'docx', 'txt', 'md'],
+  'time-machine': [],
   'void-ide': [
     'ts',
     'tsx',
@@ -194,6 +195,7 @@ export const APP_SUPPORTED_EXTENSIONS: Record<AppId, readonly string[]> = {
   todo: ['todo'],
   repo: [],
   viewer: [],
+  roadrash: [],
 };
 
 /** Built-in default handler when the user has not set an override. */

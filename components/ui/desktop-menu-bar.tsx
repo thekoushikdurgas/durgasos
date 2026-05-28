@@ -18,12 +18,12 @@ import { cn } from '@/lib/utils';
 export type MenuItemOption =
   | { type: 'separator' }
   | {
-    label: string;
-    action?: string;
-    shortcut?: string;
-    type?: 'item';
-    disabled?: boolean;
-  };
+      label: string;
+      action?: string;
+      shortcut?: string;
+      type?: 'item';
+      disabled?: boolean;
+    };
 
 export type MenuConfig = {
   label: string;
@@ -257,19 +257,19 @@ export function DesktopMenuBar({
   const portal =
     openKey && typeof document !== 'undefined'
       ? createPortal(
-        <MenuDropdownPanel
-          id={openMenuDomId}
-          items={openItems}
-          position={panelPos}
-          panelRef={panelRef}
-          onRequestClose={() => {
-            close();
-            lastTriggerRef.current?.focus();
-          }}
-          onSelect={handleSelect}
-        />,
-        document.body
-      )
+          <MenuDropdownPanel
+            id={openMenuDomId}
+            items={openItems}
+            position={panelPos}
+            panelRef={panelRef}
+            onRequestClose={() => {
+              close();
+              lastTriggerRef.current?.focus();
+            }}
+            onSelect={handleSelect}
+          />,
+          document.body
+        )
       : null;
 
   const isEl = typeof window !== 'undefined' && !!window.electronAPI;

@@ -10,6 +10,7 @@ import { notifyFocusWelcomeAuth } from '@/lib/auth-session-events';
 import { canRunAuthedGraphqlQueries } from '@/lib/auth-graphql-ready';
 import { SettingsSessionSummary } from '@/components/apps/SettingsSessionSummary';
 import { cn } from '@/lib/utils';
+import { swallowClientError } from '@/lib/safe-client-storage';
 
 function formatJson(value: unknown): string {
   try {
@@ -80,8 +81,8 @@ export function SettingsProfilePane() {
       await navigator.clipboard.writeText(me.id);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* ignore */
+    } catch (err) {
+      swallowClientError('settings-profile.copy', err);
     }
   }, [me]);
 

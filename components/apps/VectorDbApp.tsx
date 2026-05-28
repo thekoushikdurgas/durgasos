@@ -213,12 +213,6 @@ export function VectorDbApp() {
       </LiquidGlassSurface>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-4">
-        <header className="mb-3 shrink-0 border-b border-white/10 pb-3">
-          <h2 className="text-sm font-semibold tracking-tight text-white/90">Vector DB</h2>
-          <p className="mt-0.5 text-xs text-white/45">
-            Chroma via GraphQL — ragList, ragDocuments, ragQuery, ragStats
-          </p>
-        </header>
         <Tabs
           value={vectorTab}
           onValueChange={setVectorTab}

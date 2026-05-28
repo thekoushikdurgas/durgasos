@@ -10,6 +10,7 @@ import {
   TODO_WORKSPACES,
 } from '@/lib/graphql-modules';
 import { LOCAL_GOOGLE_USER_ID, type TodoWorkspaceRow } from '@/lib/todo-format';
+import { swallowStorageError } from '@/lib/safe-client-storage';
 
 function storageKey(googleUserId: string) {
   return `durgasos-todo-workspace-${googleUserId}`;
@@ -30,8 +31,8 @@ function writeStoredWorkspaceId(googleUserId: string | null, id: string | null) 
   try {
     if (id) window.localStorage.setItem(storageKey(googleUserId), id);
     else window.localStorage.removeItem(storageKey(googleUserId));
-  } catch {
-    /* ignore */
+  } catch (err) {
+    swallowStorageError('todo-workspaces.writeStored', err);
   }
 }
 

@@ -50,6 +50,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { cn } from '@/lib/utils';
+import { swallowClientError } from '@/lib/safe-client-storage';
 import type {
   FsIconKey,
   MockFsEntry,
@@ -100,6 +101,8 @@ import {
   type ExplorerEntry,
   type StorageListPayload,
 } from '@/lib/file-explorer-storage';
+import { uploadFileInChunks } from '@/lib/chunked-upload';
+import { readStoredAuthTokens } from '@/lib/auth-tokens-local';
 import {
   ME,
   STORAGE_LIST,
@@ -615,8 +618,8 @@ export function FileExplorerApp() {
           ? { ...s, items: [...s.items, ...add], nextToken: p?.nextPageToken ?? null }
           : s
       );
-    } catch {
-      /* ignore */
+    } catch (err) {
+      swallowClientError('file-explorer.driveLoadMore.left', err);
     } finally {
       setLeftDriveLoadingMore(false);
     }
@@ -650,8 +653,8 @@ export function FileExplorerApp() {
           ? { ...s, items: [...s.items, ...add], nextToken: p?.nextPageToken ?? null }
           : s
       );
-    } catch {
-      /* ignore */
+    } catch (err) {
+      swallowClientError('file-explorer.driveLoadMore.right', err);
     } finally {
       setRightDriveLoadingMore(false);
     }
@@ -708,8 +711,8 @@ export function FileExplorerApp() {
           },
         });
         await bumpAndRefetchStorage();
-      } catch {
-        /* ignore */
+      } catch (err) {
+        swallowClientError('file-explorer.deleteStorage', err);
       }
     },
     [bumpAndRefetchStorage, storageDeleteMut]
@@ -732,8 +735,8 @@ export function FileExplorerApp() {
           },
         });
         await bumpAndRefetchStorage();
-      } catch {
-        /* ignore */
+      } catch (err) {
+        swallowClientError('file-explorer.renameStorage', err);
       }
     },
     [bumpAndRefetchStorage, storageMoveMut]
@@ -804,25 +807,12 @@ export function FileExplorerApp() {
             continue;
           }
           try {
-            update(it.id, { progress: 30 });
-            const file_data = await fileToBase64ForUpload(it.file);
-            update(it.id, { progress: 65 });
-            const { data } = await storageUploadMut({
-              variables: {
-                params: {
-                  bucket_type: STORAGE_BUCKET_UPLOADS,
-                  file_path,
-                  file_data,
-                  content_type: it.file.type || 'application/octet-stream',
-                },
-              },
+            update(it.id, { progress: 5 });
+            const tokens = readStoredAuthTokens();
+            const authHeader = tokens?.access ? `Bearer ${tokens.access}` : null;
+            await uploadFileInChunks(it.file, file_path, authHeader, (progress) => {
+              update(it.id, { progress });
             });
-            const payload = data?.storageUpload as StorageUploadPayload | undefined;
-            const ok = payload?.success !== false;
-            if (!ok) {
-              update(it.id, { status: 'error', errorMessage: 'Upload rejected', progress: 0 });
-              continue;
-            }
             update(it.id, { status: 'completed', progress: 100 });
           } catch (e: unknown) {
             update(it.id, {
@@ -839,7 +829,7 @@ export function FileExplorerApp() {
       uploadQueueChainRef.current = next.catch(() => {});
       await next;
     },
-    [authed, bumpAndRefetchStorage, storageUploadMut]
+    [authed, bumpAndRefetchStorage]
   );
 
   const [selectedLeft, setSelectedLeft] = useState<Set<string>>(new Set());
@@ -1158,10 +1148,10 @@ export function FileExplorerApp() {
         window.open(entry.googleDrive.webViewLink, '_blank', 'noopener,noreferrer');
         return;
       }
-      if (!app) return;
-      openApp(app, {
+      const targetApp = app || 'viewer';
+      openApp(targetApp, {
         ...buildLaunch(entry, side),
-        ...galleryImageLaunchExtras(app, entry.name),
+        ...galleryImageLaunchExtras(targetApp, entry.name),
       });
     },
     [openApp, buildLaunch, fileAssociations, installedIds]

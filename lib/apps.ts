@@ -31,6 +31,8 @@ import {
   FileSearch,
   ListTodo,
   FolderGit2,
+  Compass,
+  Gamepad2,
 } from 'lucide-react';
 
 export type AppCategory = 'core' | 'workflows' | 'data' | 'system';
@@ -59,6 +61,7 @@ export type AppId =
   | 'workflow'
   | 'vectordb'
   | 'resume'
+  | 'time-machine'
   | 'void-ide'
   | 'viewer'
   | 'gmail'
@@ -66,7 +69,9 @@ export type AppId =
   | 'contacts'
   | 'drive'
   | 'todo'
-  | 'repo';
+  | 'repo'
+  | 'roadrash'
+  | 'gemma';
 
 export interface AppDefinition {
   id: AppId;
@@ -278,6 +283,14 @@ export const APPS: Record<AppId, AppDefinition> = {
     category: 'workflows',
     tags: ['ai', 'career'],
   },
+  'time-machine': {
+    id: 'time-machine',
+    name: 'Time Machine',
+    icon: Compass,
+    color: 'text-amber-500',
+    category: 'workflows',
+    tags: ['ai', 'history'],
+  },
   gmail: {
     id: 'gmail',
     name: 'Gmail',
@@ -326,6 +339,22 @@ export const APPS: Record<AppId, AppDefinition> = {
     category: 'core',
     tags: ['devtools', 'github'],
   },
+  roadrash: {
+    id: 'roadrash',
+    name: 'Road Rash',
+    icon: Gamepad2,
+    color: 'text-rose-500',
+    category: 'workflows',
+    tags: ['game', 'retro'],
+  },
+  gemma: {
+    id: 'gemma',
+    name: 'Gemma',
+    icon: Sparkles,
+    color: 'text-purple-400',
+    category: 'core',
+    tags: ['ai', 'devtools'],
+  },
 };
 
 export const APP_CATEGORY_LABELS: Record<AppCategory, string> = {
@@ -361,6 +390,8 @@ export const APP_DESCRIPTIONS: Record<AppId, string> = {
   sheets: 'Spreadsheet-style grids.',
   transfer: 'Move and sync data between locations.',
   resume: 'Résumé parsing and job matching helpers.',
+  'time-machine':
+    'Warp through human history, explore iconic moments with AR visual layers, and forecast our future based on historical trajectories.',
   viewer: 'Preview unknown or binary files from storage or the demo filesystem.',
   gmail: 'Read-only Gmail inbox and messages.',
   calendar: 'Read-only Google Calendar events.',
@@ -368,6 +399,10 @@ export const APP_DESCRIPTIONS: Record<AppId, string> = {
   drive: 'Read-only Google Drive file listing.',
   todo: 'Kanban tasks synced with Google Tasks.',
   repo: 'GitHub profile, repositories, and stars (public or linked account).',
+  roadrash:
+    'Play the classic retro pseudo-3D Road Rash game set in beautiful and chaotic Indian streets!',
+  gemma:
+    'Interact with Google Gemma models, load checkpoints, and simulate LoRA fine-tuning workflows.',
 };
 
 /** Sorted unique tags across all apps (launcher filter dropdown). */

@@ -296,7 +296,7 @@ export function RepoApp() {
   const showEmptyGate = !activeUsername;
 
   return (
-    <ModuleAppShell title="Repo" subtitle="GitHub profile · proxied via backend">
+    <ModuleAppShell>
       <div className="flex flex-col gap-3">
         {/* Status banner */}
         <StatusBanner

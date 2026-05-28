@@ -8,6 +8,7 @@ import React, {
   useLayoutEffect,
   useRef,
   useState,
+  startTransition,
   type ReactNode,
 } from 'react';
 import { APPS, AppId } from '@/lib/apps';
@@ -91,10 +92,10 @@ export function OSProvider({ children }: { children: ReactNode }) {
       zIndex: clampWindowZIndex(Math.max(1, r.zIndex) + idx),
     }));
     windowIdCounter += next.length;
-    // Restoring persisted windows once on mount is intentional one-time hydration.
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync restore before paint
-    setWindows(normalizeWindowStack(next));
-    setActiveWindow(next[next.length - 1]?.id ?? null);
+    startTransition(() => {
+      setWindows(normalizeWindowStack(next));
+      setActiveWindow(next[next.length - 1]?.id ?? null);
+    });
   }, [ready, isInstalled]);
 
   useEffect(() => {

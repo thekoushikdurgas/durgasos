@@ -14,7 +14,7 @@ export function CouncilApp() {
   const [run, { loading }] = useMutation(RUN_COUNCIL);
 
   return (
-    <ModuleAppShell title="Council" subtitle="runCouncil mutation">
+    <ModuleAppShell>
       <textarea
         value={paramsJson}
         onChange={(e) => setParamsJson(e.target.value)}

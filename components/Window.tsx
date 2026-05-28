@@ -90,7 +90,7 @@ export function Window({
     <SpringBox
       data-os-window
       className={cn(
-        'app-glowing-edge-window absolute flex flex-col overflow-hidden transition-[opacity,box-shadow,border-color] duration-200 motion-gpu',
+        'app-glowing-edge-window absolute flex flex-col transition-[opacity,box-shadow,border-color] duration-200 motion-gpu',
         layoutAsMaximized
           ? 'inset-0 rounded-none'
           : 'rounded-xl border border-white/20 w-[800px] h-[550px]',
@@ -126,7 +126,7 @@ export function Window({
       <LiquidGlassSurface
         variant="liquid"
         className={cn(
-          'flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[inherit]',
+          'flex h-full min-h-0 w-full flex-col rounded-[inherit]',
           layoutAsMaximized && 'rounded-none'
         )}
       >
@@ -222,7 +222,7 @@ export function Window({
         </div>
 
         <div
-          className="relative flex-1 overflow-hidden bg-slate-950 pointer-events-auto"
+          className="relative flex-1 bg-slate-950 pointer-events-auto"
           onPointerDown={() => focusWindow(id)}
         >
           <WindowLaunchProvider value={{ ...(launch ?? {}), windowId: id }}>

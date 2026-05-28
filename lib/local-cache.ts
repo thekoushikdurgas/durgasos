@@ -3,6 +3,8 @@
  * Uses a small LRU index to avoid unbounded storage growth.
  */
 
+import { swallowStorageError } from '@/lib/safe-client-storage';
+
 const CACHE_VERSION = '1';
 const ENTRY_PREFIX = 'durgasos_cache::';
 const META_KEY = 'durgasos_cache::__meta';
@@ -58,8 +60,8 @@ function touchOrder(logicalKey: string) {
     if (evict) {
       try {
         window.localStorage.removeItem(entryStorageKey(evict));
-      } catch {
-        /* ignore */
+      } catch (err) {
+        swallowStorageError('local-cache.evict', err);
       }
     }
   }
@@ -118,8 +120,8 @@ export class LocalCache {
       if (victim) {
         try {
           window.localStorage.removeItem(entryStorageKey(victim));
-        } catch {
-          /* ignore */
+        } catch (err) {
+          swallowStorageError('local-cache.evictVictim', err);
         }
       }
       writeMeta({ ...meta, order: meta.order });
@@ -175,8 +177,8 @@ export class LocalCache {
     if (typeof window === 'undefined') return;
     try {
       window.localStorage.removeItem(entryStorageKey(logicalKey));
-    } catch {
-      /* ignore */
+    } catch (err) {
+      swallowStorageError('local-cache.invalidate', err);
     }
     removeFromOrder(logicalKey);
   }
@@ -194,8 +196,8 @@ export class LocalCache {
       if (match) {
         try {
           window.localStorage.removeItem(entryStorageKey(k));
-        } catch {
-          /* ignore */
+        } catch (err) {
+          swallowStorageError('local-cache.invalidatePattern', err);
         }
       } else {
         nextOrder.push(k);
@@ -217,8 +219,8 @@ export class LocalCache {
           window.localStorage.removeItem(key);
         }
       }
-    } catch {
-      /* ignore */
+    } catch (err) {
+      swallowStorageError('local-cache.invalidatePatternScan', err);
     }
   }
 
@@ -228,8 +230,8 @@ export class LocalCache {
     for (const k of meta.order) {
       try {
         window.localStorage.removeItem(entryStorageKey(k));
-      } catch {
-        /* ignore */
+      } catch (err) {
+        swallowStorageError('local-cache.evict', err);
       }
     }
     writeMeta({ order: [], max: meta.max });

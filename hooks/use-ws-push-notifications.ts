@@ -8,6 +8,7 @@ import {
   dispatchOsLog,
   type OsNotificationInput,
 } from '@/lib/notifications';
+import { swallowClientError } from '@/lib/safe-client-storage';
 
 type PushNotifPayload = {
   id: string;
@@ -172,8 +173,8 @@ export function useWsPushNotifications(enabled = true) {
       }
       try {
         wsRef.current?.close();
-      } catch {
-        /* ignore */
+      } catch (err) {
+        swallowClientError('ws-push-notifications.close', err);
       }
       wsRef.current = null;
     };

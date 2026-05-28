@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { swallowStorageError } from '@/lib/safe-client-storage';
+
 const STORAGE_KEY = 'durgasos.file-tags.v1';
 
 /** Persist tag data: { [filePath]: string[] } */
@@ -19,8 +21,8 @@ function loadStore(): TagStore {
 function saveStore(store: TagStore): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-  } catch {
-    /* ignore */
+  } catch (err) {
+    swallowStorageError('file-tags.save', err);
   }
 }
 

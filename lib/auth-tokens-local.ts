@@ -1,5 +1,7 @@
 /** Browser-only persistence for rehydrating httpOnly session cookies after a full reload. */
 
+import { swallowStorageError } from '@/lib/safe-client-storage';
+
 export const LS_ACCESS_KEY = 'durgasos_auth_access';
 export const LS_REFRESH_KEY = 'durgasos_auth_refresh';
 export const LS_USER_KEY = 'durgasos_auth_user';
@@ -101,8 +103,8 @@ export function clearStoredAuthTokens(): void {
     window.sessionStorage.removeItem(SS_ACCESS_KEY);
     window.sessionStorage.removeItem(SS_REFRESH_KEY);
     window.sessionStorage.removeItem(SS_USER_KEY);
-  } catch {
-    /* ignore */
+  } catch (err) {
+    swallowStorageError('auth-tokens.clear', err);
   }
 }
 
@@ -134,8 +136,8 @@ export function readStoredUser(): StoredUser | null {
   try {
     const fromLs = parseStoredUser(window.localStorage.getItem(LS_USER_KEY));
     if (fromLs) return fromLs;
-  } catch {
-    /* ignore */
+  } catch (err) {
+    swallowStorageError('auth-tokens.readUser.localStorage', err);
   }
   try {
     return parseStoredUser(window.sessionStorage.getItem(SS_USER_KEY));
@@ -171,8 +173,8 @@ export function clearStoredUser(): void {
   try {
     window.localStorage.removeItem(LS_USER_KEY);
     window.sessionStorage.removeItem(SS_USER_KEY);
-  } catch {
-    /* ignore */
+  } catch (err) {
+    swallowStorageError('auth-tokens.clear', err);
   }
 }
 

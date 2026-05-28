@@ -10,6 +10,8 @@ type BoardTabProps = {
   onCardsChange: (next: TodoCard[], movedCardId: string) => void | Promise<void>;
   onAddCard: (column: TodoColumn, title: string) => void | Promise<void>;
   onDeleteCard: (card: TodoCard) => void | Promise<void>;
+  onCardClick?: (card: TodoCard) => void;
+  selectedCardId?: string | null;
 };
 
 export function BoardTab({
@@ -19,6 +21,8 @@ export function BoardTab({
   onCardsChange,
   onAddCard,
   onDeleteCard,
+  onCardClick,
+  selectedCardId,
 }: BoardTabProps) {
   if (!listIds) {
     return (
@@ -37,6 +41,8 @@ export function BoardTab({
         onAddCard={onAddCard}
         onDeleteCard={onDeleteCard}
         disabled={busy}
+        onCardClick={onCardClick}
+        selectedCardId={selectedCardId}
       />
     </div>
   );

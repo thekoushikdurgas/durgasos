@@ -1,4 +1,3 @@
-/* eslint-disable */
 /** Internal type. DO NOT USE DIRECTLY. */
 type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 /** Internal type. DO NOT USE DIRECTLY. */
@@ -234,6 +233,24 @@ export type GooglePhotosListQueryVariables = Exact<{
 }>;
 
 export type GooglePhotosListQuery = { googlePhotosList: unknown };
+
+export type GooglePhotosPickerCreateQueryVariables = Exact<{
+  params?: unknown;
+}>;
+
+export type GooglePhotosPickerCreateQuery = { googlePhotosPickerCreate: unknown };
+
+export type GooglePhotosPickerGetQueryVariables = Exact<{
+  params?: unknown;
+}>;
+
+export type GooglePhotosPickerGetQuery = { googlePhotosPickerGet: unknown };
+
+export type GooglePhotosPickerListQueryVariables = Exact<{
+  params?: unknown;
+}>;
+
+export type GooglePhotosPickerListQuery = { googlePhotosPickerList: unknown };
 
 export type GoogleTasksListTasklistsQueryVariables = Exact<{
   params?: unknown;
@@ -533,6 +550,43 @@ export type DeleteTodoTaskMutationVariables = Exact<{
 }>;
 
 export type DeleteTodoTaskMutation = { deleteTodoTask: boolean };
+
+export type TodoCommentsQueryVariables = Exact<{
+  taskId: string;
+}>;
+
+export type TodoCommentsQuery = {
+  todoComments: Array<{
+    id: string;
+    taskId: string;
+    ownerId: string;
+    content: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+};
+
+export type CreateTodoCommentMutationVariables = Exact<{
+  taskId: string;
+  content: string;
+}>;
+
+export type CreateTodoCommentMutation = {
+  createTodoComment: {
+    id: string;
+    taskId: string;
+    ownerId: string;
+    content: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+};
+
+export type DeleteTodoCommentMutationVariables = Exact<{
+  commentId: string;
+}>;
+
+export type DeleteTodoCommentMutation = { deleteTodoComment: boolean };
 
 export type TodoWorkspacesQueryVariables = Exact<{
   googleUserId: string;
@@ -1885,6 +1939,105 @@ export const GooglePhotosListDocument = {
     },
   ],
 } as unknown as DocumentNode<GooglePhotosListQuery, GooglePhotosListQueryVariables>;
+export const GooglePhotosPickerCreateDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GooglePhotosPickerCreate' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'params' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'JSON' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'googlePhotosPickerCreate' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'params' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'params' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GooglePhotosPickerCreateQuery, GooglePhotosPickerCreateQueryVariables>;
+export const GooglePhotosPickerGetDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GooglePhotosPickerGet' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'params' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'JSON' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'googlePhotosPickerGet' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'params' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'params' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GooglePhotosPickerGetQuery, GooglePhotosPickerGetQueryVariables>;
+export const GooglePhotosPickerListDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GooglePhotosPickerList' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'params' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'JSON' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'googlePhotosPickerList' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'params' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'params' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GooglePhotosPickerListQuery, GooglePhotosPickerListQueryVariables>;
 export const GoogleTasksListTasklistsDocument = {
   kind: 'Document',
   definitions: [
@@ -3411,6 +3564,149 @@ export const DeleteTodoTaskDocument = {
     },
   ],
 } as unknown as DocumentNode<DeleteTodoTaskMutation, DeleteTodoTaskMutationVariables>;
+export const TodoCommentsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'TodoComments' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'taskId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'todoComments' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'taskId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'taskId' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'ownerId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TodoCommentsQuery, TodoCommentsQueryVariables>;
+export const CreateTodoCommentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateTodoComment' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'taskId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'content' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createTodoComment' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'taskId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'taskId' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'content' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'content' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'ownerId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateTodoCommentMutation, CreateTodoCommentMutationVariables>;
+export const DeleteTodoCommentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteTodoComment' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'commentId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteTodoComment' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'commentId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'commentId' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DeleteTodoCommentMutation, DeleteTodoCommentMutationVariables>;
 export const TodoWorkspacesDocument = {
   kind: 'Document',
   definitions: [

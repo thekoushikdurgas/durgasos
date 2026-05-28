@@ -103,13 +103,11 @@ export function LiveFeedWidget() {
 
   useEffect(() => {
     mountedRef.current = true;
-    void connect();
+    void connectRef.current();
     return () => {
       mountedRef.current = false;
       if (retryRef.current) clearTimeout(retryRef.current);
     };
-    // connect is stable (useCallback with stable deps)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto-scroll to top (newest events at top)

@@ -168,6 +168,17 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
     signInMutation,
   ]);
 
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authStep === 'confirmPassword') {
+      await handleFinalSubmit(e);
+      return;
+    }
+    if (authStep === 'email' || authStep === 'password') {
+      void handleProgressStep();
+    }
+  };
+
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (modalStatus !== 'closed' || authStep !== 'confirmPassword') return;
@@ -340,6 +351,7 @@ export function useSignUpFlow(confettiRef: RefObject<ConfettiRef | null>) {
     onContinueSuccess,
     passwordInputRef,
     confirmPasswordInputRef,
+    handleFormSubmit,
     handleFinalSubmit,
     handleProgressStep,
     handleKeyDown,

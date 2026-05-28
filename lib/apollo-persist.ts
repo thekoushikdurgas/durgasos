@@ -4,6 +4,8 @@
 
 import type { ApolloCache } from '@apollo/client';
 
+import { swallowStorageError } from '@/lib/safe-client-storage';
+
 const PERSIST_KEY = 'durgasos_apollo_cache';
 const MAX_BYTES = 2 * 1024 * 1024;
 const FLUSH_INTERVAL_MS = 2500;
@@ -33,8 +35,8 @@ export function clearApolloPersistStorage(): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.removeItem(PERSIST_KEY);
-  } catch {
-    /* ignore */
+  } catch (err) {
+    swallowStorageError('apollo-persist.clear', err);
   }
 }
 

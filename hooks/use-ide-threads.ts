@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { swallowClientError } from '@/lib/safe-client-storage';
+
 export type IdeThreadSummary = {
   id: string;
   title: string;
@@ -82,8 +84,8 @@ export function useIdeThreads(callRpc: IdeThreadsCallRpc) {
         merged.sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''));
         return { ...prev, threads: merged };
       });
-    } catch {
-      /* ignore */
+    } catch (err) {
+      swallowClientError('ide-threads.refreshList', err);
     } finally {
       setListLoading(false);
     }

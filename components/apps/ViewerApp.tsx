@@ -222,7 +222,7 @@ export function ViewerApp() {
   ]);
 
   return (
-    <ModuleAppShell title="Viewer" subtitle="Catch-all file preview">
+    <ModuleAppShell>
       {state.kind === 'loading' ? <p className="text-sm text-white/50">Loading…</p> : null}
 
       {state.kind === 'text' ? (

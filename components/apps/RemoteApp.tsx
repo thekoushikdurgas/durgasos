@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { swallowStorageError } from '@/lib/safe-client-storage';
 
 const STORAGE_KEY = 'durgasos.remote.sessions.v1';
 
@@ -35,8 +36,8 @@ export function RemoteApp() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) return JSON.parse(raw) as SessionProfile[];
-    } catch {
-      /* ignore */
+    } catch (err) {
+      swallowStorageError('remote-app.loadSessions', err);
     }
     return DEFAULT_PROFILES;
   });

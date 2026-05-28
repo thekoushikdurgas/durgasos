@@ -3,7 +3,7 @@
 import {
   ArrowLeft,
   LayoutGrid,
-  ImageIcon,
+  Image as ImageIcon,
   ZoomIn,
   ZoomOut,
   Maximize2,
@@ -21,6 +21,7 @@ import {
   type InfiniteDragVariant,
 } from '@/components/ui/infinite-drag-scroll';
 import { cn } from '@/lib/utils';
+import { RemoteImage } from '@/components/ui/remote-image';
 import { SpringBox } from '@/components/motion/SpringBox';
 import { Presence } from '@/components/motion/PresenceList';
 import { usePointerDragSpring } from '@/components/motion/use-pointer-drag-spring';
@@ -211,13 +212,11 @@ export function GalleryInfiniteViewer({
                     onClick={() => selectImage(image)}
                     className="absolute inset-0 select-none cursor-pointer"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <RemoteImage
                       src={image.src}
                       alt={image.alt}
                       className="pointer-events-none absolute inset-0 h-full w-full object-cover rounded-inherit"
-                      loading="lazy"
-                      decoding="async"
+                      fill
                     />
                   </div>
                 </GridItem>
@@ -322,12 +321,12 @@ export function GalleryInfiniteViewer({
                 >
                   {variant === 'polaroid' ? (
                     <div className="bg-white p-3 sm:p-4 pb-14 sm:pb-16 shadow-2xl rounded-sm flex flex-col items-center border border-slate-200 border-b-[40px] border-b-white select-none">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <RemoteImage
                         src={activeImage.src}
                         alt={activeImage.alt}
                         className="max-h-[50vh] sm:max-h-[58vh] max-w-full object-contain pointer-events-none select-none rounded-sm"
-                        draggable={false}
+                        width={1200}
+                        height={800}
                       />
                       <div className="absolute bottom-3 text-center w-full px-2">
                         <span className="font-mono text-[10px] sm:text-xs text-slate-700 tracking-wider font-semibold truncate block max-w-full">
@@ -336,12 +335,12 @@ export function GalleryInfiniteViewer({
                       </div>
                     </div>
                   ) : (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
+                    <RemoteImage
                       src={activeImage.src}
                       alt={activeImage.alt}
                       className="max-h-[66vh] sm:max-h-[72vh] max-w-full rounded-lg shadow-2xl object-contain border border-white/10 pointer-events-none select-none"
-                      draggable={false}
+                      width={1200}
+                      height={800}
                     />
                   )}
                 </SpringBox>
@@ -382,11 +381,11 @@ export function GalleryInfiniteViewer({
                         : 'border-transparent opacity-50 hover:opacity-100 hover:scale-105'
                     )}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <RemoteImage
                       src={img.src}
                       alt={img.alt}
                       className="h-full w-full object-cover pointer-events-none select-none rounded-inherit"
+                      fill
                     />
                   </button>
                 );

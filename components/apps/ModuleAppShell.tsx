@@ -1,38 +1,10 @@
 'use client';
 
-import { useMemo, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-import { ParticleTextEffect } from '@/components/ui/particle-text-effect';
-
-export function ModuleAppShell({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  children: ReactNode;
-}) {
-  const subtitleWords = useMemo(() => (subtitle ? [subtitle] : []), [subtitle]);
-
+export function ModuleAppShell({ children }: { children: ReactNode }) {
   return (
     <div className="absolute inset-0 flex flex-col bg-slate-950/90 text-slate-100">
-      <header className="shrink-0 border-b border-white/10 px-4 py-3">
-        <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
-        {subtitleWords.length > 0 ? (
-          <div className="mt-1 h-9 w-full max-w-full">
-            <ParticleTextEffect
-              words={subtitleWords}
-              pixelSteps={10}
-              interactive={false}
-              autoRotate={false}
-              transparentTrail
-              className="h-full w-full min-h-0"
-              particleColor={{ r: 148, g: 163, b: 184 }}
-            />
-          </div>
-        ) : null}
-      </header>
       <div className="min-h-0 flex-1 overflow-auto p-4">{children}</div>
     </div>
   );

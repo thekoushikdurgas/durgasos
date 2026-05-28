@@ -20,6 +20,7 @@ import { useMutation, useApolloClient } from '@apollo/client/react';
 import { useWindowLaunch } from '@/components/window-launch-context';
 import { useAiChatGateway } from '@/hooks/use-ai-chat-gateway';
 import { isGatewayBenignError } from '@/lib/gateway-errors';
+import { swallowClientError } from '@/lib/safe-client-storage';
 import {
   VOID_IDE_SAMPLE_FILES,
   buildIdeAiContext,
@@ -326,7 +327,7 @@ export function VoidIdeApp() {
     }
   };
 
-  const handleCancelCtrlK = () => {
+  const handleCancelCtrlK = useCallback(() => {
     if (ctrlkCancelRef.current) {
       ctrlkCancelRef.current();
       ctrlkCancelRef.current = null;
@@ -341,9 +342,9 @@ export function VoidIdeApp() {
     setInlineEditActive(false);
     setInlineEditStatus('idle');
     setCtrlkStreamText('');
-  };
+  }, [activePath, markDirty, mode, setVirtualContent]);
 
-  const handleRejectCtrlK = () => {
+  const handleRejectCtrlK = useCallback(() => {
     if (ctrlkBackupContent.current) {
       setBuffer(ctrlkBackupContent.current);
       if (mode === 'virtual') {
@@ -354,14 +355,14 @@ export function VoidIdeApp() {
     setInlineEditActive(false);
     setInlineEditStatus('idle');
     setCtrlkStreamText('');
-  };
+  }, [activePath, markDirty, mode, setVirtualContent]);
 
-  const handleAcceptCtrlK = () => {
+  const handleAcceptCtrlK = useCallback(() => {
     setUndoBackup({ path: activePath, content: ctrlkBackupContent.current });
     setInlineEditActive(false);
     setInlineEditStatus('idle');
     setCtrlkStreamText('');
-  };
+  }, [activePath]);
 
   const applyFenceDirectly = (code: string) => {
     const ed = editorRef.current;
@@ -408,7 +409,7 @@ export function VoidIdeApp() {
     };
     window.addEventListener('keydown', handleKeys, true);
     return () => window.removeEventListener('keydown', handleKeys, true);
-  }, [inlineEditActive, inlineEditStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [inlineEditActive, inlineEditStatus, handleCancelCtrlK, handleRejectCtrlK, handleAcceptCtrlK]);
 
   const handleStartCtrlK = async () => {
     const inst = inlineInstruction.trim();
@@ -579,8 +580,8 @@ export function VoidIdeApp() {
         n.delete(activePath);
         return n;
       });
-    } catch {
-      /* ignore */
+    } catch (err) {
+      swallowClientError('void-ide.saveFile', err);
     }
   }, [mode, activePath, buffer, rootHandle, setVirtualContent]);
 
@@ -755,8 +756,8 @@ export function VoidIdeApp() {
       if (sel && model && !sel.isEmpty()) {
         selection = model.getValueInRange(sel);
       }
-    } catch {
-      /* ignore */
+    } catch (err) {
+      swallowClientError('void-ide.saveFile', err);
     }
 
     const ctx = buildIdeAiContext({
@@ -819,8 +820,8 @@ export function VoidIdeApp() {
   const copyAssistant = useCallback(async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-    } catch {
-      /* ignore */
+    } catch (err) {
+      swallowClientError('void-ide.saveFile', err);
     }
   }, []);
 

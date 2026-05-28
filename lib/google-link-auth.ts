@@ -2,7 +2,7 @@ import type { GoogleAuthProvider } from 'firebase/auth';
 
 /** OAuth scopes requested when linking a Google account (Photos + Workspace read-only). */
 export const GOOGLE_LINK_SCOPES = [
-  'https://www.googleapis.com/auth/photoslibrary.readonly',
+  'https://www.googleapis.com/auth/photospicker.mediaitems.readonly',
   'https://www.googleapis.com/auth/gmail.readonly',
   'https://www.googleapis.com/auth/calendar.readonly',
   'https://www.googleapis.com/auth/contacts.readonly',

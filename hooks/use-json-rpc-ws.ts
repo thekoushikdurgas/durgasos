@@ -4,6 +4,7 @@ import { useCallback, useRef } from 'react';
 
 import { readStoredAuthTokens } from '@/lib/auth-tokens-local';
 import { getAiWebSocketGatewayUrl } from '@/lib/backend-url';
+import { swallowClientError } from '@/lib/safe-client-storage';
 
 export type JsonRpcStreamHandlers = {
   onMessage?: (msg: Record<string, unknown>) => void;
@@ -35,8 +36,8 @@ export function useJsonRpcStream() {
         const cleanup = () => {
           try {
             ws.close();
-          } catch {
-            /* ignore */
+          } catch (err) {
+            swallowClientError('json-rpc-ws.close', err);
           }
         };
 

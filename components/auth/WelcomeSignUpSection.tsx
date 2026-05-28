@@ -101,7 +101,7 @@ export function WelcomeSignUpSection() {
               handleProgressStep={signUp.handleProgressStep}
               handleKeyDown={signUp.handleKeyDown}
               handleGoBack={signUp.handleGoBack}
-              handleFinalSubmit={signUp.handleFinalSubmit}
+              handleFinalSubmit={signUp.handleFormSubmit}
               passwordInputRef={signUp.passwordInputRef}
               confirmPasswordInputRef={signUp.confirmPasswordInputRef}
               oauthSoon={signUp.oauthSoon}

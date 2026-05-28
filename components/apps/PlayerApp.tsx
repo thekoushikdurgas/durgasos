@@ -16,6 +16,7 @@ import { useMutation } from '@apollo/client/react';
 import { useWindowLaunch } from '@/components/window-launch-context';
 import { useGoogleDriveLaunchSource } from '@/hooks/use-google-drive-launch-source';
 import { cn } from '@/lib/utils';
+import { swallowClientError } from '@/lib/safe-client-storage';
 import { STORAGE_GET_URL } from '@/lib/graphql-modules';
 
 type StorageUrlPayload = { success?: boolean; url?: string };
@@ -72,8 +73,8 @@ export function PlayerApp() {
           const json = data?.storageGetUrl as StorageUrlPayload | undefined;
           const url = json?.success && json.url ? json.url : null;
           if (url && !cancelled && gen === fetchGen.current) setFetchedSrc(url);
-        } catch {
-          /* ignore */
+        } catch (err) {
+          swallowClientError('player-app.fetchUrl', err);
         }
         return;
       }
@@ -212,8 +213,8 @@ export function PlayerApp() {
             if (!v) return;
             try {
               void v.requestFullscreen();
-            } catch {
-              /* ignore */
+            } catch (err) {
+              swallowClientError('player-app.requestFullscreen', err);
             }
           }}
         >

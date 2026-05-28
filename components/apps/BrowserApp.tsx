@@ -16,6 +16,7 @@ import {
 import { useMutation } from '@apollo/client/react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { swallowClientError, swallowStorageError } from '@/lib/safe-client-storage';
 import { useWindowLaunch } from '@/components/window-launch-context';
 import { useGoogleDriveLaunchSource } from '@/hooks/use-google-drive-launch-source';
 import { STORAGE_GET_URL } from '@/lib/graphql-modules';
@@ -110,8 +111,8 @@ export function BrowserApp() {
     try {
       const raw = localStorage.getItem(BOOKMARKS_KEY);
       if (raw) return JSON.parse(raw) as string[];
-    } catch {
-      /* ignore */
+    } catch (err) {
+      swallowStorageError('browser-app.loadBookmarks', err);
     }
     return [];
   });
@@ -233,8 +234,8 @@ export function BrowserApp() {
           queueMicrotask(() => {
             setTabs((prev) => prev.map((x) => (x.id === id ? { ...x, url: blobUrl, title } : x)));
           });
-        } catch {
-          /* ignore */
+        } catch (err) {
+          swallowClientError('browser-app.fetchSignedHtml', err);
         }
       })();
       return;

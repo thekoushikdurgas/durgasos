@@ -3,7 +3,11 @@ import { join, relative } from 'node:path';
 
 const root = process.cwd();
 const reportDir = join(root, 'reports');
-const ignoredDirs = new Set(['node_modules', '.next', 'reports']);
+const ignoredDirs = new Set([
+  'node_modules',
+  '.next',
+  'reports', // align with .prettierignore / eslint ignores
+]);
 const sourceExtensions = new Set(['.css', '.tsx', '.ts', '.jsx', '.js']);
 
 function collectFiles(dir) {

@@ -6,6 +6,7 @@ import { readStoredAuthTokens } from '@/lib/auth-tokens-local';
 import { getAiWebSocketGatewayUrl } from '@/lib/backend-url';
 import { getDesktopAiConversationId } from '@/lib/desktop-ai-conversation';
 import { GatewayCancelledError } from '@/lib/gateway-errors';
+import { swallowClientError } from '@/lib/safe-client-storage';
 
 const THINK_INSTRUCTION =
   'Think step by step briefly, then give a clear, direct final answer for the user.';
@@ -42,6 +43,28 @@ type RpcPending = {
 
 type Pending = StreamPending | RpcPending;
 
+/** Avoid "closed before connection is established" when tearing down a CONNECTING socket. */
+function safeCloseWebSocket(ws: WebSocket | null | undefined): void {
+  if (!ws) return;
+  if (ws.readyState === WebSocket.CONNECTING) {
+    ws.addEventListener('open', () => {
+      try {
+        ws.close();
+      } catch (err) {
+        swallowClientError('ai-chat-gateway.ws.safeClose', err);
+      }
+    }, { once: true });
+    return;
+  }
+  if (ws.readyState === WebSocket.OPEN) {
+    try {
+      ws.close();
+    } catch (err) {
+      swallowClientError('ai-chat-gateway.ws.safeClose', err);
+    }
+  }
+}
+
 function defaultProvider(): string | undefined {
   const p = process.env.NEXT_PUBLIC_CHAT_PROVIDER?.trim();
   return p || undefined;
@@ -65,11 +88,7 @@ function openWebSocket(
     return;
   }
   if (cur) {
-    try {
-      cur.close();
-    } catch {
-      /* ignore */
-    }
+    safeCloseWebSocket(cur);
     wsRef.current = null;
   }
 
@@ -114,11 +133,7 @@ function openWebSocket(
         import('@/lib/restore-auth-session').then(({ silentRefreshAuthSession }) => {
           void silentRefreshAuthSession().then((ok) => {
             if (ok && wsRef.current === ws) {
-              try {
-                ws.close();
-              } catch {
-                /* ignore */
-              }
+              safeCloseWebSocket(ws);
             }
           });
         });
@@ -261,7 +276,7 @@ export function useAiChatGateway() {
   const pendingRef = useRef<Map<string, Pending>>(new Map());
   const reconnectRef = useRef<number | null>(null);
   const unmountedRef = useRef(false);
-  const scheduleReconnectRef = useRef<() => void>(() => {});
+  const scheduleReconnectRef = useRef<() => void>(() => { });
 
   const scheduleReconnect = useCallback(() => {
     if (typeof window === 'undefined' || unmountedRef.current) return;
@@ -298,11 +313,7 @@ export function useAiChatGateway() {
         }
       }
       pendingMap.clear();
-      try {
-        w?.close();
-      } catch {
-        /* ignore */
-      }
+      safeCloseWebSocket(w);
     };
   }, [connect]);
 

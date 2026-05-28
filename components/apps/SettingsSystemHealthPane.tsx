@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSystemHealth } from '@/hooks/use-system-health';
+import { useChatProviders } from '@/hooks/use-chat-providers';
 
 /* ─── types ─── */
 
@@ -270,6 +271,7 @@ function ServiceCard({ svc }: { svc: ServiceEntry }) {
 
 /* ─── SettingsSystemHealthPane (main export) ─── */
 export function SettingsSystemHealthPane() {
+  const { providers: llmProviders, loading: llmLoading } = useChatProviders();
   const { raw, overall, loading, error, refetch } = useSystemHealth(30_000);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const {
@@ -415,6 +417,37 @@ export function SettingsSystemHealthPane() {
             />
           </button>
         </div>
+      </section>
+
+      <section className="frost-glass-surface mb-0 border border-white/10 p-6">
+        <h2 className="mb-3 text-lg font-semibold text-white/90">LLM providers</h2>
+        <p className="mb-4 text-sm text-white/45">
+          Status from <code className="rounded bg-black/40 px-1">chat.providers</code> (API keys
+          configured on the backend).
+        </p>
+        {llmLoading ? (
+          <p className="text-sm text-white/50">Loading providers…</p>
+        ) : (
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {llmProviders.slice(0, 24).map((p) => (
+              <li
+                key={p.name}
+                className="flex items-center justify-between rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm"
+              >
+                <span className="truncate font-mono text-cyan-200/90">{p.name}</span>
+                <span
+                  className={cn(
+                    'shrink-0 text-xs font-medium',
+                    p.status === 'available' ? 'text-emerald-300' : 'text-white/40'
+                  )}
+                >
+                  {p.status}
+                  {p.latency_tier === 'fast' ? ' ⚡' : ''}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       {/* Raw JSON debug section */}

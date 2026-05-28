@@ -1,4 +1,5 @@
 import type { ApplicationRecord, ApplicationStatus, MasterResume } from '@/lib/resume-types';
+import { swallowStorageError } from '@/lib/safe-client-storage';
 
 const STORAGE_KEY = 'durgasos_resume_matcher_v1';
 
@@ -107,8 +108,8 @@ export function saveResumeStore(store: ResumeStoreV1): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-  } catch {
-    /* ignore quota */
+  } catch (err) {
+    swallowStorageError('resume-storage.save', err);
   }
 }
 

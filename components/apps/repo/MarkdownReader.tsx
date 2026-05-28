@@ -1,9 +1,9 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { RemoteImage } from '@/components/ui/remote-image';
 import {
   BookOpen,
   FileText,
@@ -533,7 +533,7 @@ export function MarkdownReader({ readmeText, loading, username }: MarkdownReader
 
         if (isBadgeOrIcon) {
           return (
-            <img
+            <RemoteImage
               src={resolvedSrc}
               alt={actualAlt}
               style={{
@@ -552,6 +552,8 @@ export function MarkdownReader({ readmeText, loading, username }: MarkdownReader
                 margin: '0 4px',
               }}
               className="rounded-sm animate-fade-in duration-200"
+              width={parseInt(width ?? '120', 10) || 120}
+              height={parseInt(height ?? '40', 10) || 40}
             />
           );
         }
@@ -559,7 +561,7 @@ export function MarkdownReader({ readmeText, loading, username }: MarkdownReader
         // Standard image display block-centered
         return (
           <span className="block my-6 text-center">
-            <img
+            <RemoteImage
               src={resolvedSrc}
               alt={actualAlt}
               style={{
@@ -577,6 +579,8 @@ export function MarkdownReader({ readmeText, loading, username }: MarkdownReader
                   : 'auto',
               }}
               className="rounded-lg shadow-md border border-white/5"
+              width={parseInt(width ?? '800', 10) || 800}
+              height={parseInt(height ?? '600', 10) || 600}
             />
           </span>
         );

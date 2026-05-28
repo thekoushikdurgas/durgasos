@@ -38,8 +38,8 @@ export function SidebarShellFrame({
   onMouseLeave,
   onClick,
   children,
-  widthOpen = 240,
-  widthClosed = 48.8,
+  widthOpen = 350,
+  widthClosed = 60,
   ...rest
 }: SidebarShellFrameProps) {
   const layoutTarget = pinned ? { width: widthOpen } : { width: widthClosed };

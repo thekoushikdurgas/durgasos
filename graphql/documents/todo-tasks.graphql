@@ -37,3 +37,29 @@ mutation MoveTodoTask($taskId: String!, $column: String!, $previousTaskId: Strin
 mutation DeleteTodoTask($taskId: String!) {
   deleteTodoTask(taskId: $taskId)
 }
+
+query TodoComments($taskId: String!) {
+  todoComments(taskId: $taskId) {
+    id
+    taskId
+    ownerId
+    content
+    createdAt
+    updatedAt
+  }
+}
+
+mutation CreateTodoComment($taskId: String!, $content: String!) {
+  createTodoComment(taskId: $taskId, content: $content) {
+    id
+    taskId
+    ownerId
+    content
+    createdAt
+    updatedAt
+  }
+}
+
+mutation DeleteTodoComment($commentId: String!) {
+  deleteTodoComment(commentId: $commentId)
+}

@@ -8,6 +8,7 @@ import {
   ME,
 } from '@/lib/graphql-modules';
 import { useAiChatGateway } from '@/hooks/use-ai-chat-gateway';
+import { useChatProviders } from '@/hooks/use-chat-providers';
 import { useWindowLaunch } from '@/components/window-launch-context';
 import { getThreadTitle, removeThreadTitle, setThreadTitle } from '@/lib/chat-thread-titles';
 import { CHAT_PROMPT_TEMPLATES } from '@/components/apps/chat/templates';
@@ -40,10 +41,6 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-
-const DEFAULT_MODEL =
-  (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_CHAT_MODEL?.trim()) ||
-  'steamdj/llama3.1-cpu-only';
 
 type UiMessage = {
   id: string;
@@ -95,6 +92,15 @@ function MarkdownBody({ content }: { content: string }) {
 
 export function ChatApp() {
   const { sendCompletion, abortActiveRequests } = useAiChatGateway();
+  const {
+    providers: chatProviders,
+    provider: chatProvider,
+    setProvider: setChatProvider,
+    model,
+    setModel,
+    modelsForProvider,
+    loading: providersLoading,
+  } = useChatProviders();
   const launchOptions = useWindowLaunch();
   const [activeThreadId, setActiveThreadId] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
@@ -113,7 +119,6 @@ export function ChatApp() {
   const [inputValue, setInputValue] = useState('');
   const [think, setThink] = useState(false);
   const [deepSearch, setDeepSearch] = useState(false);
-  const [model, setModel] = useState(DEFAULT_MODEL);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [optimisticUser, setOptimisticUser] = useState<string | null>(null);
@@ -341,6 +346,7 @@ export function ChatApp() {
         think,
         deepSearch,
         model,
+        provider: chatProvider || undefined,
         conversationId: threadId,
       },
       {
@@ -375,6 +381,7 @@ export function ChatApp() {
     think,
     deepSearch,
     model,
+    chatProvider,
     sendCompletion,
     refreshLists,
   ]);
@@ -620,14 +627,37 @@ export function ChatApp() {
                     RAG
                   </label>
                   <select
+                    value={chatProvider}
+                    onChange={(e) => setChatProvider(e.target.value)}
+                    disabled={providersLoading || chatProviders.length === 0}
+                    className="max-w-[120px] rounded-lg border border-[#27272a] bg-[#121214] px-2 py-1 text-[11px] text-[#e4e4e7]"
+                    title="LLM provider"
+                  >
+                    {chatProviders.length === 0 ? (
+                      <option value="">Loading…</option>
+                    ) : (
+                      chatProviders.map((p) => (
+                        <option key={p.name} value={p.name}>
+                          {p.display_name?.replace(/^📌\s*/, '') ?? p.name}
+                          {p.status !== 'available' ? ` (${p.status})` : ''}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                  <select
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
-                    className="rounded-lg border border-[#27272a] bg-[#121214] px-2 py-1 text-[11px] text-[#e4e4e7]"
+                    disabled={!modelsForProvider.length}
+                    className="max-w-[160px] rounded-lg border border-[#27272a] bg-[#121214] px-2 py-1 text-[11px] text-[#e4e4e7]"
                     title="Model id passed to chat.completions"
                   >
-                    <option value="steamdj/llama3.1-cpu-only">Llama 3.1 (CPU)</option>
-                    <option value="steamdj/mistral-cpu-only">Mistral (CPU)</option>
-                    <option value="Raiff1982/codette-ultimate-rc-xi-cpu">Codette</option>
+                    {(modelsForProvider.length ? modelsForProvider : [model || 'default']).map(
+                      (m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      )
+                    )}
                   </select>
                   <button
                     type="button"

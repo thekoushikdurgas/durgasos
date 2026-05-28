@@ -108,8 +108,8 @@ export function WidgetSidebarShell({
       onMouseLeave={handleMouseLeave}
       onClick={(e) => e.stopPropagation()}
       style={{ zIndex: SHELL_Z.widgetSidebar }}
-      widthOpen={240}
-      widthClosed={48.8}
+      widthOpen={350}
+      widthClosed={60}
       data-widget-sidebar="true"
       onDragOver={handleDragOver}
       onDrop={handleDrop}
@@ -121,7 +121,7 @@ export function WidgetSidebarShell({
       >
         <ul className="flex h-full min-h-0 flex-col text-slate-400">
           <div className="flex h-[54px] w-full shrink-0 items-center border-b border-white/10 p-2">
-            <div className="flex w-full items-center gap-1">
+            <div className="flex w-full items-center gap-1 justify-between">
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button

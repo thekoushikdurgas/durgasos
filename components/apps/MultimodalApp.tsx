@@ -4,6 +4,7 @@ import { useMutation } from '@apollo/client/react';
 import { useEffect, useRef, useState } from 'react';
 import { TEXT_TO_IMAGE, STORAGE_GET_URL } from '@/lib/graphql-modules';
 import { ModuleAppShell, JsonBlock } from '@/components/apps/ModuleAppShell';
+import { RemoteImage } from '@/components/ui/remote-image';
 import { useWindowLaunch } from '@/components/window-launch-context';
 import { getStorageSignedUrl } from '@/lib/storage-signed-url';
 import { extensionFromFileName } from '@/lib/app-file-associations';
@@ -59,15 +60,17 @@ export function MultimodalApp() {
   }, [launch?.fileName, launch?.storage, getUrl]);
 
   return (
-    <ModuleAppShell
-      title="Multimodal"
-      subtitle="textToImage mutation (optional reference from Files)"
-    >
+    <ModuleAppShell>
       {refImageUrl ? (
         <div className="mb-3 rounded-lg border border-white/10 bg-black/30 p-2">
           <p className="mb-1 text-[10px] text-white/50">Reference from storage</p>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={refImageUrl} alt="" className="max-h-32 max-w-full rounded object-contain" />
+          <RemoteImage
+            src={refImageUrl}
+            alt=""
+            className="max-h-32 max-w-full rounded object-contain"
+            width={512}
+            height={128}
+          />
         </div>
       ) : null}
       <textarea

@@ -102,6 +102,10 @@ const ResumeMatcherApp = dynamic(
   () => import('./apps/ResumeMatcherApp').then((m) => m.ResumeMatcherApp),
   { ssr: false, loading: LoadingSpinner }
 );
+const TimeMachineApp = dynamic(
+  () => import('./apps/TimeMachineApp').then((m) => m.TimeMachineApp),
+  { ssr: false, loading: LoadingSpinner }
+);
 const VoidIdeApp = dynamic(() => import('./apps/VoidIdeApp').then((m) => m.VoidIdeApp), {
   ssr: false,
   loading: LoadingSpinner,
@@ -134,7 +138,15 @@ const RepoApp = dynamic(() => import('./apps/RepoApp').then((m) => m.RepoApp), {
   ssr: false,
   loading: LoadingSpinner,
 });
+const RoadRashApp = dynamic(() => import('./apps/RoadRashApp').then((m) => m.RoadRashApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
 const ViewerApp = dynamic(() => import('./apps/ViewerApp').then((m) => m.ViewerApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const GemmaApp = dynamic(() => import('./apps/GemmaApp').then((m) => m.GemmaApp), {
   ssr: false,
   loading: LoadingSpinner,
 });
@@ -201,6 +213,8 @@ export function WindowManager() {
         return <TodoApp />;
       case 'repo':
         return <RepoApp />;
+      case 'roadrash':
+        return <RoadRashApp />;
       case 'apps-manager':
         return <AppsManagerApp />;
       case 'volumes':
@@ -227,6 +241,10 @@ export function WindowManager() {
         return <ViewerApp />;
       case 'resume':
         return <ResumeMatcherApp />;
+      case 'time-machine':
+        return <TimeMachineApp />;
+      case 'gemma':
+        return <GemmaApp />;
       default:
         return <FallbackApp name={appId} />;
     }

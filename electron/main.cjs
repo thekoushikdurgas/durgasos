@@ -109,8 +109,10 @@ function stopNextChild() {
   if (nextChild && !nextChild.killed) {
     try {
       nextChild.kill('SIGTERM');
-    } catch {
-      // ignore
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('[electron.main] stopNextChild', err);
+      }
     }
     nextChild = null;
   }

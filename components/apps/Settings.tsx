@@ -29,6 +29,8 @@ import {
   type DesktopBackgroundId,
 } from '@/lib/desktop-background-storage';
 import { SettingsAiProvidersPane } from '@/components/apps/SettingsAiProvidersPane';
+import { SettingsLatencyBenchmarkPane } from '@/components/apps/SettingsLatencyBenchmarkPane';
+import { useChatProviders } from '@/hooks/use-chat-providers';
 import { SettingsDefaultAppsPane } from '@/components/apps/SettingsDefaultAppsPane';
 import { SettingsProfilePane } from '@/components/apps/SettingsProfilePane';
 import { SettingsAccountsPane } from '@/components/apps/SettingsAccountsPane';
@@ -124,10 +126,19 @@ export function SettingsApp() {
   const [agentsTab, setAgentsTab] = useState('routing');
   const { backgroundId, setBackgroundId } = useDesktopBackground();
 
-  const chatProvider = useMemo(
-    () => process.env.NEXT_PUBLIC_CHAT_PROVIDER ?? '(not set — default stack)',
-    []
-  );
+  const {
+    provider: liveChatProvider,
+    model: liveChatModel,
+    providers: liveProviders,
+  } = useChatProviders();
+  const chatProvider = useMemo(() => {
+    if (liveChatProvider) {
+      const label =
+        liveProviders.find((p) => p.name === liveChatProvider)?.display_name ?? liveChatProvider;
+      return `${label} · ${liveChatModel || 'default model'}`;
+    }
+    return process.env.NEXT_PUBLIC_CHAT_PROVIDER ?? '(connect gateway for live list)';
+  }, [liveChatProvider, liveChatModel, liveProviders]);
 
   const graphqlUrl = useMemo(() => {
     try {
@@ -375,6 +386,7 @@ export function SettingsApp() {
               <TabsList className="w-full flex-wrap gap-1 bg-white/5 p-1">
                 <TabsTrigger value="routing">Routing</TabsTrigger>
                 <TabsTrigger value="models">Models</TabsTrigger>
+                <TabsTrigger value="latency">Latency</TabsTrigger>
               </TabsList>
               <TabsContent value="routing" className="mt-4">
                 <section className="frost-glass-surface mb-0 border border-white/10 p-6">
@@ -396,6 +408,9 @@ export function SettingsApp() {
                     for live catalogs.
                   </p>
                 </section>
+              </TabsContent>
+              <TabsContent value="latency" className="mt-4">
+                <SettingsLatencyBenchmarkPane />
               </TabsContent>
             </Tabs>
           </div>

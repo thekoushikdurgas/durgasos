@@ -1,3 +1,15 @@
 query GooglePhotosList($params: JSON) {
   googlePhotosList(params: $params)
 }
+
+query GooglePhotosPickerCreate($params: JSON) {
+  googlePhotosPickerCreate(params: $params)
+}
+
+query GooglePhotosPickerGet($params: JSON) {
+  googlePhotosPickerGet(params: $params)
+}
+
+query GooglePhotosPickerList($params: JSON) {
+  googlePhotosPickerList(params: $params)
+}

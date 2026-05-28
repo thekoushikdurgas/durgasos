@@ -36,6 +36,47 @@ type LoadPayload = {
   warnings?: string[];
 };
 
+const SECTION_CATEGORY: Record<string, string> = {
+  defaults: 'Core',
+  ollama: 'Chat',
+  huggingface: 'Chat',
+  gemini: 'Chat',
+  openai: 'Chat',
+  deepseek: 'Chat',
+  mistral: 'Chat',
+  together: 'Chat',
+  perplexity: 'Chat',
+  xai: 'Chat',
+  sambanova: 'Chat',
+  groq: 'Chat',
+  cerebras: 'Chat',
+  nvidia: 'Chat',
+  openrouter: 'Chat',
+  fireworks: 'Chat',
+  deepinfra: 'Chat',
+  anyscale: 'Chat',
+  cohere: 'Chat',
+  hyperbolic: 'Chat',
+  reka: 'Chat',
+  github_ai: 'Chat',
+  docker_model_runner: 'Chat',
+  ai21: 'Chat',
+  vertex: 'Cloud',
+  bedrock: 'Cloud',
+  dashscope: 'Cloud',
+  watsonx: 'Cloud',
+  deepgram: 'Audio',
+  elevenlabs: 'Audio',
+  fal: 'Image',
+  stability: 'Image',
+  replicate: 'Image',
+  eden: 'Aggregator',
+};
+
+function categoryForSection(sectionId: string): string {
+  return SECTION_CATEGORY[sectionId] ?? 'Chat';
+}
+
 function isSecretMask(v: unknown): v is SecretMask {
   return (
     typeof v === 'object' && v !== null && 'set' in v && typeof (v as SecretMask).set === 'boolean'
@@ -324,50 +365,70 @@ export function SettingsAiProvidersPane() {
 
       {displayLoadState === 'ok' ? (
         <>
-          {sections.map((sec) => (
-            <section key={sec.id} className="frost-glass-surface mb-0 border border-white/10 p-6">
-              <h2 className="mb-4 text-lg font-semibold text-white/90">{sec.title}</h2>
-              <div className="space-y-4">
-                {sec.fields.map((f) => {
-                  const v = values[f.key];
-                  const secretHint = f.kind === 'secret' && isSecretMask(v) && v.set && (
-                    <p className="text-xs text-white/45">
-                      Configured{v.preview ? ` (${v.preview})` : ''}. Enter a new value to replace.
-                    </p>
-                  );
-                  return (
-                    <div key={f.key}>
-                      <label className="block text-sm font-medium text-white/75">{f.label}</label>
-                      {secretHint}
-                      {f.kind === 'enum' && f.enum_options?.length ? (
-                        <select
-                          className={inputCls}
-                          aria-label={f.label}
-                          title={f.label}
-                          value={draft[f.key] ?? ''}
-                          onChange={(e) => setDraft((d) => ({ ...d, [f.key]: e.target.value }))}
-                        >
-                          {f.enum_options.map((opt) => (
-                            <option key={opt} value={opt}>
-                              {opt}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          type={f.kind === 'secret' ? 'password' : 'text'}
-                          autoComplete="off"
-                          className={inputCls}
-                          placeholder={f.kind === 'secret' ? 'Leave blank to keep current' : ''}
-                          value={draft[f.key] ?? ''}
-                          onChange={(e) => setDraft((d) => ({ ...d, [f.key]: e.target.value }))}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
+          {Array.from(
+            sections.reduce((map, sec) => {
+              const cat = categoryForSection(sec.id);
+              if (!map.has(cat)) map.set(cat, []);
+              map.get(cat)!.push(sec);
+              return map;
+            }, new Map<string, SectionDef[]>())
+          ).map(([category, catSections]) => (
+            <div key={category} className="space-y-4">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-cyan-300/80">
+                {category}
+              </h2>
+              {catSections.map((sec) => (
+                <section
+                  key={sec.id}
+                  className="frost-glass-surface mb-0 border border-white/10 p-6"
+                >
+                  <h2 className="mb-4 text-lg font-semibold text-white/90">{sec.title}</h2>
+                  <div className="space-y-4">
+                    {sec.fields.map((f) => {
+                      const v = values[f.key];
+                      const secretHint = f.kind === 'secret' && isSecretMask(v) && v.set && (
+                        <p className="text-xs text-white/45">
+                          Configured{v.preview ? ` (${v.preview})` : ''}. Enter a new value to
+                          replace.
+                        </p>
+                      );
+                      return (
+                        <div key={f.key}>
+                          <label className="block text-sm font-medium text-white/75">
+                            {f.label}
+                          </label>
+                          {secretHint}
+                          {f.kind === 'enum' && f.enum_options?.length ? (
+                            <select
+                              className={inputCls}
+                              aria-label={f.label}
+                              title={f.label}
+                              value={draft[f.key] ?? ''}
+                              onChange={(e) => setDraft((d) => ({ ...d, [f.key]: e.target.value }))}
+                            >
+                              {f.enum_options.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type={f.kind === 'secret' ? 'password' : 'text'}
+                              autoComplete="off"
+                              className={inputCls}
+                              placeholder={f.kind === 'secret' ? 'Leave blank to keep current' : ''}
+                              value={draft[f.key] ?? ''}
+                              onChange={(e) => setDraft((d) => ({ ...d, [f.key]: e.target.value }))}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
+            </div>
           ))}
 
           <div className="flex flex-nowrap items-end justify-end gap-3 px-[15px] py-[10px]">

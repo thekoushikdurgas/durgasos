@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { X } from 'lucide-react';
 
+import { DesktopWidgetChrome } from '@/components/widget/DesktopWidgetChrome';
 import { AIChatInput, type AIChatSubmitPayload } from '@/components/ui/ai-chat-input';
 import { useAiChatGateway } from '@/hooks/use-ai-chat-gateway';
 import { cn } from '@/lib/utils';
@@ -74,35 +75,40 @@ export function AiSearchWidget() {
         : 'Reply';
 
   return (
-    <div
-      className="w-[min(100vw-2rem,40rem)] max-w-3xl"
-      onPointerDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
-      role="search"
-      aria-label="AI assistant"
+    <DesktopWidgetChrome
+      maxWidthClass="max-w-[min(100vw-2rem,42rem)]"
+      contentClassName="gap-2"
+      className="w-full"
     >
-      <div className="flex flex-col gap-2">
+      <div
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        role="search"
+        aria-label="AI assistant"
+        className="flex min-w-0 flex-col gap-2"
+      >
         <AIChatInput
           disabled={streaming}
           streaming={streaming}
           onStop={handleStop}
           onSubmit={handleSubmit}
         />
-        <p className="sr-only">Enter to send. Shift+Enter for a new line.</p>
         {(reply || error || stoppedByUser) && (
           <div
             className={cn(
-              'max-h-40 overflow-y-auto rounded-2xl border border-white/10 px-3 py-2 text-sm shadow-xl backdrop-blur-md',
-              error ? 'bg-red-950/50 text-red-100' : 'bg-slate-950/60 text-slate-200'
+              'max-h-40 overflow-y-auto rounded-xl border px-3 py-2 text-sm',
+              error
+                ? 'border-red-400/30 bg-red-950/40 text-red-100'
+                : 'border-white/12 bg-white/5 text-white/90'
             )}
           >
             <div className="mb-1 flex items-center justify-between gap-2">
-              <span className="text-[10px] font-semibold tracking-wide text-slate-500 uppercase">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-white/45">
                 {replyStatusLabel}
               </span>
               <button
                 type="button"
-                className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+                className="rounded p-1 text-white/45 hover:bg-white/10 hover:text-white"
                 title="Clear reply"
                 aria-label="Clear reply"
                 onClick={clearReply}
@@ -116,6 +122,6 @@ export function AiSearchWidget() {
           </div>
         )}
       </div>
-    </div>
+    </DesktopWidgetChrome>
   );
 }

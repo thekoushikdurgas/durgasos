@@ -22,7 +22,7 @@ export function RagApp() {
   }, [launch?.fileName, launch?.storage]);
 
   return (
-    <ModuleAppShell title="RAG" subtitle="ragList query">
+    <ModuleAppShell>
       {storageHint ? (
         <p className="mb-3 rounded-lg border border-cyan-500/30 bg-cyan-950/25 px-3 py-2 text-xs text-cyan-100/90">
           {storageHint}

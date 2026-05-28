@@ -1,4 +1,5 @@
 import { CACHE_TTL_MS, localCache } from '@/lib/local-cache';
+import { swallowStorageError } from '@/lib/safe-client-storage';
 
 const STORAGE_KEY = 'durgasos_chat_thread_titles';
 
@@ -23,13 +24,13 @@ function writeAll(map: Record<string, string>) {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
-  } catch {
-    /* ignore quota */
+  } catch (err) {
+    swallowStorageError('chat-thread-titles.writeAll.localStorage', err);
   }
   try {
     localCache.set('chat_titles', map, CACHE_TTL_MS.chat_titles);
-  } catch {
-    /* ignore */
+  } catch (err) {
+    swallowStorageError('chat-thread-titles.writeAll.cache', err);
   }
 }
 
