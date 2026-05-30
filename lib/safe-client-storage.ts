@@ -53,3 +53,23 @@ export function tryLocalStorageRemove(key: string): boolean {
     return false;
   }
 }
+
+export function tryLocalStorageGetJson<T>(key: string, fallback: T): T {
+  const raw = tryLocalStorageGet(key);
+  if (raw == null) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch (err) {
+    swallowStorageError(`localStorage.getJson:${key}`, err);
+    return fallback;
+  }
+}
+
+export function tryLocalStorageSetJson(key: string, value: unknown): boolean {
+  try {
+    return tryLocalStorageSet(key, JSON.stringify(value));
+  } catch (err) {
+    swallowStorageError(`localStorage.setJson:${key}`, err);
+    return false;
+  }
+}

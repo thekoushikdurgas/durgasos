@@ -146,11 +146,10 @@ const nextConfig: NextConfig = {
   /** Next 16 defaults to Turbopack; empty config acknowledges intent alongside `webpack` (e.g. PWA / dev HMR hooks). */
   turbopack: {},
   webpack: (config, { dev }) => {
-    // HMR is disabled in AI Studio via DISABLE_HMR env var.
-    // Do not modify—file watching is disabled to prevent flickering during agent edits.
+    // HMR narrowed in AI Studio (DISABLE_HMR): ignore heavy trees, not the whole repo.
     if (dev && process.env.DISABLE_HMR === 'true') {
       config.watchOptions = {
-        ignored: /.*/,
+        ignored: ['**/node_modules/**', '**/.git/**', '**/.next/**'],
       };
     }
     return config;

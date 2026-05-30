@@ -3,12 +3,23 @@ import { join, relative } from 'node:path';
 
 const root = process.cwd();
 const reportDir = join(root, 'reports');
+// Align with eslint.config.mjs global ignores (build output, vendor, native shells).
 const ignoredDirs = new Set([
   'node_modules',
   '.next',
-  'reports', // align with .prettierignore / eslint ignores
+  'reports',
+  'coverage',
+  'out',
+  'graphql',
+  'dist-electron',
+  'android',
+  'ios',
 ]);
 const sourceExtensions = new Set(['.css', '.tsx', '.ts', '.jsx', '.js']);
+
+function isIgnoredDir(name) {
+  return ignoredDirs.has(name) || name.startsWith('node_modules_broken_');
+}
 
 function collectFiles(dir) {
   const entries = readdirSync(dir, { withFileTypes: true });
@@ -16,7 +27,7 @@ function collectFiles(dir) {
 
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      if (!ignoredDirs.has(entry.name)) {
+      if (!isIgnoredDir(entry.name)) {
         files.push(...collectFiles(join(dir, entry.name)));
       }
       continue;

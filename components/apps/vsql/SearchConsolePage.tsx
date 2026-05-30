@@ -19,6 +19,11 @@ import {
   validateSearchJsonBody,
   type SearchSavedApiDefinition,
 } from '@/lib/searchApiBuilder';
+import {
+  swallowStorageError,
+  tryLocalStorageGet,
+  tryLocalStorageSetJson,
+} from '@/lib/safe-client-storage';
 import { motion } from 'framer-motion';
 import {
   FileJson,
@@ -203,20 +208,17 @@ export function SearchConsolePage() {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(SEARCH_SAVED_APIS_STORAGE_KEY);
+      const raw = tryLocalStorageGet(SEARCH_SAVED_APIS_STORAGE_KEY);
       setSavedLibrary(parseSavedApisJson(raw));
-    } catch {
+    } catch (err) {
+      swallowStorageError('vsql.searchConsole.loadLibrary', err);
       setSavedLibrary([]);
     }
   }, []);
 
   const persistLibrary = useCallback((next: SearchSavedApiDefinition[]) => {
     setSavedLibrary(next);
-    try {
-      localStorage.setItem(SEARCH_SAVED_APIS_STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      /* ignore quota */
-    }
+    tryLocalStorageSetJson(SEARCH_SAVED_APIS_STORAGE_KEY, next);
   }, []);
 
   const refreshHealth = useCallback(async () => {

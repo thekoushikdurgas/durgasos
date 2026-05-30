@@ -245,8 +245,8 @@ export function BootSimulatorApp() {
                 <ShieldAlert className="h-10 w-10 text-white/10 mb-2" />
                 <p className="text-xs font-bold uppercase tracking-widest">System Offline</p>
                 <p className="text-[10px] text-white/40 mt-1 max-w-xs leading-normal">
-                  No electrical signal detected. Click "Power On" on the left panel to begin the
-                  firmware instruction cycle.
+                  No electrical signal detected. Click &quot;Power On&quot; on the left panel to
+                  begin the firmware instruction cycle.
                 </p>
               </div>
             ) : (

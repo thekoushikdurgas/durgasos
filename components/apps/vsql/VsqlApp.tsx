@@ -23,6 +23,13 @@ import {
   type CsvImportPlan,
   type SchemaColumn,
 } from '@/lib/vsql-api';
+import {
+  swallowClientError,
+  swallowStorageError,
+  tryLocalStorageGet,
+  tryLocalStorageGetJson,
+  tryLocalStorageSetJson,
+} from '@/lib/safe-client-storage';
 import { AlertCircle } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { AppShell } from './AppShell';
@@ -150,9 +157,9 @@ export function VsqlApp() {
 
   useEffect(() => {
     if (typeof window === 'undefined' || !dbId) return;
-    try {
-      const raw = localStorage.getItem(sqlSessionsStorageKey(dbId));
-      if (raw) {
+    const raw = tryLocalStorageGet(sqlSessionsStorageKey(dbId));
+    if (raw) {
+      try {
         const parsed = JSON.parse(raw) as Partial<SqlWorkspaceState>;
         if (
           Array.isArray(parsed.sessions) &&
@@ -169,9 +176,9 @@ export function VsqlApp() {
           setSqlWorkspace({ sessions, activeId });
           return;
         }
+      } catch (err) {
+        swallowStorageError('vsql.sqlSessions.load', err);
       }
-    } catch {
-      /* ignore */
     }
     const s = createSqlSession('Main');
     setSqlWorkspace({ sessions: [s], activeId: s.id });
@@ -180,11 +187,7 @@ export function VsqlApp() {
   useEffect(() => {
     if (typeof window === 'undefined' || !dbId) return;
     const tid = window.setTimeout(() => {
-      try {
-        localStorage.setItem(sqlSessionsStorageKey(dbId), JSON.stringify(sqlWorkspace));
-      } catch {
-        /* ignore */
-      }
+      tryLocalStorageSetJson(sqlSessionsStorageKey(dbId), sqlWorkspace);
     }, 200);
     return () => clearTimeout(tid);
   }, [dbId, sqlWorkspace]);
@@ -287,52 +290,38 @@ export function VsqlApp() {
   const SETTINGS_KEY = 'vsql_ui_settings';
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    try {
-      const raw = localStorage.getItem(SETTINGS_KEY);
-      if (raw) {
-        const p = JSON.parse(raw) as {
-          videoFps?: number;
-          encodeHourShell?: boolean;
-          compressionAlgorithm?: 'zstd' | 'zlib';
-          compressionLevel?: 'fast' | 'balanced' | 'maximum';
-        };
-        if (typeof p.videoFps === 'number' && p.videoFps >= 1 && p.videoFps <= 120) {
-          setVideoFps(p.videoFps);
-        }
-        if (typeof p.encodeHourShell === 'boolean') {
-          setEncodeHourShell(p.encodeHourShell);
-        }
-        if (p.compressionAlgorithm === 'zlib' || p.compressionAlgorithm === 'zstd') {
-          setCompressionAlgorithm(p.compressionAlgorithm);
-        }
-        if (
-          p.compressionLevel === 'fast' ||
-          p.compressionLevel === 'balanced' ||
-          p.compressionLevel === 'maximum'
-        ) {
-          setCompressionLevel(p.compressionLevel);
-        }
-      }
-    } catch {
-      /* ignore */
+    const p = tryLocalStorageGetJson<{
+      videoFps?: number;
+      encodeHourShell?: boolean;
+      compressionAlgorithm?: 'zstd' | 'zlib';
+      compressionLevel?: 'fast' | 'balanced' | 'maximum';
+    }>(SETTINGS_KEY, {});
+    if (typeof p.videoFps === 'number' && p.videoFps >= 1 && p.videoFps <= 120) {
+      setVideoFps(p.videoFps);
+    }
+    if (typeof p.encodeHourShell === 'boolean') {
+      setEncodeHourShell(p.encodeHourShell);
+    }
+    if (p.compressionAlgorithm === 'zlib' || p.compressionAlgorithm === 'zstd') {
+      setCompressionAlgorithm(p.compressionAlgorithm);
+    }
+    if (
+      p.compressionLevel === 'fast' ||
+      p.compressionLevel === 'balanced' ||
+      p.compressionLevel === 'maximum'
+    ) {
+      setCompressionLevel(p.compressionLevel);
     }
   }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(
-        SETTINGS_KEY,
-        JSON.stringify({
-          videoFps,
-          encodeHourShell,
-          compressionAlgorithm,
-          compressionLevel,
-        })
-      );
-    } catch {
-      /* ignore */
-    }
+    tryLocalStorageSetJson(SETTINGS_KEY, {
+      videoFps,
+      encodeHourShell,
+      compressionAlgorithm,
+      compressionLevel,
+    });
   }, [videoFps, encodeHourShell, compressionAlgorithm, compressionLevel]);
   const [selectedInspectorTable, setSelectedInspectorTable] = useState<string | null>(null);
 
@@ -360,7 +349,8 @@ export function VsqlApp() {
       setSelectedInspectorTable((current) =>
         current && next.includes(current) ? current : (next[0] ?? null)
       );
-    } catch {
+    } catch (err) {
+      swallowClientError('vsql.tables', err);
       setTables([]);
       setSelectedInspectorTable(null);
     }
@@ -374,7 +364,8 @@ export function VsqlApp() {
         setPayloadFrames(Math.max(1, meta.payload_frame_count));
         setVideoFileSize(Math.max(0, meta.video_size_bytes));
         setCurrentFrameIndex((index) => Math.min(index, Math.max(0, meta.payload_frame_count - 1)));
-      } catch {
+      } catch (err) {
+        swallowClientError('vsql.frameMeta', err);
         setPayloadFrames(1);
         setVideoFileSize(0);
         setCurrentFrameIndex(0);
@@ -521,7 +512,8 @@ export function VsqlApp() {
         setSheetData(r.values);
         setSheetTotalRows(r.totalRowCount);
         setSheetTotalCols(r.totalColumnCount);
-      } catch {
+      } catch (err) {
+        swallowClientError('vsql.sheetWindow', err);
         setSheetColumns([]);
         setSheetData([]);
         setSheetTotalRows(0);
@@ -846,8 +838,8 @@ export function VsqlApp() {
               if (existingCols.length > 0) {
                 importPlan = alignImportPlanForAppend(importPlan, existingCols);
               }
-            } catch {
-              /* keep plan if schema cannot be read */
+            } catch (err) {
+              swallowClientError('vsql.csvSchema', err);
             }
           }
           const result = await importCsv(

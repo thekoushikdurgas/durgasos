@@ -19,9 +19,6 @@
         "name": "next"
       }
     ],
-    // baseUrl deprecated in TS 6; paths-only migration pending. Suppress until Next/tsconfig preset updates.
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }

@@ -12,6 +12,7 @@ import {
   uploadDevToolFile,
   type IconHistoryItem,
 } from '@/lib/dev-tool-api';
+import { swallowClientError } from '@/lib/safe-client-storage';
 
 import styles from '../DevToolApp.module.css';
 import { ToolPanel } from './shared';
@@ -28,8 +29,8 @@ export function IconGeneratorTab() {
   const loadHistory = useCallback(async () => {
     try {
       setHistory(await listIconHistory());
-    } catch {
-      /* ignore */
+    } catch (err) {
+      swallowClientError('dev-tool.iconHistory', err);
     }
   }, []);
 

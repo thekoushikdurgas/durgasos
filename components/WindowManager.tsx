@@ -166,6 +166,10 @@ const SudokuApp = dynamic(() => import('./apps/SudokuApp').then((m) => m.SudokuA
   ssr: false,
   loading: LoadingSpinner,
 });
+const PokemonApp = dynamic(() => import('./apps/PokemonApp').then((m) => m.PokemonApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
 const LibraryApp = dynamic(() => import('./apps/library/LibraryApp').then((m) => m.LibraryApp), {
   ssr: false,
   loading: LoadingSpinner,
@@ -302,6 +306,8 @@ export function WindowManager() {
         return <DataVideoApp />;
       case 'sudoku':
         return <SudokuApp />;
+      case 'pokemon':
+        return <PokemonApp />;
       case 'library':
         return <LibraryApp />;
       case 'dev-tool':

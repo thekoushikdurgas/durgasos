@@ -23,6 +23,7 @@ import {
   Info,
 } from 'lucide-react';
 import { getBackendOrigin } from '@/lib/backend-url';
+import type { GlobeMethods } from 'react-globe.gl';
 
 // Dynamically load the react-globe.gl component to avoid SSR errors
 const Globe = dynamic(() => import('react-globe.gl'), {
@@ -35,9 +36,9 @@ const Globe = dynamic(() => import('react-globe.gl'), {
       </div>
     </div>
   ),
-});
+}) as typeof import('react-globe.gl').default;
 
-const GlobeAny = Globe as any;
+type HexBinAggregate = { sumWeight?: number; points: EventMarkerData[] };
 
 export interface EventMarkerData {
   id: string;
@@ -159,7 +160,7 @@ export function WorldMapApp() {
   // Globe dimensions measurement
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const globeRef = useRef<any>(undefined);
+  const globeRef = useRef<GlobeMethods | undefined>(undefined);
 
   // Resize handler
   useEffect(() => {
@@ -241,8 +242,7 @@ export function WorldMapApp() {
       {/* Main Map Container */}
       <div ref={containerRef} className="relative flex-1 h-full min-w-0 bg-black">
         {/* React Globe */}
-        {/* @ts-ignore */}
-        <GlobeAny
+        <Globe
           ref={globeRef}
           width={dimensions.width}
           height={dimensions.height}
@@ -254,52 +254,59 @@ export function WorldMapApp() {
           pointLat="lat"
           pointLng="lng"
           pointColor="color"
-          pointAltitude={(d: any) => (d.size || 1.5) * 0.08}
-          pointRadius={(d: any) => (d.size || 1.5) * 0.8}
+          pointAltitude={(d: object) => ((d as EventMarkerData).size || 1.5) * 0.08}
+          pointRadius={(d: object) => ((d as EventMarkerData).size || 1.5) * 0.8}
           pointsMerge={false}
           pointResolution={24}
-          onPointClick={(point: any) => {
-            setSelectedEvent(point as EventMarkerData);
+          onPointClick={(point: object) => {
+            const marker = point as EventMarkerData;
+            setSelectedEvent(marker);
             if (globeRef.current) {
               globeRef.current.pointOfView(
                 {
-                  lat: point.lat,
-                  lng: point.lng,
+                  lat: marker.lat,
+                  lng: marker.lng,
                   altitude: 1.5,
                 },
                 800
               );
             }
           }}
-          pointLabel={(d: any) => `
+          pointLabel={(d: object) => {
+            const m = d as EventMarkerData;
+            return `
             <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 11px; max-width: 250px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); color: #fff;">
-              <div style="font-weight: bold; color: ${d.color}; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; margin-bottom: 4px; display: flex; justify-content: space-between;">
-                <span>${d.category.toUpperCase()}</span>
-                <span>${d.country}</span>
+              <div style="font-weight: bold; color: ${m.color}; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; margin-bottom: 4px; display: flex; justify-content: space-between;">
+                <span>${m.category.toUpperCase()}</span>
+                <span>${m.country}</span>
               </div>
-              <div style="font-weight: bold; margin-bottom: 4px; color: #f8fafc;">${d.title}</div>
-              <div style="color: #cbd5e1; line-height: 1.3;">${d.summary}</div>
-              <div style="color: rgba(255,255,255,0.4); margin-top: 4px; font-size: 9px;">Age: ${d.daysAgo === 0 ? 'Today' : d.daysAgo + ' days ago'}</div>
+              <div style="font-weight: bold; margin-bottom: 4px; color: #f8fafc;">${m.title}</div>
+              <div style="color: #cbd5e1; line-height: 1.3;">${m.summary}</div>
+              <div style="color: rgba(255,255,255,0.4); margin-top: 4px; font-size: 9px;">Age: ${m.daysAgo === 0 ? 'Today' : m.daysAgo + ' days ago'}</div>
             </div>
-          `}
+          `;
+          }}
           // Heatmap settings
           hexBinPointsData={heatmapMode !== 'off' ? filteredEvents : []}
           hexBinPointLat="lat"
           hexBinPointLng="lng"
           hexBinPointWeight="size"
           hexBinResolution={4}
-          hexAltitude={(bin: any) => Math.min(0.35, (bin.sumWeight || 1) * 0.08)}
+          hexAltitude={(bin: object) =>
+            Math.min(0.35, ((bin as HexBinAggregate).sumWeight || 1) * 0.08)
+          }
           hexSideColor={() => 'rgba(255, 255, 255, 0.06)'}
-          hexBinTopColor={(bin: any) => {
+          hexTopColor={(bin: object) => {
+            const agg = bin as HexBinAggregate;
             if (heatmapMode === 'density') {
-              const weight = bin.sumWeight || 1;
+              const weight = agg.sumWeight || 1;
               if (weight < 1.5) return 'rgba(59, 130, 246, 0.5)'; // blue
               if (weight < 2.5) return 'rgba(234, 179, 8, 0.6)'; // yellow
               return 'rgba(239, 68, 68, 0.7)'; // red
             } else {
               // Category based dominant color
               const categories: Record<string, number> = {};
-              bin.points.forEach((pt: any) => {
+              agg.points.forEach((pt) => {
                 categories[pt.category] = (categories[pt.category] || 0) + (pt.size || 1);
               });
               let dominant = '';

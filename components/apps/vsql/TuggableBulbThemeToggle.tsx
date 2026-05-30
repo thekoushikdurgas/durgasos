@@ -2,6 +2,7 @@
 
 import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { swallowClientError } from '@/lib/safe-client-storage';
 import styles from './TuggableBulbThemeToggle.module.css';
 
 const CORD_X1 = 98.7255;
@@ -111,8 +112,8 @@ export function TuggableBulbThemeToggle() {
     dragStartRef.current = null;
     try {
       (e.target as SVGCircleElement).releasePointerCapture(e.pointerId);
-    } catch {
-      /* ignore */
+    } catch (err) {
+      swallowClientError('vsql.bulb.releasePointerCapture', err);
     }
 
     const travelled = Math.hypot(e.clientX - start.x, e.clientY - start.y);

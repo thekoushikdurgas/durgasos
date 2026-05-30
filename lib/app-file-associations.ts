@@ -201,6 +201,7 @@ export const APP_SUPPORTED_EXTENSIONS: Record<AppId, readonly string[]> = {
   datavideo: [],
   durgasman: [],
   sudoku: [],
+  pokemon: [],
   library: [],
   'dev-tool': [],
   'os-academy': [],

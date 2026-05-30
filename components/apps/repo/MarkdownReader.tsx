@@ -22,6 +22,7 @@ import {
   Sparkles,
   ChevronRight,
 } from 'lucide-react';
+import { swallowClientError } from '@/lib/safe-client-storage';
 
 interface MarkdownReaderProps {
   readmeText: string;
@@ -106,8 +107,8 @@ function decodeCamoUrl(url: string): string {
       }
       return decoded;
     }
-  } catch (e) {
-    // Ignore and fallback
+  } catch (err) {
+    swallowClientError('markdownReader.decodeCamo', err);
   }
   return url;
 }

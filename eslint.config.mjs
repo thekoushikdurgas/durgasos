@@ -19,6 +19,7 @@ export default defineConfig([
       'out/**',
       'graphql/generated/**',
       'dist-electron/**',
+      // Capacitor native shells (Gradle/Kotlin/Swift) — not part of the Next TS lint surface.
       'android/**',
       'ios/**',
     ],
@@ -26,7 +27,7 @@ export default defineConfig([
   {
     extends: [...next],
     rules: {
-      // Many apps load data on mount via effects; disabling avoids 50+ false positives until refactored.
+      // Intentional: many apps hydrate local/remote state on mount via effects (50+ sites).
       'react-hooks/set-state-in-effect': 'off',
     },
   },

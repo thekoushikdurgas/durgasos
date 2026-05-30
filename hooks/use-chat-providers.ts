@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useAiChatGateway } from '@/hooks/use-ai-chat-gateway';
 import { isGatewayBenignError } from '@/lib/gateway-errors';
+import { swallowClientError } from '@/lib/safe-client-storage';
 
 const STORAGE_PROVIDER = 'durgasos.chat.provider';
 const STORAGE_MODEL = 'durgasos.chat.model';
@@ -105,8 +106,8 @@ export function useChatProviders() {
         } else if (res.models?.[0]) {
           setModel(res.models[0]);
         }
-      } catch {
-        /* ignore */
+      } catch (err) {
+        swallowClientError('chat-providers.models', err);
       }
     })();
     return () => {

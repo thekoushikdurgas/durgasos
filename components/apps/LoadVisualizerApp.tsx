@@ -14,6 +14,7 @@ import {
   Network,
 } from 'lucide-react';
 import { useJsonRpcStream } from '@/hooks/use-json-rpc-ws';
+import { swallowClientError } from '@/lib/safe-client-storage';
 import { cn } from '@/lib/utils';
 
 interface TelemetryData {
@@ -81,11 +82,13 @@ export function LoadVisualizerApp() {
             setData(res as unknown as TelemetryData);
             setLoading(false);
           },
-          onError: () => {
-            // ignore polling errors to keep UI smooth
+          onError: (message) => {
+            swallowClientError('os-labs.telemetry', message);
           },
         }
-      ).catch(() => {});
+      ).catch((err) => {
+        swallowClientError('os-labs.telemetry', err);
+      });
     };
 
     fetchTelemetry();
@@ -102,8 +105,8 @@ export function LoadVisualizerApp() {
     setGpuStressLoad(gpuVal);
     try {
       await callStreaming('os_labs.trigger_load', { loadPercent: cpuVal, gpuLoadPercent: gpuVal });
-    } catch (e) {
-      // ignore failures
+    } catch (err) {
+      swallowClientError('os-labs.trigger_load', err);
     }
   };
 
@@ -117,8 +120,8 @@ export function LoadVisualizerApp() {
     setSavingCurve(true);
     try {
       await callStreaming('os_labs.configure_fan_curve', { curve: fanCurve });
-    } catch (e) {
-      // ignore
+    } catch (err) {
+      swallowClientError('os-labs.fan_curve', err);
     } finally {
       setSavingCurve(false);
     }

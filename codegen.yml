@@ -2,8 +2,7 @@
 schema: graphql/schema.graphql
 documents:
   - 'graphql/**/*.graphql'
-# Some SDL-only modules have no .graphql documents yet; keep true until every module has ops.
-ignoreNoDocuments: true
+ignoreNoDocuments: false
 generates:
   graphql/generated/:
     preset: client

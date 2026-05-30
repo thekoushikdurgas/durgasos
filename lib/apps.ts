@@ -86,6 +86,7 @@ export type AppId =
   | 'durgasman'
   | 'datavideo'
   | 'sudoku'
+  | 'pokemon'
   | 'library'
   | 'os-academy'
   | 'strace-inspector'
@@ -407,6 +408,14 @@ export const APPS: Record<AppId, AppDefinition> = {
     category: 'workflows',
     tags: ['game', 'ai', 'retro'],
   },
+  pokemon: {
+    id: 'pokemon',
+    name: 'PokeBattle AI',
+    icon: Gamepad2,
+    color: 'text-rose-400',
+    category: 'workflows',
+    tags: ['game', 'ai', 'retro'],
+  },
   library: {
     id: 'library',
     name: 'Library',
@@ -510,6 +519,8 @@ export const APP_DESCRIPTIONS: Record<AppId, string> = {
     'Pack compressed SQLite databases into video frames (MP4/MKV) and query databases stored inside video files.',
   sudoku:
     'Play Sudoku games generated dynamically by Gemini with real-time multiplayer lobbies and AI coaching.',
+  pokemon:
+    'Build creative custom teams using AI, battle against Gemini opponents, trace damage math, and receive coaching feedback.',
   library:
     'Personal book library with borrowing tracking, research notes, and Gemma-grounded chat over your catalog.',
   'dev-tool':
