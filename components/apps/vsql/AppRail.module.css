@@ -1,0 +1,109 @@
+/* Shared collapsible app rail shell (SessionSidebar / sidebar.md pattern) */
+
+.aside {
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  z-index: 2;
+  flex-shrink: 0;
+  border-right: 1px solid var(--vsql-border-primary);
+  background-color: var(--vsql-bg-secondary);
+  color: var(--vsql-text-muted);
+  overflow: hidden;
+}
+
+.motion {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.headerStrip {
+  flex-shrink: 0;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--vsql-border-primary);
+  background-color: var(--vsql-bg-secondary);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-md);
+  padding: var(--vsql-space-md) var(--vsql-space-sm) var(--vsql-space-md);
+  overflow: hidden;
+}
+
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: var(--vsql-space-sm);
+  border-top: 1px solid var(--vsql-border-primary);
+  background-color: var(--vsql-bg-secondary);
+}
+
+.pinButton {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: var(--vsql-radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--vsql-text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color var(--vsql-transition-fast),
+    background-color var(--vsql-transition-fast),
+    border-color var(--vsql-transition-fast);
+}
+
+.pinButton:hover {
+  color: var(--vsql-accent-cyan);
+  background: var(--vsql-pin-hover-bg);
+}
+
+.pinButtonActive {
+  color: var(--vsql-accent-cyan);
+  border-color: var(--vsql-pin-active-border);
+  background: var(--vsql-pin-active-bg);
+}
+
+.pinIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.interactiveOff {
+  pointer-events: none;
+}
+
+.interactiveOn {
+  pointer-events: auto;
+}

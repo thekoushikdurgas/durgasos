@@ -5,6 +5,36 @@ export type Incremental<T> =
   | T
   | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+export type LibraryBookUpsertInput = {
+  author: string;
+  authorInfo?: string | null | undefined;
+  borrowDate?: string | null | undefined;
+  borrower?: string | null | undefined;
+  borrowingStatus?: string | null | undefined;
+  category?: string | null | undefined;
+  coverUrl?: string | null | undefined;
+  description?: string | null | undefined;
+  id: string;
+  isbn?: string | null | undefined;
+  pagesRead?: number | null | undefined;
+  pagesTotal?: number | null | undefined;
+  pdfAttached?: boolean | null | undefined;
+  pdfContent?: string | null | undefined;
+  pdfName?: string | null | undefined;
+  pdfStoragePath?: string | null | undefined;
+  publishedDate?: string | null | undefined;
+  rating?: number | null | undefined;
+  returnDueDate?: string | null | undefined;
+  title: string;
+};
+
+export type LibraryNoteUpsertInput = {
+  content?: string | null | undefined;
+  id: string;
+  linkedBookIds?: Array<string> | null | undefined;
+  title: string;
+};
+
 export type ListAgentsQueryVariables = Exact<{ [key: string]: never }>;
 
 export type ListAgentsQuery = { listAgents: unknown };
@@ -365,6 +395,136 @@ export type JobStatusQuery = {
     updatedAt: number;
   } | null;
 };
+
+export type LibraryBooksQueryVariables = Exact<{ [key: string]: never }>;
+
+export type LibraryBooksQuery = {
+  libraryBooks: Array<{
+    id: string;
+    title: string;
+    author: string;
+    isbn: string;
+    category: string;
+    description: string;
+    coverUrl: string;
+    borrowingStatus: string;
+    borrower: string | null;
+    borrowDate: string | null;
+    returnDueDate: string | null;
+    pdfAttached: boolean;
+    pdfStoragePath: string | null;
+    pdfName: string | null;
+    pdfContent: string | null;
+    pagesTotal: number;
+    pagesRead: number;
+    rating: number | null;
+    publishedDate: string | null;
+    authorInfo: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+};
+
+export type LibraryNotesQueryVariables = Exact<{ [key: string]: never }>;
+
+export type LibraryNotesQuery = {
+  libraryNotes: Array<{
+    id: string;
+    title: string;
+    content: string;
+    linkedBookIds: Array<string>;
+    lastSaved: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+};
+
+export type LibraryDevicesQueryVariables = Exact<{ [key: string]: never }>;
+
+export type LibraryDevicesQuery = {
+  libraryDevices: Array<{
+    id: string;
+    name: string;
+    type: string;
+    lastSync: string;
+    active: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+};
+
+export type LibraryNotificationsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type LibraryNotificationsQuery = {
+  libraryNotifications: Array<{ id: string; message: string; type: string; timestamp: string }>;
+};
+
+export type LibraryBookUpsertMutationVariables = Exact<{
+  input: LibraryBookUpsertInput;
+}>;
+
+export type LibraryBookUpsertMutation = {
+  libraryBookUpsert: {
+    id: string;
+    title: string;
+    author: string;
+    isbn: string;
+    category: string;
+    description: string;
+    coverUrl: string;
+    borrowingStatus: string;
+    borrower: string | null;
+    borrowDate: string | null;
+    returnDueDate: string | null;
+    pdfAttached: boolean;
+    pdfStoragePath: string | null;
+    pdfName: string | null;
+    pdfContent: string | null;
+    pagesTotal: number;
+    pagesRead: number;
+    rating: number | null;
+    publishedDate: string | null;
+    authorInfo: string | null;
+    updatedAt: string;
+  };
+};
+
+export type LibraryBookDeleteMutationVariables = Exact<{
+  bookId: string;
+}>;
+
+export type LibraryBookDeleteMutation = { libraryBookDelete: boolean };
+
+export type LibraryNoteUpsertMutationVariables = Exact<{
+  input: LibraryNoteUpsertInput;
+}>;
+
+export type LibraryNoteUpsertMutation = {
+  libraryNoteUpsert: {
+    id: string;
+    title: string;
+    content: string;
+    linkedBookIds: Array<string>;
+    lastSaved: string;
+    updatedAt: string;
+  };
+};
+
+export type LibraryNoteDeleteMutationVariables = Exact<{
+  noteId: string;
+}>;
+
+export type LibraryNoteDeleteMutation = { libraryNoteDelete: boolean };
+
+export type LibraryTriggerSyncMutationVariables = Exact<{ [key: string]: never }>;
+
+export type LibraryTriggerSyncMutation = { libraryTriggerSync: unknown };
+
+export type LibraryNotificationDeleteMutationVariables = Exact<{
+  notificationId: string;
+}>;
+
+export type LibraryNotificationDeleteMutation = { libraryNotificationDelete: boolean };
 
 export type LinkedGoogleAccountsQueryVariables = Exact<{ [key: string]: never }>;
 
@@ -2544,6 +2704,376 @@ export const JobStatusDocument = {
     },
   ],
 } as unknown as DocumentNode<JobStatusQuery, JobStatusQueryVariables>;
+export const LibraryBooksDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'LibraryBooks' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'libraryBooks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isbn' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'coverUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'borrowingStatus' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'borrower' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'borrowDate' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'returnDueDate' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pdfAttached' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pdfStoragePath' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pdfName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pdfContent' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pagesTotal' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pagesRead' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'rating' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'publishedDate' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'authorInfo' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LibraryBooksQuery, LibraryBooksQueryVariables>;
+export const LibraryNotesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'LibraryNotes' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'libraryNotes' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'linkedBookIds' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastSaved' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LibraryNotesQuery, LibraryNotesQueryVariables>;
+export const LibraryDevicesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'LibraryDevices' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'libraryDevices' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastSync' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'active' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LibraryDevicesQuery, LibraryDevicesQueryVariables>;
+export const LibraryNotificationsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'LibraryNotifications' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'libraryNotifications' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LibraryNotificationsQuery, LibraryNotificationsQueryVariables>;
+export const LibraryBookUpsertDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'LibraryBookUpsert' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'LibraryBookUpsertInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'libraryBookUpsert' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isbn' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'coverUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'borrowingStatus' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'borrower' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'borrowDate' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'returnDueDate' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pdfAttached' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pdfStoragePath' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pdfName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pdfContent' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pagesTotal' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pagesRead' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'rating' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'publishedDate' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'authorInfo' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LibraryBookUpsertMutation, LibraryBookUpsertMutationVariables>;
+export const LibraryBookDeleteDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'LibraryBookDelete' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'bookId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'libraryBookDelete' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'bookId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'bookId' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LibraryBookDeleteMutation, LibraryBookDeleteMutationVariables>;
+export const LibraryNoteUpsertDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'LibraryNoteUpsert' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'LibraryNoteUpsertInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'libraryNoteUpsert' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'linkedBookIds' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastSaved' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LibraryNoteUpsertMutation, LibraryNoteUpsertMutationVariables>;
+export const LibraryNoteDeleteDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'LibraryNoteDelete' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'noteId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'libraryNoteDelete' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'noteId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'noteId' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LibraryNoteDeleteMutation, LibraryNoteDeleteMutationVariables>;
+export const LibraryTriggerSyncDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'LibraryTriggerSync' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [{ kind: 'Field', name: { kind: 'Name', value: 'libraryTriggerSync' } }],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LibraryTriggerSyncMutation, LibraryTriggerSyncMutationVariables>;
+export const LibraryNotificationDeleteDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'LibraryNotificationDelete' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'notificationId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'libraryNotificationDelete' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'notificationId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'notificationId' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  LibraryNotificationDeleteMutation,
+  LibraryNotificationDeleteMutationVariables
+>;
 export const LinkedGoogleAccountsDocument = {
   kind: 'Document',
   definitions: [

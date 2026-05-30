@@ -1,0 +1,96 @@
+.tableWrap {
+  border: 1px solid var(--vsql-border-secondary);
+  border-radius: var(--vsql-radius-md);
+  overflow: hidden;
+  background: var(--vsql-bg-primary);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--vsql-text-xs);
+  font-family: var(--vsql-font-mono);
+}
+
+.table th {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  background: var(--vsql-bg-elevated);
+  color: var(--vsql-text-muted);
+  font-weight: var(--vsql-font-semibold);
+  border-bottom: 1px solid var(--vsql-border-secondary);
+}
+
+.table td {
+  padding: 0.25rem 0.35rem;
+  border-bottom: 1px solid var(--vsql-border-secondary);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.cellInput {
+  width: 100%;
+  min-width: 0;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid transparent;
+  border-radius: var(--vsql-radius-sm);
+  background: transparent;
+  color: var(--vsql-text-primary);
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.cellInput:focus {
+  outline: none;
+  border-color: rgba(34, 211, 238, 0.45);
+  background: var(--vsql-bg-elevated);
+}
+
+.checkboxCell {
+  width: 2rem;
+  text-align: center;
+}
+
+.rowActions {
+  width: 2.5rem;
+  text-align: center;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border: none;
+  border-radius: var(--vsql-radius-sm);
+  background: transparent;
+  color: var(--vsql-text-muted);
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  color: var(--vsql-accent-red);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.35rem 0.5rem;
+  border-top: 1px solid var(--vsql-border-secondary);
+  background: var(--vsql-bg-elevated);
+}
+
+.addRowBtn {
+  font-size: var(--vsql-text-xs);
+  padding: 0.25rem 0.5rem;
+}
+
+.caption {
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-tertiary);
+  margin: 0 0 0.35rem;
+}

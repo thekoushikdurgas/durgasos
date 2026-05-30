@@ -1,0 +1,120 @@
+/* Toast Component Styles */
+
+.toastItem {
+  pointer-events: auto;
+  display: flex;
+  width: 100%;
+  max-width: 24rem;
+  align-items: flex-start;
+  gap: var(--vsql-space-md);
+  border-radius: var(--vsql-radius-lg);
+  border: 1px solid;
+  padding: var(--vsql-space-md);
+  box-shadow: var(--vsql-shadow-xl);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  transition: all var(--vsql-transition-normal);
+  animation:
+    slideInFromBottom 0.3s ease-out,
+    fadeIn 0.3s ease-out;
+}
+
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Type Variants */
+.toastSuccess {
+  color: var(--vsql-accent-green);
+  border-color: rgba(34, 197, 94, 0.2);
+  background-color: rgba(34, 197, 94, 0.1);
+}
+
+.toastError {
+  color: var(--vsql-accent-red);
+  border-color: rgba(239, 68, 68, 0.2);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.toastInfo {
+  color: var(--vsql-accent-cyan);
+  border-color: rgba(34, 211, 238, 0.2);
+  background-color: rgba(34, 211, 238, 0.1);
+}
+
+.toastWarning {
+  color: var(--vsql-accent-amber);
+  border-color: rgba(245, 158, 11, 0.2);
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+/* Toast Elements */
+.toastIcon {
+  margin-top: 2px;
+  height: 1.25rem;
+  width: 1.25rem;
+  flex-shrink: 0;
+}
+
+.toastContent {
+  flex: 1;
+}
+
+.toastTitle {
+  font-weight: var(--vsql-font-medium);
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-primary);
+}
+
+.toastDescription {
+  margin-top: var(--vsql-space-xs);
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-secondary);
+}
+
+.toastDismissButton {
+  flex-shrink: 0;
+  border-radius: var(--vsql-radius-md);
+  padding: var(--vsql-space-xs);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  transition: background-color var(--vsql-transition-fast);
+}
+
+.toastDismissButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.toastDismissIcon {
+  height: 1rem;
+  width: 1rem;
+}
+
+/* Toast Container */
+.toastContainer {
+  position: fixed;
+  bottom: var(--vsql-space-md);
+  right: var(--vsql-space-md);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-sm);
+}

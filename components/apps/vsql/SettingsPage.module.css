@@ -1,0 +1,350 @@
+/* SettingsPage Component Styles */
+
+/* Main Container */
+.settingsPage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-lg);
+  background-color: var(--vsql-workspace-canvas);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 5px;
+}
+
+/* Content Wrapper */
+.content {
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Header */
+.header {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--vsql-space-md);
+  border-bottom: 1px solid var(--vsql-border-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+  color: var(--vsql-text-secondary);
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-sm);
+  background-color: var(--vsql-bg-elevated);
+  border-top-left-radius: var(--vsql-radius-xl);
+  border-top-right-radius: var(--vsql-radius-xl);
+}
+
+.headerPrompt {
+  color: var(--vsql-accent-cyan);
+}
+
+/* Card Body */
+.card {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--vsql-bg-primary);
+  padding: var(--vsql-space-2xl);
+  border-bottom-left-radius: var(--vsql-radius-xl);
+  border-bottom-right-radius: var(--vsql-radius-xl);
+  border: 1px solid var(--vsql-border-primary);
+  border-top: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-2xl);
+  box-shadow: var(--vsql-shadow-sm);
+}
+
+/* Section */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-md);
+  border-bottom: 1px solid var(--vsql-border-primary);
+  padding-bottom: var(--vsql-space-2xl);
+}
+
+.section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* Section Header */
+.sectionHeader {
+  font-size: var(--vsql-text-sm);
+  font-weight: var(--vsql-font-bold);
+  color: var(--vsql-text-primary);
+  letter-spacing: var(--vsql-tracking-widest);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+}
+
+.sectionIconCyan {
+  width: 1rem;
+  height: 1rem;
+  color: var(--vsql-accent-cyan);
+}
+
+.sectionIconGreen {
+  width: 1rem;
+  height: 1rem;
+  color: var(--vsql-accent-green);
+}
+
+.sectionIconAmber {
+  width: 1rem;
+  height: 1rem;
+  color: var(--vsql-accent-amber);
+}
+
+/* Grid Layout */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--vsql-space-lg);
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Form Field */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-xs);
+}
+
+.fieldLabel {
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--vsql-tracking-widest);
+  font-weight: var(--vsql-font-bold);
+}
+
+/* Inputs */
+.input {
+  background-color: var(--vsql-bg-elevated);
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-md);
+  padding: 0.75rem;
+  font-size: var(--vsql-text-sm);
+  font-family: var(--vsql-font-mono);
+  color: var(--vsql-text-primary);
+  transition: border-color var(--vsql-transition-fast);
+}
+
+.input:focus {
+  outline: none;
+  border-color: rgba(34, 211, 238, 0.5);
+}
+
+.inputReadonly {
+  background-color: var(--vsql-bg-elevated);
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-md);
+  padding: 0.75rem;
+  font-size: var(--vsql-text-sm);
+  font-family: var(--vsql-font-mono);
+  color: var(--vsql-text-muted);
+  cursor: not-allowed;
+}
+
+/* Checkbox Field */
+.checkboxField {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--vsql-space-sm);
+  background-color: var(--vsql-bg-elevated);
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-md);
+  padding: var(--vsql-space-md);
+  cursor: pointer;
+  font-size: var(--vsql-text-sm);
+  transition: border-color var(--vsql-transition-fast);
+}
+
+.checkboxField:hover {
+  border-color: rgba(34, 211, 238, 0.3);
+}
+
+.checkbox {
+  margin-top: 4px;
+  accent-color: var(--vsql-accent-cyan);
+}
+
+.checkboxLabel {
+  display: block;
+  color: var(--vsql-text-primary);
+  font-weight: var(--vsql-font-semibold);
+}
+
+.checkboxHint {
+  display: block;
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  margin-top: var(--vsql-space-xs);
+}
+
+/* Workspace Info Box */
+.workspaceBox {
+  background-color: var(--vsql-bg-card);
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-lg);
+  padding: var(--vsql-space-md);
+}
+
+.workspaceLabel {
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--vsql-tracking-widest);
+  font-weight: var(--vsql-font-bold);
+  margin-bottom: var(--vsql-space-sm);
+}
+
+.workspaceId {
+  color: var(--vsql-accent-cyan);
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-xs);
+  word-break: break-all;
+}
+
+.workspaceButton {
+  margin-top: var(--vsql-space-md);
+  border-color: var(--vsql-border-secondary);
+  background-color: var(--vsql-bg-elevated);
+}
+
+/* Keyboard Shortcuts */
+.shortcutsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--vsql-space-xs);
+}
+
+@media (min-width: 640px) {
+  .shortcutsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.shortcutItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--vsql-bg-elevated);
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-md);
+  padding: 0.75rem;
+}
+
+.shortcutName {
+  font-size: var(--vsql-text-sm);
+  color: #cbd5e1;
+}
+
+.shortcutKey {
+  padding: 0.25rem 0.5rem;
+  background-color: var(--vsql-bg-elevated);
+  border-radius: var(--vsql-radius-md);
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  font-family: var(--vsql-font-mono);
+}
+
+.shortcutVia {
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+}
+
+.shortcutHint {
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  margin-top: var(--vsql-space-sm);
+}
+
+.shortcutHintIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.shortcutHintKey {
+  padding: 2px 4px;
+  background-color: var(--vsql-bg-elevated);
+  border-radius: var(--vsql-radius-sm);
+  font-size: 10px;
+  color: var(--vsql-text-muted);
+  font-family: var(--vsql-font-mono);
+}
+
+/* Warning Box */
+.warningBox {
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  line-height: var(--vsql-leading-relaxed);
+  background-color: var(--vsql-bg-card);
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-xl);
+  padding: var(--vsql-space-md);
+}
+
+.hint {
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-muted);
+  margin: 0 0 var(--vsql-space-md);
+  line-height: 1.45;
+}
+
+.fieldHint {
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  margin: 0 0 var(--vsql-space-lg);
+  line-height: 1.5;
+}
+
+.fieldHint strong {
+  color: var(--vsql-text-secondary);
+  font-weight: var(--vsql-font-semibold);
+}
+
+.inlineCode {
+  font-family: var(--vsql-font-mono);
+  color: var(--vsql-accent-cyan);
+}
+
+.preJson {
+  margin: 0;
+  padding: var(--vsql-space-md);
+  border-radius: var(--vsql-radius-md);
+  border: 1px solid var(--vsql-border-secondary);
+  background: var(--vsql-bg-primary);
+  font-family: var(--vsql-font-mono);
+  font-size: 11px;
+  overflow-x: auto;
+  color: var(--vsql-text-secondary);
+}
+
+.authRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vsql-space-md);
+  margin-top: var(--vsql-space-md);
+}
+
+.authNote {
+  margin-top: var(--vsql-space-md);
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-accent-green);
+}

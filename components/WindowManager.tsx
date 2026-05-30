@@ -150,6 +150,30 @@ const GemmaApp = dynamic(() => import('./apps/GemmaApp').then((m) => m.GemmaApp)
   ssr: false,
   loading: LoadingSpinner,
 });
+const WorldMapApp = dynamic(() => import('./apps/WorldMapApp').then((m) => m.WorldMapApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const DurgasmanApp = dynamic(() => import('./apps/DurgasmanApp').then((m) => m.DurgasmanApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const DataVideoApp = dynamic(() => import('./apps/vsql/VsqlApp').then((m) => m.VsqlApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const SudokuApp = dynamic(() => import('./apps/SudokuApp').then((m) => m.SudokuApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const LibraryApp = dynamic(() => import('./apps/library/LibraryApp').then((m) => m.LibraryApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const DevToolApp = dynamic(() => import('./apps/DevToolApp').then((m) => m.DevToolApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
 
 const FallbackApp = ({ name }: { name: string }) => (
   <div className="absolute inset-0 bg-slate-900 border border-t-0 border-white/5 flex items-center justify-center flex-col gap-4 text-white/50">
@@ -245,6 +269,18 @@ export function WindowManager() {
         return <TimeMachineApp />;
       case 'gemma':
         return <GemmaApp />;
+      case 'worldmap':
+        return <WorldMapApp />;
+      case 'durgasman':
+        return <DurgasmanApp />;
+      case 'datavideo':
+        return <DataVideoApp />;
+      case 'sudoku':
+        return <SudokuApp />;
+      case 'library':
+        return <LibraryApp />;
+      case 'dev-tool':
+        return <DevToolApp />;
       default:
         return <FallbackApp name={appId} />;
     }

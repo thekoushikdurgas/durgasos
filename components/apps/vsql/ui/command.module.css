@@ -1,0 +1,133 @@
+/* Command Component Styles */
+
+/* Dialog Content for Command */
+.dialogContent {
+  overflow: hidden;
+  padding: 0;
+  box-shadow: var(--vsql-shadow-lg);
+}
+
+/* Command Wrapper */
+.command {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Input Wrapper */
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--vsql-border-primary);
+  padding: var(--vsql-space-xs) var(--vsql-space-sm);
+}
+
+/* Search Icon */
+.searchIcon {
+  margin-right: var(--vsql-space-sm);
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  opacity: 0.5;
+  color: var(--vsql-text-muted);
+}
+
+/* Command Input */
+.input {
+  display: flex;
+  height: 2.75rem;
+  width: 100%;
+  border-radius: var(--vsql-radius-md);
+  background-color: transparent;
+  padding: var(--vsql-space-xs) 0;
+  font-size: var(--vsql-text-sm);
+  outline: none;
+  border: none;
+  color: var(--vsql-text-primary);
+}
+
+.input::placeholder {
+  color: var(--vsql-text-muted);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Command List */
+.list {
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Empty State */
+.empty {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+  text-align: center;
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-muted);
+}
+
+/* Command Group */
+.group {
+  overflow: hidden;
+  padding: var(--vsql-space-xs);
+  color: var(--vsql-text-primary);
+}
+
+/* Group Heading */
+.groupHeading {
+  padding-left: var(--vsql-space-xs);
+  padding-right: var(--vsql-space-xs);
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+  font-size: var(--vsql-text-xs);
+  font-weight: var(--vsql-font-medium);
+  color: var(--vsql-text-muted);
+}
+
+/* Separator */
+.separator {
+  height: 1px;
+  background-color: var(--vsql-border-primary);
+  margin-left: -0.25rem;
+  margin-right: -0.25rem;
+}
+
+/* Command Item */
+.item {
+  position: relative;
+  display: flex;
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+  align-items: center;
+  border-radius: var(--vsql-radius-sm);
+  padding: var(--vsql-space-xs) var(--vsql-space-xs);
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-primary);
+  outline: none;
+}
+
+.item[data-selected='true'] {
+  background-color: var(--vsql-bg-elevated);
+  color: var(--vsql-accent-cyan);
+}
+
+.item[data-disabled='true'] {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Command Shortcut */
+.shortcut {
+  margin-left: auto;
+  font-size: var(--vsql-text-xs);
+  letter-spacing: 0.05em;
+  color: var(--vsql-text-muted);
+}

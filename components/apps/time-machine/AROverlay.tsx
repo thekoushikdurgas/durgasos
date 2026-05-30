@@ -860,10 +860,11 @@ export default function AROverlay({ eraName, locationName, year }: AROverlayProp
         {/* Toggle Button for AR Lens Power Control */}
         <button
           onClick={handleToggleArEnabled}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider border transition pointer-events-auto cursor-pointer shadow-lg backdrop-blur-md ${isArEnabled
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider border transition pointer-events-auto cursor-pointer shadow-lg backdrop-blur-md ${
+            isArEnabled
               ? 'bg-emerald-950/80 hover:bg-emerald-900 border-emerald-500/30 text-emerald-400 hover:text-emerald-300'
               : 'bg-zinc-900/90 hover:bg-zinc-800 border-white/10 text-zinc-400 hover:text-zinc-350'
-            }`}
+          }`}
           title={isArEnabled ? 'Enable power saving standby mode' : 'Turn on AR Hologram engine'}
         >
           <Power
@@ -1049,10 +1050,11 @@ export default function AROverlay({ eraName, locationName, year }: AROverlayProp
 
       {/* Manual Gyro navigation sliders & sequence playback dashboard */}
       <div
-        className={`p-4 bg-zinc-950 border-t border-white/5 space-y-4 z-30 text-left transition-all duration-300 ${isArEnabled
+        className={`p-4 bg-zinc-950 border-t border-white/5 space-y-4 z-30 text-left transition-all duration-300 ${
+          isArEnabled
             ? 'opacity-100'
             : 'opacity-40 pointer-events-none select-none filter grayscale-[30%]'
-          }`}
+        }`}
       >
         {/* Dynamic Controls Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1068,10 +1070,11 @@ export default function AROverlay({ eraName, locationName, year }: AROverlayProp
                   setAutoRotate((prev) => !prev);
                   setSelectedHotspot(null);
                 }}
-                className={`px-2.5 py-1 rounded text-[8.5px] font-mono uppercase cursor-pointer transition ${autoRotate
+                className={`px-2.5 py-1 rounded text-[8.5px] font-mono uppercase cursor-pointer transition ${
+                  autoRotate
                     ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25'
                     : 'bg-zinc-900 text-zinc-400 border border-white/5'
-                  }`}
+                }`}
               >
                 {autoRotate ? 'Auto-Orbit: ON' : 'Auto-Orbit: OFF'}
               </button>

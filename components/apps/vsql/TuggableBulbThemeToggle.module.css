@@ -1,0 +1,160 @@
+/**
+ * Scoped bulb + cord (adapted from docs/uiux/tuggable-light-bulb-gsap-draggable-morphsvg).
+ * Uses --bulb-lit on .host (1 = light theme / “on”, 0 = dark).
+ */
+.host {
+  --bulb-lit: 0;
+  --cord: hsl(0, 0%, calc((60 - (var(--bulb-lit) * 50)) * 1%));
+  --stroke: hsl(0, 0%, calc((60 - (var(--bulb-lit) * 50)) * 1%));
+  --shine: hsla(0, 0%, 100%, calc(0.75 - (var(--bulb-lit) * 0.5)));
+  --cap: hsl(0, 0%, calc((40 + (var(--bulb-lit) * 30)) * 1%));
+  --filament: hsl(45, calc(var(--bulb-lit) * 80%), calc((25 + (var(--bulb-lit) * 75)) * 1%));
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-shrink: 0;
+  height: 40px;
+  /* width: 46px; */
+  touch-action: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.host[data-lit='1'] {
+  --bulb-lit: 1;
+}
+
+.host[data-lit='0'] {
+  --bulb-lit: 0;
+}
+
+.host svg {
+  display: block;
+  width: 30px;
+  /* height: 100px; */
+  max-height: 52px;
+  /* margin: 0 auto; */
+  flex-shrink: 0;
+  transform: scale(1.6);
+  transform-origin: 50% 18%;
+  overflow: visible;
+  border-radius: var(--vsql-radius-md);
+}
+
+.host:focus-within {
+  outline: 2px solid var(--vsql-accent-cyan);
+  outline-offset: 2px;
+  border-radius: var(--vsql-radius-md);
+}
+
+.svgPending {
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.svgReady {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+/* Visually hidden but focusable — do not use display:none (see docs/uiux/uiux.md). */
+.srToggle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Reference class names (SVG markup) */
+.host :global(.toggle-scene__cord) {
+  stroke: var(--cord);
+  cursor: grab;
+}
+
+.host :global(.toggle-scene__cord:nth-of-type(1)) {
+  display: none;
+}
+
+.host :global(.toggle-scene__cord:nth-of-type(2)),
+.host :global(.toggle-scene__cord:nth-of-type(3)),
+.host :global(.toggle-scene__cord:nth-of-type(4)),
+.host :global(.toggle-scene__cord:nth-of-type(5)) {
+  display: none;
+}
+
+.host :global(.toggle-scene__cord-end) {
+  stroke: var(--cord);
+  fill: var(--cord);
+}
+
+.host :global(.toggle-scene__dummy-cord) {
+  stroke-width: 6;
+  stroke: var(--cord);
+}
+
+.host :global(.toggle-scene__hit-spot) {
+  cursor: grab;
+}
+
+.host :global(.toggle-scene__hit-spot:active) {
+  cursor: grabbing;
+}
+
+.host :global(.bulb__filament) {
+  stroke: var(--filament);
+}
+
+.host :global(.bulb__shine) {
+  stroke: var(--shine);
+}
+
+.host :global(.bulb__flash) {
+  stroke: #f5e0a3;
+  display: none;
+}
+
+.host :global(.bulb__bulb) {
+  stroke: var(--stroke);
+  fill: hsla(calc(180 - (95 * var(--bulb-lit))), 80%, 80%, calc(0.1 + (0.4 * var(--bulb-lit))));
+}
+
+.host :global(.bulb__cap) {
+  fill: var(--cap);
+}
+
+.host :global(.bulb__cap-shine) {
+  fill: var(--shine);
+}
+
+.host :global(.bulb__cap-outline) {
+  stroke: var(--stroke);
+}
+
+@keyframes bulbWobble {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  25% {
+    transform: translateY(11px);
+  }
+
+  55% {
+    transform: translateY(-6px);
+  }
+}
+
+.wobble {
+  animation: bulbWobble 0.48s cubic-bezier(0.34, 1.56, 0.64, 1);
+}

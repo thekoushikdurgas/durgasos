@@ -17,7 +17,7 @@ import {
   BookOpen,
   Sliders,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
 } from 'lucide-react';
 import { useAiChatGateway } from '@/hooks/use-ai-chat-gateway';
 import ReactMarkdown from 'react-markdown';
@@ -66,18 +66,30 @@ export function GemmaApp() {
     {
       id: 'welcome',
       role: 'assistant',
-      content: 'Welcome to **Gemma Studio**! Select a Gemma model variant and start chatting or explore the training/checkpoint tabs.',
-      timestamp: new Date()
-    }
+      content:
+        'Welcome to **Gemma Studio**! Select a Gemma model variant and start chatting or explore the training/checkpoint tabs.',
+      timestamp: new Date(),
+    },
   ]);
   const [chatInput, setChatInput] = useState('');
   const [selectedModel, setSelectedModel] = useState('google/gemma-3-4b-it');
   const [temperature, setTemperature] = useState(0.7);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [demoTokensPerSec, setDemoTokensPerSec] = useState(0);
   const [streamingResponse, setStreamingResponse] = useState('');
-  const [executionMode, setExecutionMode] = useState<'simulated' | 'local' | 'ollama' | 'api'>('simulated');
+  const [executionMode, setExecutionMode] = useState<'simulated' | 'local' | 'ollama' | 'api'>(
+    'simulated'
+  );
   const chatEndRef = useRef<HTMLDivElement>(null);
   const abortChatRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    if (!isGenerating) {
+      setDemoTokensPerSec(0);
+      return;
+    }
+    setDemoTokensPerSec(Math.floor(Math.random() * 13) + 35);
+  }, [isGenerating]);
 
   // Catalog Tab State
   const [catalogModels, setCatalogModels] = useState<ModelSpec[]>([]);
@@ -184,7 +196,7 @@ export function GemmaApp() {
 
     setMessages((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), role: 'user', content: text, timestamp: new Date() }
+      { id: crypto.randomUUID(), role: 'user', content: text, timestamp: new Date() },
     ]);
     setChatInput('');
     setStreamingResponse('');
@@ -197,7 +209,7 @@ export function GemmaApp() {
         model: selectedModel,
         temperature,
         mode: executionMode,
-        stream: true
+        stream: true,
       },
       {
         onChunk: (_, full) => {
@@ -206,7 +218,7 @@ export function GemmaApp() {
         onDone: (full) => {
           setMessages((prev) => [
             ...prev,
-            { id: crypto.randomUUID(), role: 'assistant', content: full, timestamp: new Date() }
+            { id: crypto.randomUUID(), role: 'assistant', content: full, timestamp: new Date() },
           ]);
           setStreamingResponse('');
           setIsGenerating(false);
@@ -214,10 +226,15 @@ export function GemmaApp() {
         onError: (err) => {
           setMessages((prev) => [
             ...prev,
-            { id: crypto.randomUUID(), role: 'system', content: `Error: ${err}`, timestamp: new Date() }
+            {
+              id: crypto.randomUUID(),
+              role: 'system',
+              content: `Error: ${err}`,
+              timestamp: new Date(),
+            },
           ]);
           setIsGenerating(false);
-        }
+        },
       }
     );
 
@@ -253,8 +270,8 @@ export function GemmaApp() {
               {
                 text: data.log,
                 level: data.level,
-                timestamp: new Date().toLocaleTimeString()
-              }
+                timestamp: new Date().toLocaleTimeString(),
+              },
             ]);
             if (data.percent !== undefined) {
               setCheckpointLoadingProgress(data.percent);
@@ -262,7 +279,7 @@ export function GemmaApp() {
             if (data.level === 'success') {
               setLoadedCheckpoint(selectedCheckpoint);
               // Set the default model parameter matching checkpoint size
-              const matched = checkpoints.find(c => c.id === selectedCheckpoint);
+              const matched = checkpoints.find((c) => c.id === selectedCheckpoint);
               if (matched) {
                 // If it is Gemma 3 or Gemma 4, set the selector model path
                 const size = matched.size.toLowerCase();
@@ -276,8 +293,8 @@ export function GemmaApp() {
               {
                 text: delta,
                 level: 'info',
-                timestamp: new Date().toLocaleTimeString()
-              }
+                timestamp: new Date().toLocaleTimeString(),
+              },
             ]);
           }
         },
@@ -291,12 +308,12 @@ export function GemmaApp() {
             {
               text: `Error: ${err}`,
               level: 'info',
-              timestamp: new Date().toLocaleTimeString()
-            }
+              timestamp: new Date().toLocaleTimeString(),
+            },
           ]);
           setIsCheckpointLoading(false);
           setCheckpointLoadingProgress(null);
-        }
+        },
       }
     );
 
@@ -309,8 +326,8 @@ export function GemmaApp() {
         {
           text: '[CANCEL] Loading task aborted by operator.',
           level: 'info',
-          timestamp: new Date().toLocaleTimeString()
-        }
+          timestamp: new Date().toLocaleTimeString(),
+        },
       ]);
     };
   }, [isCheckpointLoading, selectedCheckpoint, sendStreamingMethod, checkpoints]);
@@ -332,7 +349,7 @@ export function GemmaApp() {
         epochs: trainingEpochs,
         learning_rate: parseFloat(trainingLR),
         rank: trainingRank,
-        alpha: trainingAlpha
+        alpha: trainingAlpha,
       },
       {
         onChunk: (delta) => {
@@ -354,8 +371,8 @@ export function GemmaApp() {
               {
                 text: data.log,
                 level: data.level,
-                timestamp: new Date().toLocaleTimeString()
-              }
+                timestamp: new Date().toLocaleTimeString(),
+              },
             ]);
 
             if (data.metrics) {
@@ -363,7 +380,7 @@ export function GemmaApp() {
               setTrainingProgressPercent(Math.round((step / total_steps) * 100));
               setTrainingMetrics((prev) => ({
                 loss: [...prev.loss, loss],
-                accuracy: [...prev.accuracy, accuracy]
+                accuracy: [...prev.accuracy, accuracy],
               }));
             }
 
@@ -376,8 +393,8 @@ export function GemmaApp() {
               {
                 text: delta,
                 level: 'info',
-                timestamp: new Date().toLocaleTimeString()
-              }
+                timestamp: new Date().toLocaleTimeString(),
+              },
             ]);
           }
         },
@@ -390,11 +407,11 @@ export function GemmaApp() {
             {
               text: `Error: ${err}`,
               level: 'info',
-              timestamp: new Date().toLocaleTimeString()
-            }
+              timestamp: new Date().toLocaleTimeString(),
+            },
           ]);
           setIsTraining(false);
-        }
+        },
       }
     );
 
@@ -406,11 +423,19 @@ export function GemmaApp() {
         {
           text: '[CANCEL] Training process terminated by user.',
           level: 'info',
-          timestamp: new Date().toLocaleTimeString()
-        }
+          timestamp: new Date().toLocaleTimeString(),
+        },
       ]);
     };
-  }, [isTraining, trainingDataset, trainingEpochs, trainingLR, trainingRank, trainingAlpha, sendStreamingMethod]);
+  }, [
+    isTraining,
+    trainingDataset,
+    trainingEpochs,
+    trainingLR,
+    trainingRank,
+    trainingAlpha,
+    sendStreamingMethod,
+  ]);
 
   return (
     <div className="absolute inset-0 flex flex-col bg-[#0b0a12]/95 text-slate-100 font-sans">
@@ -443,13 +468,21 @@ export function GemmaApp() {
               className="bg-transparent text-purple-300 font-semibold focus:outline-none border-none cursor-pointer"
               title="Execution mode"
             >
-              <option value="simulated" className="bg-[#121021]">Simulated CPU</option>
-              <option value="local" className="bg-[#121021]">Local JAX/TPU</option>
-              <option value="ollama" className="bg-[#121021]">Ollama service</option>
-              <option value="api" className="bg-[#121021]">Cloud API</option>
+              <option value="simulated" className="bg-[#121021]">
+                Simulated CPU
+              </option>
+              <option value="local" className="bg-[#121021]">
+                Local JAX/TPU
+              </option>
+              <option value="ollama" className="bg-[#121021]">
+                Ollama service
+              </option>
+              <option value="api" className="bg-[#121021]">
+                Cloud API
+              </option>
             </select>
           </div>
-          
+
           <div className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse shadow-glow shadow-emerald-500/40" />
           <span className="text-[11px] text-slate-400 font-medium mr-2">Connected</span>
         </div>
@@ -523,7 +556,10 @@ export function GemmaApp() {
               </div>
               <div className="flex justify-between">
                 <span>Active checkpoint:</span>
-                <span className="font-mono text-purple-300 truncate max-w-[80px]" title={loadedCheckpoint || 'None'}>
+                <span
+                  className="font-mono text-purple-300 truncate max-w-[80px]"
+                  title={loadedCheckpoint || 'None'}
+                >
                   {loadedCheckpoint || 'None'}
                 </span>
               </div>
@@ -548,8 +584,8 @@ export function GemmaApp() {
                         msg.role === 'user'
                           ? 'bg-purple-600 text-white'
                           : msg.role === 'system'
-                          ? 'bg-slate-800 text-red-400 border border-red-500/10'
-                          : 'bg-[#1a182c] border border-purple-500/20 text-purple-300'
+                            ? 'bg-slate-800 text-red-400 border border-red-500/10'
+                            : 'bg-[#1a182c] border border-purple-500/20 text-purple-300'
                       }`}
                     >
                       {msg.role === 'user' ? 'U' : msg.role === 'system' ? '!' : 'G'}
@@ -559,8 +595,8 @@ export function GemmaApp() {
                         msg.role === 'user'
                           ? 'bg-[#211d3d] border-purple-500/30 text-slate-100'
                           : msg.role === 'system'
-                          ? 'bg-red-950/25 border-red-500/20 text-red-200'
-                          : 'bg-[#151324]/80 border-purple-500/10 text-slate-300'
+                            ? 'bg-red-950/25 border-red-500/20 text-red-200'
+                            : 'bg-[#151324]/80 border-purple-500/10 text-slate-300'
                       }`}
                     >
                       <div className="prose prose-invert prose-xs max-w-none">
@@ -569,7 +605,7 @@ export function GemmaApp() {
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Streaming Assistant Response */}
                 {streamingResponse && (
                   <div className="flex gap-3.5 max-w-[85%] mr-auto">
@@ -578,12 +614,14 @@ export function GemmaApp() {
                     </div>
                     <div className="rounded-2xl px-4 py-2.5 text-xs sm:text-sm leading-relaxed bg-[#151324]/80 border border-purple-500/10 text-slate-300">
                       <div className="prose prose-invert prose-xs max-w-none">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamingResponse}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {streamingResponse}
+                        </ReactMarkdown>
                       </div>
                     </div>
                   </div>
                 )}
-                
+
                 {isGenerating && !streamingResponse && (
                   <div className="flex gap-3.5 max-w-[85%] mr-auto items-center">
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#1a182c] border border-purple-500/20 text-purple-300 text-xs font-semibold shadow-md">
@@ -618,7 +656,7 @@ export function GemmaApp() {
                     />
                     <span className="font-mono text-purple-300 font-bold">{temperature}</span>
                   </div>
-                  
+
                   <div className="flex items-center gap-1.5">
                     <span>Variant:</span>
                     <select
@@ -635,7 +673,10 @@ export function GemmaApp() {
 
                   {/* Latency Diagnostic */}
                   <div className="ml-auto font-mono text-[10px] text-slate-500 flex items-center gap-2">
-                    <span>Tokens/sec: <span className="text-purple-400 font-semibold">{isGenerating ? random.randint(35, 48) : 0}</span></span>
+                    <span>
+                      Tokens/sec:{' '}
+                      <span className="text-purple-400 font-semibold">{demoTokensPerSec}</span>
+                    </span>
                   </div>
                 </div>
 
@@ -683,7 +724,10 @@ export function GemmaApp() {
             <div className="flex-1 p-6 space-y-6 overflow-y-auto">
               <div>
                 <h2 className="text-base font-bold text-white">Google Gemma Catalog</h2>
-                <p className="text-xs text-slate-400">Official technical specifications and hardware recommendations for local deployments.</p>
+                <p className="text-xs text-slate-400">
+                  Official technical specifications and hardware recommendations for local
+                  deployments.
+                </p>
               </div>
 
               {loadingCatalog ? (
@@ -693,7 +737,10 @@ export function GemmaApp() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {catalogModels.map((m) => (
-                    <div key={m.id} className="rounded-2xl border border-purple-500/10 bg-[#121021]/30 p-5 space-y-3 shadow-md hover:border-purple-500/20 transition-all flex flex-col justify-between">
+                    <div
+                      key={m.id}
+                      className="rounded-2xl border border-purple-500/10 bg-[#121021]/30 p-5 space-y-3 shadow-md hover:border-purple-500/20 transition-all flex flex-col justify-between"
+                    >
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <h3 className="text-xs sm:text-sm font-bold text-white">{m.name}</h3>
@@ -703,11 +750,13 @@ export function GemmaApp() {
                         </div>
                         <p className="text-xs text-slate-400 leading-relaxed">{m.description}</p>
                       </div>
-                      
+
                       <div className="border-t border-purple-500/5 pt-3 space-y-1.5 text-[10px]">
                         <div className="flex justify-between">
                           <span className="text-slate-500">Context Length:</span>
-                          <span className="font-mono text-slate-300 font-semibold">{m.context} tokens</span>
+                          <span className="font-mono text-slate-300 font-semibold">
+                            {m.context} tokens
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-500">Input Type:</span>
@@ -732,7 +781,9 @@ export function GemmaApp() {
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                   <div>
                     <h2 className="text-base font-bold text-white">Orbax Checkpoint Loader</h2>
-                    <p className="text-xs text-slate-400">Resolve Google Storage (gs://) weights and map parameter dicts dynamically.</p>
+                    <p className="text-xs text-slate-400">
+                      Resolve Google Storage (gs://) weights and map parameter dicts dynamically.
+                    </p>
                   </div>
 
                   {loadedCheckpoint && (
@@ -747,7 +798,9 @@ export function GemmaApp() {
                 <div className="rounded-2xl border border-purple-500/10 bg-[#121021]/30 p-5 space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-400 mb-1.5">Select Checkpoint</label>
+                      <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                        Select Checkpoint
+                      </label>
                       <select
                         value={selectedCheckpoint}
                         onChange={(e) => setSelectedCheckpoint(e.target.value)}
@@ -761,14 +814,27 @@ export function GemmaApp() {
                         ))}
                       </select>
                     </div>
-                    
+
                     <div className="text-[11px] text-slate-400 flex flex-col justify-end">
                       {selectedCheckpoint && checkpoints.length > 0 && (
                         <div className="space-y-1 bg-black/20 p-2.5 rounded-lg border border-white/5">
-                          <div>Path: <span className="font-mono text-purple-300">{checkpoints.find(c => c.id === selectedCheckpoint)?.path}</span></div>
-                          <div>Status: <span className={`font-semibold ${checkpoints.find(c => c.id === selectedCheckpoint)?.status === 'available' ? 'text-emerald-400' : 'text-amber-400'}`}>
-                            {checkpoints.find(c => c.id === selectedCheckpoint)?.status === 'available' ? 'Local Cache Available' : 'Requires Cloud Download'}
-                          </span></div>
+                          <div>
+                            Path:{' '}
+                            <span className="font-mono text-purple-300">
+                              {checkpoints.find((c) => c.id === selectedCheckpoint)?.path}
+                            </span>
+                          </div>
+                          <div>
+                            Status:{' '}
+                            <span
+                              className={`font-semibold ${checkpoints.find((c) => c.id === selectedCheckpoint)?.status === 'available' ? 'text-emerald-400' : 'text-amber-400'}`}
+                            >
+                              {checkpoints.find((c) => c.id === selectedCheckpoint)?.status ===
+                              'available'
+                                ? 'Local Cache Available'
+                                : 'Requires Cloud Download'}
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -792,7 +858,9 @@ export function GemmaApp() {
                                 style={{ width: `${checkpointLoadingProgress}%` }}
                               />
                             </div>
-                            <span className="font-mono text-xs text-purple-300 font-bold">{checkpointLoadingProgress}%</span>
+                            <span className="font-mono text-xs text-purple-300 font-bold">
+                              {checkpointLoadingProgress}%
+                            </span>
                           </div>
                         )}
                       </>
@@ -824,7 +892,10 @@ export function GemmaApp() {
                   </div>
                   <div className="flex-1 p-4 font-mono text-[10px] sm:text-[11px] text-slate-300 overflow-y-auto space-y-1.5 selection:bg-purple-500/30">
                     {checkpointLogs.length === 0 ? (
-                      <div className="text-slate-600 italic">No logs. Click 'Load Checkpoint' to trace the Orbax initialization sequence.</div>
+                      <div className="text-slate-600 italic">
+                        No logs. Click &apos;Load Checkpoint&apos; to trace the Orbax initialization
+                        sequence.
+                      </div>
                     ) : (
                       checkpointLogs.map((log, idx) => (
                         <div
@@ -833,11 +904,13 @@ export function GemmaApp() {
                             log.level === 'success'
                               ? 'text-emerald-400 font-semibold'
                               : log.level === 'progress'
-                              ? 'text-indigo-300'
-                              : 'text-slate-300'
+                                ? 'text-indigo-300'
+                                : 'text-slate-300'
                           }`}
                         >
-                          <span className="text-slate-600 select-none shrink-0">[{log.timestamp}]</span>
+                          <span className="text-slate-600 select-none shrink-0">
+                            [{log.timestamp}]
+                          </span>
                           <span>{log.text}</span>
                         </div>
                       ))
@@ -856,9 +929,12 @@ export function GemmaApp() {
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                   <div>
                     <h2 className="text-base font-bold text-white">LoRA Fine-Tuning Simulator</h2>
-                    <p className="text-xs text-slate-400">Inject rank decomposition matrices and train adapters on downstream task datasets.</p>
+                    <p className="text-xs text-slate-400">
+                      Inject rank decomposition matrices and train adapters on downstream task
+                      datasets.
+                    </p>
                   </div>
-                  
+
                   {savedAdapter && (
                     <div className="flex items-center gap-1.5 rounded-lg border border-purple-500/20 bg-purple-950/20 px-3 py-1.5 text-[11px] text-purple-300">
                       <CheckCircle2 className="h-4 w-4 text-purple-400" />
@@ -871,7 +947,9 @@ export function GemmaApp() {
                 <div className="rounded-2xl border border-purple-500/10 bg-[#121021]/30 p-5 space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Dataset</label>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">
+                        Dataset
+                      </label>
                       <select
                         value={trainingDataset}
                         onChange={(e) => setTrainingDataset(e.target.value)}
@@ -885,7 +963,9 @@ export function GemmaApp() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Epochs</label>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">
+                        Epochs
+                      </label>
                       <input
                         type="number"
                         min="1"
@@ -898,7 +978,9 @@ export function GemmaApp() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">LoRA Rank</label>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">
+                        LoRA Rank
+                      </label>
                       <select
                         value={trainingRank}
                         onChange={(e) => setTrainingRank(parseInt(e.target.value))}
@@ -913,7 +995,9 @@ export function GemmaApp() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">Learning Rate</label>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">
+                        Learning Rate
+                      </label>
                       <select
                         value={trainingLR}
                         onChange={(e) => setTrainingLR(e.target.value)}
@@ -944,7 +1028,9 @@ export function GemmaApp() {
                               style={{ width: `${trainingProgressPercent}%` }}
                             />
                           </div>
-                          <span className="font-mono text-xs text-purple-300 font-bold">{trainingProgressPercent}%</span>
+                          <span className="font-mono text-xs text-purple-300 font-bold">
+                            {trainingProgressPercent}%
+                          </span>
                         </div>
                       </>
                     ) : (
@@ -963,13 +1049,17 @@ export function GemmaApp() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0 flex-1">
                   {/* Left Graph Panel */}
                   <div className="lg:col-span-1 rounded-2xl border border-purple-500/10 bg-[#121021]/20 p-5 flex flex-col justify-between space-y-4">
-                    <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wide">Training Metrics</h3>
-                    
+                    <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wide">
+                      Training Metrics
+                    </h3>
+
                     <div className="flex-1 bg-black/40 rounded-xl border border-white/5 p-4 flex flex-col justify-around text-xs">
                       <div>
                         <span className="text-slate-500 block mb-1">Current Loss:</span>
                         <span className="font-mono text-xl font-bold text-purple-300">
-                          {trainingMetrics.loss.length > 0 ? trainingMetrics.loss[trainingMetrics.loss.length - 1].toFixed(4) : '—'}
+                          {trainingMetrics.loss.length > 0
+                            ? trainingMetrics.loss[trainingMetrics.loss.length - 1].toFixed(4)
+                            : '—'}
                         </span>
                         {trainingMetrics.loss.length > 1 && (
                           <span className="text-[10px] text-emerald-400 block mt-0.5">
@@ -977,18 +1067,23 @@ export function GemmaApp() {
                           </span>
                         )}
                       </div>
-                      
+
                       <div>
                         <span className="text-slate-500 block mb-1">Eval Accuracy:</span>
                         <span className="font-mono text-xl font-bold text-indigo-300">
-                          {trainingMetrics.accuracy.length > 0 ? `${(trainingMetrics.accuracy[trainingMetrics.accuracy.length - 1] * 100).toFixed(2)}%` : '—'}
+                          {trainingMetrics.accuracy.length > 0
+                            ? `${(trainingMetrics.accuracy[trainingMetrics.accuracy.length - 1] * 100).toFixed(2)}%`
+                            : '—'}
                         </span>
                       </div>
                     </div>
 
                     <div className="rounded-xl border border-yellow-500/15 bg-yellow-950/10 p-3 text-[10px] text-yellow-200/80 flex gap-2">
                       <AlertTriangle className="h-4 w-4 text-yellow-400 shrink-0 mt-0.5" />
-                      <span>Simulated training utilizes cpu fallbacks. Metrics show expected target parameter convergence logs.</span>
+                      <span>
+                        Simulated training utilizes cpu fallbacks. Metrics show expected target
+                        parameter convergence logs.
+                      </span>
                     </div>
                   </div>
 
@@ -1002,7 +1097,10 @@ export function GemmaApp() {
                     </div>
                     <div className="flex-1 p-4 font-mono text-[10px] sm:text-[11px] text-slate-300 overflow-y-auto space-y-1.5">
                       {trainingLogs.length === 0 ? (
-                        <div className="text-slate-600 italic">No output. Configure adapter properties and click 'Start Training Job'.</div>
+                        <div className="text-slate-600 italic">
+                          No output. Configure adapter properties and click &apos;Start Training
+                          Job&apos;.
+                        </div>
                       ) : (
                         trainingLogs.map((log, idx) => (
                           <div
@@ -1011,11 +1109,13 @@ export function GemmaApp() {
                               log.level === 'success'
                                 ? 'text-emerald-400 font-semibold'
                                 : log.level === 'step'
-                                ? 'text-indigo-300'
-                                : 'text-slate-300'
+                                  ? 'text-indigo-300'
+                                  : 'text-slate-300'
                             }`}
                           >
-                            <span className="text-slate-600 select-none shrink-0">[{log.timestamp}]</span>
+                            <span className="text-slate-600 select-none shrink-0">
+                              [{log.timestamp}]
+                            </span>
                             <span>{log.text}</span>
                           </div>
                         ))

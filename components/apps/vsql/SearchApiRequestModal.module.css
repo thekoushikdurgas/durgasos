@@ -1,0 +1,126 @@
+.dialogContent {
+  max-width: min(720px, 96vw);
+  max-height: min(90vh, 900px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dialogHeader {
+  flex-shrink: 0;
+}
+
+.dialogTitle {
+  font-size: var(--vsql-text-lg);
+}
+
+.dialogDescription {
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-muted);
+}
+
+.tabBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--vsql-border-secondary);
+  padding-bottom: 0.35rem;
+}
+
+.tab {
+  font-size: var(--vsql-text-xs);
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--vsql-radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--vsql-text-muted);
+  cursor: pointer;
+  font-family: var(--vsql-font-sans);
+}
+
+.tab:hover {
+  color: var(--vsql-text-secondary);
+  background: var(--vsql-bg-elevated);
+}
+
+.tabActive {
+  color: var(--vsql-accent-cyan);
+  border-color: var(--vsql-border-secondary);
+  background: var(--vsql-bg-primary);
+}
+
+.panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.25rem 0;
+}
+
+.fieldLabel {
+  font-size: var(--vsql-text-xs);
+  font-weight: var(--vsql-font-semibold);
+  color: var(--vsql-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--vsql-tracking-wide);
+}
+
+.fieldBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.textInput {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--vsql-radius-md);
+  border: 1px solid var(--vsql-border-secondary);
+  background: var(--vsql-bg-elevated);
+  color: var(--vsql-text-primary);
+  font-family: var(--vsql-font-sans);
+  font-size: var(--vsql-text-sm);
+}
+
+.textInput:focus {
+  outline: none;
+  border-color: rgba(34, 211, 238, 0.45);
+}
+
+.methodSelect {
+  width: 100%;
+  max-width: 200px;
+  padding: 0.45rem 0.5rem;
+  border-radius: var(--vsql-radius-md);
+  border: 1px solid var(--vsql-border-secondary);
+  background: var(--vsql-bg-elevated);
+  color: var(--vsql-text-primary);
+  font-family: var(--vsql-font-sans);
+  font-size: var(--vsql-text-sm);
+}
+
+.bodyArea {
+  min-height: 160px;
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: var(--vsql-radius-md);
+  border: 1px solid var(--vsql-border-secondary);
+  background: var(--vsql-bg-elevated);
+  color: var(--vsql-text-primary);
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-sm);
+  resize: vertical;
+}
+
+.urlHint {
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-tertiary);
+  margin: 0;
+}
+
+.dialogFooter {
+  flex-shrink: 0;
+  gap: 0.5rem;
+}

@@ -1,0 +1,595 @@
+.root {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: var(--vsql-space-lg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-muted);
+  margin-bottom: var(--vsql-space-sm);
+}
+
+.prompt {
+  color: var(--vsql-accent-cyan);
+}
+
+.loadingDot {
+  margin-left: auto;
+  color: var(--vsql-text-muted);
+}
+
+.intro {
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-secondary);
+  margin-bottom: var(--vsql-space-md);
+  max-width: 52rem;
+}
+
+.code {
+  font-family: var(--vsql-font-mono);
+  color: var(--vsql-accent-cyan);
+}
+
+.tabStrip {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: var(--vsql-space-md);
+  border-bottom: 1px solid var(--vsql-border-primary);
+}
+
+.tab {
+  padding: 0.45rem 0.85rem;
+  border: none;
+  border-radius: var(--vsql-radius-md) var(--vsql-radius-md) 0 0;
+  background: transparent;
+  color: var(--vsql-text-muted);
+  font-size: var(--vsql-text-sm);
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--vsql-text-primary);
+}
+
+.tabActive {
+  background: var(--vsql-bg-card);
+  color: var(--vsql-accent-cyan);
+  border: 1px solid var(--vsql-border-primary);
+  border-bottom-color: transparent;
+}
+
+.statsBar {
+  margin-bottom: var(--vsql-space-md);
+}
+
+.progressWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.progressLabel {
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+}
+
+.progressTrack {
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--vsql-bg-elevated);
+  border: 1px solid var(--vsql-border-secondary);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--vsql-accent-cyan), var(--vsql-accent-orange));
+  transition: width 0.25s ease;
+}
+
+.progressMeta {
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  font-family: var(--vsql-font-mono);
+}
+
+.statsWarn {
+  margin-top: var(--vsql-space-xs);
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-accent-orange);
+}
+
+.eventsToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+  margin-bottom: var(--vsql-space-sm);
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.subTabStrip {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: var(--vsql-space-sm);
+}
+
+.subTab {
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--vsql-radius-md);
+  border: 1px solid var(--vsql-border-secondary);
+  background: var(--vsql-bg-elevated);
+  color: var(--vsql-text-muted);
+  font-size: var(--vsql-text-xs);
+  cursor: pointer;
+}
+
+.subTabActive {
+  border-color: var(--vsql-accent-cyan);
+  color: var(--vsql-accent-cyan);
+}
+
+.eventsLayout {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  align-items: stretch;
+  min-height: 22rem;
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-md);
+  overflow: hidden;
+  background: var(--vsql-bg-card);
+}
+
+@media (max-width: 980px) {
+  .eventsLayout {
+    flex-direction: column;
+  }
+
+  .filterAsideHost {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+.filterAsideHost {
+  flex-shrink: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+.filterAside {
+  height: 100%;
+  min-height: 22rem;
+}
+
+.filterAsideBrand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.filterAsideIcon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  color: var(--vsql-text-muted);
+}
+
+.filterAsideTitleWrap {
+  display: block;
+}
+
+.filterAsideTitle {
+  font-size: var(--vsql-text-sm);
+  font-weight: var(--vsql-font-semibold);
+  color: var(--vsql-text-secondary);
+}
+
+.filterAsideBody {
+  min-height: 0;
+}
+
+.filterScroll {
+  flex: 1;
+  min-height: 0;
+  max-height: min(52vh, 28rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--vsql-border-secondary) transparent;
+}
+
+.filterScroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filterScroll::-webkit-scrollbar-thumb {
+  background: var(--vsql-border-secondary);
+  border-radius: var(--vsql-radius-full);
+}
+
+.filterCollapsed {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--vsql-space-sm);
+  padding-top: var(--vsql-space-md);
+  color: var(--vsql-text-muted);
+}
+
+.filterCollapsedIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  opacity: 0.85;
+}
+
+.filterCollapsedBadge {
+  font-size: 0.65rem;
+}
+
+.filterRailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--vsql-space-sm);
+  flex-shrink: 0;
+}
+
+.filterRailTitle {
+  margin: 0;
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-primary);
+}
+
+.clearBtn {
+  font-size: var(--vsql-text-xs);
+  height: auto;
+  padding: 0.15rem 0.4rem;
+}
+
+.chipList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.filterChip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  border-radius: var(--vsql-radius-md);
+  border: 1px solid var(--vsql-border-secondary);
+  background: var(--vsql-bg-elevated);
+  color: var(--vsql-text-secondary);
+  font-size: var(--vsql-text-xs);
+  cursor: pointer;
+  text-align: left;
+}
+
+.filterChip:hover {
+  border-color: color-mix(in srgb, var(--vsql-accent-cyan) 45%, transparent);
+}
+
+.filterChipOn {
+  border-color: var(--vsql-accent-cyan);
+  background: color-mix(in srgb, var(--vsql-accent-cyan) 12%, transparent);
+  color: var(--vsql-accent-cyan);
+}
+
+.chipLabel {
+  font-family: var(--vsql-font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chipCheck {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex-shrink: 0;
+}
+
+.filterHint {
+  margin: var(--vsql-space-sm) 0;
+  font-size: 0.65rem;
+  color: var(--vsql-text-muted);
+  line-height: 1.35;
+}
+
+.chartControls {
+  border-top: 1px solid var(--vsql-border-secondary);
+  padding-top: var(--vsql-space-sm);
+  margin-top: var(--vsql-space-xs);
+}
+
+.radioLegend {
+  display: block;
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.radioRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.miniChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 4.5rem;
+  margin-top: var(--vsql-space-sm);
+  padding: 0.25rem;
+  border-radius: var(--vsql-radius-md);
+  background: var(--vsql-bg-elevated);
+  border: 1px solid var(--vsql-border-secondary);
+}
+
+.miniBar {
+  flex: 1;
+  min-width: 3px;
+  min-height: 4px;
+  border-radius: 2px 2px 0 0;
+  background: color-mix(in srgb, var(--vsql-accent-cyan) 70%, var(--vsql-accent-orange));
+  align-self: flex-end;
+}
+
+.eventsMain {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--vsql-space-sm);
+}
+
+.error {
+  color: var(--vsql-accent-red);
+  font-size: var(--vsql-text-sm);
+  margin-bottom: var(--vsql-space-md);
+}
+
+.tailWrap {
+  max-height: 28rem;
+  overflow-y: auto;
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-md);
+  background: var(--vsql-bg-card);
+  padding: var(--vsql-space-sm);
+}
+
+.tailLine {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--vsql-border-secondary);
+  font-size: var(--vsql-text-xs);
+}
+
+.tailTime {
+  font-family: var(--vsql-font-mono);
+  color: var(--vsql-text-muted);
+  width: 5.5rem;
+  flex-shrink: 0;
+}
+
+.tailMsg {
+  color: var(--vsql-text-secondary);
+  font-family: var(--vsql-font-mono);
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-md);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--vsql-text-xs);
+}
+
+.table th,
+.table td {
+  padding: 0.45rem 0.55rem;
+  text-align: left;
+  border-bottom: 1px solid var(--vsql-border-secondary);
+  vertical-align: top;
+}
+
+.table th {
+  font-weight: 600;
+  color: var(--vsql-text-muted);
+  background: var(--vsql-bg-elevated);
+  white-space: nowrap;
+}
+
+.dataRow:hover {
+  background: var(--vsql-bg-card);
+}
+
+.colNarrow {
+  width: 2rem;
+}
+
+.expandBtn {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--vsql-radius-md);
+  border: 1px solid var(--vsql-border-secondary);
+  background: var(--vsql-bg-elevated);
+  color: var(--vsql-text-primary);
+  cursor: pointer;
+  font-family: var(--vsql-font-mono);
+  line-height: 1;
+}
+
+.mono {
+  font-family: var(--vsql-font-mono);
+}
+
+.detailRow td {
+  padding: 0;
+  border-bottom: 1px solid var(--vsql-border-primary);
+}
+
+.detailBox {
+  padding: var(--vsql-space-md);
+  background: color-mix(in srgb, var(--vsql-bg-elevated) 80%, transparent);
+}
+
+.detailLabel {
+  margin: 0 0 0.35rem;
+  font-size: var(--vsql-text-xs);
+  font-weight: 600;
+  color: var(--vsql-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.detailPre {
+  margin: 0;
+  padding: 0.5rem;
+  border-radius: var(--vsql-radius-md);
+  background: var(--vsql-bg-card);
+  border: 1px solid var(--vsql-border-secondary);
+  font-size: 0.65rem;
+  max-height: 14rem;
+  overflow: auto;
+  color: var(--vsql-text-primary);
+}
+
+.detailMuted {
+  margin: 0.5rem 0 0;
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+}
+
+.empty {
+  color: var(--vsql-text-muted);
+  font-size: var(--vsql-text-sm);
+  padding: var(--vsql-space-md);
+}
+
+.storagePanel {
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-md);
+  padding: var(--vsql-space-md);
+  background: var(--vsql-bg-card);
+}
+
+.storageToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--vsql-space-md);
+  margin-bottom: var(--vsql-space-md);
+}
+
+.filterLabel {
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-xs);
+}
+
+.select {
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--vsql-radius-md);
+  border: 1px solid var(--vsql-border-secondary);
+  background: var(--vsql-bg-elevated);
+  color: var(--vsql-text-primary);
+  font-size: var(--vsql-text-xs);
+}
+
+.storageTitle {
+  margin: 0 0 var(--vsql-space-sm);
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-primary);
+}
+
+.storageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--vsql-space-sm);
+  font-size: var(--vsql-text-xs);
+}
+
+.storageItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.storageLabel {
+  color: var(--vsql-text-muted);
+}
+
+.storageValue {
+  font-family: var(--vsql-font-mono);
+  color: var(--vsql-text-primary);
+}
+
+.storageHint {
+  margin-top: var(--vsql-space-sm);
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+}
+
+.flowPanel {
+  padding: var(--vsql-space-md);
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-md);
+  background: var(--vsql-bg-card);
+}
+
+.flowIntro {
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-secondary);
+  margin: 0 0 var(--vsql-space-md);
+  max-width: 40rem;
+}
+
+.flowSvg {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  color: var(--vsql-text-muted);
+}
+
+.flowText {
+  fill: var(--vsql-text-primary);
+  font-size: 11px;
+  font-family: var(--vsql-font-mono, monospace);
+}
+
+.flowBox {
+  color: var(--vsql-border-secondary);
+}

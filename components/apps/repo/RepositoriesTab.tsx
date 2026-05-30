@@ -16,6 +16,7 @@ import {
   Globe,
   Lock,
   ArrowUpRight,
+  Sparkles,
 } from 'lucide-react';
 
 export interface Repository {
@@ -202,11 +203,13 @@ export function RepositoriesTab({
   loading,
   error,
   onCreateRepo,
+  onReverseEngineer,
 }: {
   repos: unknown;
   loading: boolean;
   error?: Error | null;
   onCreateRepo: (repo: Repository) => void;
+  onReverseEngineer?: (owner: string, repo: string) => void;
 }) {
   const list = useMemo(() => asRepoList(repos), [repos]);
   const [q, setQ] = useState('');
@@ -610,6 +613,33 @@ export function RepositoriesTab({
                 </a>
               ) : (
                 <span className="text-[11px] text-white/30 italic">Local Prototype</span>
+              )}
+
+              {onReverseEngineer && openDetailRepo.html_url && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const fullName = openDetailRepo.full_name || '';
+                    const parts = fullName.split('/');
+                    if (parts.length === 2) {
+                      onReverseEngineer(parts[0], parts[1]);
+                    } else {
+                      const urlStr = openDetailRepo.html_url || '';
+                      try {
+                        const url = new URL(urlStr);
+                        const pathParts = url.pathname.split('/').filter(Boolean);
+                        if (pathParts.length >= 2) {
+                          onReverseEngineer(pathParts[0], pathParts[1]);
+                        }
+                      } catch (e) {
+                        console.error('Failed to parse html_url for reverse engineering:', e);
+                      }
+                    }
+                  }}
+                  className="flex items-center gap-1 rounded-xl bg-violet-500/90 hover:bg-violet-500 px-2.5 py-1.5 text-[10px] font-semibold text-white transition cursor-pointer"
+                >
+                  <Sparkles className="h-3 w-3 text-violet-200" /> Reverse Engineer
+                </button>
               )}
             </div>
           </aside>

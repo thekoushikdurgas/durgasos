@@ -1,0 +1,8 @@
+/* Modal Component Styles */
+
+/* Modal Body */
+.body {
+  padding: var(--vsql-space-md) var(--vsql-space-md);
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}

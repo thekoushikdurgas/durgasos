@@ -1,0 +1,413 @@
+/* EnhancedImportAnalysis.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* No Analysis State */
+.noAnalysis {
+  padding: 1.5rem;
+  background-color: hsl(var(--muted) / 0.3);
+  border: 2px dashed hsl(var(--border));
+  border-radius: 0.75rem;
+}
+
+.noAnalysisContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+}
+
+.noAnalysisIcon {
+  height: 2.5rem;
+  width: 2.5rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.noAnalysisText {
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+  margin: 0;
+}
+
+.analyzeButton {
+  margin-top: 0.5rem;
+}
+
+/* Analysis Header */
+.analysisHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.analysisTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.clientAnalysisBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.625rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--secondary) / 0.3));
+  border: 1px solid hsl(var(--primary) / 0.3);
+  border-radius: 9999px;
+  color: hsl(var(--primary));
+}
+
+.serverAnalysisBadge {
+  font-size: 0.625rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  background-color: hsl(var(--muted));
+  border-radius: 9999px;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Warnings */
+.warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: hsl(var(--warning) / 0.1);
+  border: 1px solid hsl(var(--warning) / 0.2);
+  border-radius: 0.375rem;
+  color: hsl(var(--warning-foreground));
+  font-size: 0.8125rem;
+}
+
+.warningIcon {
+  height: 1rem;
+  width: 1rem;
+  flex-shrink: 0;
+}
+
+/* Columns Grid */
+.columnsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+
+/* Column Card */
+.columnCard {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.columnCard:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+.columnCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.columnCardHeader:hover {
+  background-color: hsl(var(--accent));
+}
+
+.columnCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+.includeCheckbox {
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.typeIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.25rem;
+  flex-shrink: 0;
+}
+
+/* Data Type Colors */
+.typeText {
+  background-color: hsl(217, 91%, 60%);
+  color: white;
+}
+
+.typeInteger {
+  background-color: hsl(142, 76%, 36%);
+  color: white;
+}
+
+.typeReal {
+  background-color: hsl(160, 84%, 39%);
+  color: white;
+}
+
+.typeBlob {
+  background-color: hsl(270, 50%, 60%);
+  color: white;
+}
+
+.typeDate {
+  background-color: hsl(25, 95%, 53%);
+  color: white;
+}
+
+.typeBoolean {
+  background-color: hsl(199, 89%, 48%);
+  color: white;
+}
+
+.typeNull {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+.columnSourceName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.columnCardActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Quality Badge */
+.qualityBadge {
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.125rem 0.375rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.qualityHigh {
+  background-color: hsl(142, 76%, 36%);
+  color: white;
+}
+
+.qualityMedium {
+  background-color: hsl(48, 96%, 53%);
+  color: hsl(40, 80%, 20%);
+}
+
+.qualityLow {
+  background-color: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+
+/* Column Card Details */
+.columnCardDetails {
+  border-top: 1px solid hsl(var(--border));
+  padding: 0.75rem;
+  background-color: hsl(var(--muted) / 0.2);
+}
+
+.detailSection {
+  margin-bottom: 0.75rem;
+}
+
+.detailSection:last-child {
+  margin-bottom: 0;
+}
+
+.detailLabel {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 0.375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.targetInput {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.8125rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.375rem;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.targetInput:focus {
+  outline: none;
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1);
+}
+
+.typeSelect {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.8125rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.375rem;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.sampleValues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.sampleValue {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background-color: hsl(var(--secondary));
+  border-radius: 0.25rem;
+  font-size: 0.6875rem;
+  font-family: monospace;
+  color: hsl(var(--secondary-foreground));
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Stats Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  background-color: hsl(var(--card));
+  border-radius: 0.375rem;
+  text-align: center;
+}
+
+.statValue {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.statLabel {
+  font-size: 0.5625rem;
+  color: hsl(var(--muted-foreground));
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* Range Info */
+.rangeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: hsl(var(--foreground));
+  font-family: monospace;
+}
+
+/* Unique Badge */
+.uniqueBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.6875rem;
+  padding: 0.25rem 0.5rem;
+  background-color: hsl(142, 76%, 36%);
+  color: white;
+  border-radius: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Constraints */
+.constraints {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.constraintLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+}
+
+.constraintLabel input[type='checkbox'] {
+  cursor: pointer;
+}
+
+/* Row Count Info */
+.rowCountInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: hsl(var(--muted) / 0.3);
+  border-radius: 0.5rem;
+}
+
+.rowCountLabel {
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.rowCountValue {
+  font-size: 1rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .columnsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .constraints {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

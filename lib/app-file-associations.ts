@@ -196,6 +196,13 @@ export const APP_SUPPORTED_EXTENSIONS: Record<AppId, readonly string[]> = {
   repo: [],
   viewer: [],
   roadrash: [],
+  gemma: [],
+  worldmap: [],
+  datavideo: [],
+  durgasman: [],
+  sudoku: [],
+  library: [],
+  'dev-tool': [],
 };
 
 /** Built-in default handler when the user has not set an override. */

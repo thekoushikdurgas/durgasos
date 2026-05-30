@@ -1,0 +1,74 @@
+/* VsqlApp Component Styles */
+
+/* Loading Screen */
+.loadingScreen {
+  min-height: 100vh;
+  background-color: var(--vsql-bg-primary);
+  color: var(--vsql-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vsql-space-sm);
+}
+
+/* Hidden File Input */
+.hiddenInput {
+  display: none;
+}
+
+/* Boot Error Screen */
+.bootErrorScreen {
+  min-height: 100vh;
+  background-color: var(--vsql-bg-primary);
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--vsql-space-2xl);
+}
+
+/* Error Container */
+.errorContainer {
+  max-width: 32rem;
+  border: 1px solid rgba(127, 29, 29, 0.5);
+  background-color: rgba(127, 29, 29, 0.2);
+  border-radius: var(--vsql-radius-lg);
+  padding: var(--vsql-space-lg);
+  display: flex;
+  gap: var(--vsql-space-sm);
+}
+
+/* Error Icon */
+.errorIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #f87171;
+  flex-shrink: 0;
+}
+
+/* Error Title */
+.errorTitle {
+  font-weight: var(--vsql-font-semibold);
+  color: #fca5a5;
+}
+
+/* Error Message */
+.errorMessage {
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-muted);
+  margin-top: var(--vsql-space-sm);
+  font-family: var(--vsql-font-mono);
+  word-break: break-all;
+}
+
+/* Error Hint */
+.errorHint {
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  margin-top: var(--vsql-space-md);
+}
+
+/* Code */
+.code {
+  color: #0891b2;
+}

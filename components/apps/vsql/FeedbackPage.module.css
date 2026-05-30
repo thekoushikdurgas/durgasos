@@ -1,0 +1,97 @@
+.container {
+  padding: var(--vsql-space-lg);
+  max-width: 52rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-muted);
+  margin-bottom: var(--vsql-space-md);
+}
+
+.prompt {
+  color: var(--vsql-accent-cyan);
+}
+
+.intro {
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-secondary);
+  margin-bottom: var(--vsql-space-md);
+}
+
+.code {
+  font-family: var(--vsql-font-mono);
+  color: var(--vsql-accent-cyan);
+}
+
+.refresh {
+  margin-bottom: var(--vsql-space-md);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--vsql-radius-md);
+  border: 1px solid var(--vsql-border-secondary);
+  background: var(--vsql-bg-elevated);
+  color: var(--vsql-text-primary);
+  font-size: var(--vsql-text-xs);
+  cursor: pointer;
+}
+
+.refresh:hover {
+  border-color: var(--vsql-accent-cyan);
+}
+
+.error {
+  color: var(--vsql-accent-red);
+  font-size: var(--vsql-text-sm);
+  margin-bottom: var(--vsql-space-md);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-md);
+}
+
+.empty {
+  color: var(--vsql-text-muted);
+  font-size: var(--vsql-text-sm);
+}
+
+.card {
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-md);
+  padding: var(--vsql-space-md);
+  background: var(--vsql-bg-card);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vsql-space-sm);
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  margin-bottom: var(--vsql-space-xs);
+}
+
+.date {
+  font-family: var(--vsql-font-mono);
+}
+
+.session {
+  font-family: var(--vsql-font-mono);
+  opacity: 0.85;
+}
+
+.rating {
+  color: var(--vsql-accent-orange);
+}
+
+.message {
+  margin: 0;
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-primary);
+  white-space: pre-wrap;
+}

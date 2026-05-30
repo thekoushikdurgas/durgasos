@@ -1,0 +1,49 @@
+/* ConfirmDialog Component Styles */
+
+/* Dialog Content */
+.dialogContent {
+  background-color: #111113;
+  border: 1px solid var(--vsql-border-primary);
+  color: var(--vsql-text-secondary);
+}
+
+/* Dialog Header */
+.dialogHeader {
+  background-color: #111113;
+  border-bottom: 1px solid var(--vsql-border-primary);
+  padding: var(--vsql-space-md) var(--vsql-space-lg);
+}
+
+/* Dialog Title */
+.dialogTitle {
+  color: var(--vsql-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+  font-size: var(--vsql-text-lg);
+  font-weight: var(--vsql-font-semibold);
+}
+
+/* Warning Icon */
+.warningIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #facc15; /* yellow-400 */
+}
+
+/* Dialog Description */
+.dialogDescription {
+  color: var(--vsql-text-muted);
+  font-size: var(--vsql-text-sm);
+  margin-top: var(--vsql-space-xs);
+}
+
+/* Dialog Footer */
+.dialogFooter {
+  background-color: #0b0b0c;
+  border-top: 1px solid var(--vsql-border-primary);
+  padding: var(--vsql-space-md) var(--vsql-space-lg);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--vsql-space-sm);
+}

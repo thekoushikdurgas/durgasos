@@ -33,6 +33,13 @@ import {
   FolderGit2,
   Compass,
   Gamepad2,
+  Sparkles,
+  Map,
+  Video,
+  Network,
+  Grid3X3,
+  BookOpen,
+  Wrench,
 } from 'lucide-react';
 
 export type AppCategory = 'core' | 'workflows' | 'data' | 'system';
@@ -71,7 +78,13 @@ export type AppId =
   | 'todo'
   | 'repo'
   | 'roadrash'
-  | 'gemma';
+  | 'gemma'
+  | 'worldmap'
+  | 'durgasman'
+  | 'datavideo'
+  | 'sudoku'
+  | 'library'
+  | 'dev-tool';
 
 export interface AppDefinition {
   id: AppId;
@@ -355,6 +368,54 @@ export const APPS: Record<AppId, AppDefinition> = {
     category: 'core',
     tags: ['ai', 'devtools'],
   },
+  worldmap: {
+    id: 'worldmap',
+    name: 'World Map',
+    icon: Map,
+    color: 'text-sky-400',
+    category: 'workflows',
+    tags: ['ai', 'analytics', 'map'],
+  },
+  durgasman: {
+    id: 'durgasman',
+    name: 'Durgasman',
+    icon: Network,
+    color: 'text-orange-500',
+    category: 'core',
+    tags: ['devtools', 'network', 'productivity'],
+  },
+  datavideo: {
+    id: 'datavideo',
+    name: 'Data Video',
+    icon: Video,
+    color: 'text-pink-500',
+    category: 'data',
+    tags: ['video', 'data', 'sqlite', 'codec'],
+  },
+  sudoku: {
+    id: 'sudoku',
+    name: 'Sudoku',
+    icon: Grid3X3,
+    color: 'text-indigo-400',
+    category: 'workflows',
+    tags: ['game', 'ai', 'retro'],
+  },
+  library: {
+    id: 'library',
+    name: 'Library',
+    icon: BookOpen,
+    color: 'text-emerald-400',
+    category: 'core',
+    tags: ['ai', 'productivity', 'books'],
+  },
+  'dev-tool': {
+    id: 'dev-tool',
+    name: 'Dev AI',
+    icon: Wrench,
+    color: 'text-violet-400',
+    category: 'core',
+    tags: ['devtools', 'ai'],
+  },
 };
 
 export const APP_CATEGORY_LABELS: Record<AppCategory, string> = {
@@ -403,6 +464,17 @@ export const APP_DESCRIPTIONS: Record<AppId, string> = {
     'Play the classic retro pseudo-3D Road Rash game set in beautiful and chaotic Indian streets!',
   gemma:
     'Interact with Google Gemma models, load checkpoints, and simulate LoRA fine-tuning workflows.',
+  worldmap: 'Real-time global events and supply chain monitor using Gemini grounding.',
+  durgasman:
+    'A fully-featured API Client Studio to send HTTP requests, manage environments, analyze responses, and generate collection docs using Gemini AI.',
+  datavideo:
+    'Pack compressed SQLite databases into video frames (MP4/MKV) and query databases stored inside video files.',
+  sudoku:
+    'Play Sudoku games generated dynamically by Gemini with real-time multiplayer lobbies and AI coaching.',
+  library:
+    'Personal book library with borrowing tracking, research notes, and Gemma-grounded chat over your catalog.',
+  'dev-tool':
+    'AI-powered dev utilities: minify, regex, JSON types, prompts, memory bank, icon generator, and more.',
 };
 
 /** Sorted unique tags across all apps (launcher filter dropdown). */

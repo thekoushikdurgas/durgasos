@@ -1,0 +1,129 @@
+/* Windowed spreadsheet: fixed viewport, replace pages on scroll (no unbounded growth). */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vsql-space-md);
+  flex-shrink: 0;
+  padding: var(--vsql-space-sm) 0 var(--vsql-space-md);
+  border-bottom: 1px solid var(--vsql-border-secondary);
+  margin-bottom: var(--vsql-space-sm);
+}
+
+.toolbarLead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.sheetToolbarTitle {
+  font-family: var(--vsql-font-sans);
+  font-size: var(--vsql-text-lg);
+  font-weight: var(--vsql-font-semibold);
+  color: var(--vsql-text-primary);
+  line-height: var(--vsql-leading-tight);
+  word-break: break-word;
+}
+
+.rangeLabel {
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  font-family: var(--vsql-font-mono);
+  line-height: var(--vsql-leading-snug);
+}
+
+.toolbarActions {
+  display: flex;
+  gap: var(--vsql-space-xs);
+  align-items: center;
+}
+
+/* Doc outer: `border border-border rounded-lg overflow-hidden bg-background` */
+.scrollShellOuter {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-lg);
+  background-color: var(--vsql-bg-primary);
+  box-shadow: var(--vsql-shadow-sm);
+}
+
+.scrollShellOuterFullscreen {
+  min-height: min(46vh, 28rem);
+}
+
+/* Doc inner: `overflow-auto max-h-96` (24rem ≈ 384px) — scrollport for window paging */
+.scrollShell {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  max-height: min(24rem, 70vh);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--vsql-border-secondary) transparent;
+}
+
+.scrollShell::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollShell::-webkit-scrollbar-thumb {
+  background: var(--vsql-border-secondary);
+  border-radius: var(--vsql-radius-full);
+}
+
+.scrollShell::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Fullscreen / dialog: tall sheet viewport (doc demo + reference image proportions) */
+.scrollShellFullscreen {
+  max-height: min(calc(100vh - 10rem), calc(100dvh - 10rem));
+  min-height: min(38vh, 24rem);
+}
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--vsql-bg-primary) 85%, transparent);
+  z-index: 2;
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-muted);
+}
+
+.hint {
+  flex-shrink: 0;
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-tertiary);
+  font-family: var(--vsql-font-sans);
+  line-height: var(--vsql-leading-relaxed);
+  margin-top: 0;
+  margin-bottom: var(--vsql-space-sm);
+}
+
+.emptyWindow {
+  padding: 1rem;
+}

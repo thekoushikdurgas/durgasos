@@ -1,0 +1,653 @@
+/* SqlConsolePage Component Styles */
+
+/* Main workspace column (sibling of history rail under AppShell content) */
+.sqlWorkspace {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--vsql-workspace-canvas);
+  overflow: hidden;
+}
+
+.sqlAside[data-rail-collapsed='true'] .sqlRailBrand {
+  justify-content: center;
+}
+
+.sqlAside[data-rail-collapsed='true'] .sessionRow {
+  justify-content: center;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.sqlAside[data-rail-collapsed='true'] .sessionRowWrap {
+  justify-content: center;
+}
+
+@media (max-width: 980px) {
+  .sqlAside {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    max-height: min(38vh, 18rem);
+    border-right: none;
+    border-bottom: 1px solid var(--vsql-border-primary);
+  }
+
+  .sessionNav {
+    max-height: 10rem;
+  }
+
+  .consolePanel .historyScroll {
+    max-height: min(32vh, 16rem);
+  }
+}
+
+.sqlRailBrand {
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+  min-width: 0;
+  width: 100%;
+}
+
+.sqlRailIcon {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  color: var(--vsql-accent-cyan);
+  opacity: 0.9;
+}
+
+.sqlRailTitleWrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.sqlRailTitle {
+  font-size: var(--vsql-text-sm);
+  font-weight: var(--vsql-font-semibold);
+  color: var(--vsql-text-primary);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.sqlRailCount {
+  font-family: var(--vsql-font-mono);
+  font-size: 10px;
+  color: var(--vsql-text-tertiary);
+}
+
+.sqlRailBody {
+  padding-top: var(--vsql-space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-sm);
+  min-height: 0;
+}
+
+.sessionNav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--vsql-border-secondary) transparent;
+}
+
+.sessionNav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sessionNav::-webkit-scrollbar-thumb {
+  background: var(--vsql-border-secondary);
+  border-radius: var(--vsql-radius-full);
+}
+
+.sessionRowWrap {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  border-radius: var(--vsql-radius-md);
+  overflow: hidden;
+  border: 1px solid transparent;
+}
+
+.sessionRowWrapActive {
+  border-color: var(--vsql-nav-active-ring);
+  background: var(--vsql-nav-active-bg);
+}
+
+.sessionRow {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--vsql-space-xs);
+  padding: 0.4rem var(--vsql-space-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--vsql-text-secondary);
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-xs);
+  text-align: left;
+  transition: color var(--vsql-transition-fast);
+}
+
+.sessionRow:hover {
+  color: var(--vsql-text-primary);
+}
+
+.sessionGlyph {
+  flex-shrink: 0;
+  color: var(--vsql-accent-cyan);
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+.sessionName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sessionDelete {
+  flex-shrink: 0;
+  width: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--vsql-text-tertiary);
+  cursor: pointer;
+  border-radius: var(--vsql-radius-sm);
+  transition:
+    color var(--vsql-transition-fast),
+    background-color var(--vsql-transition-fast);
+}
+
+.sessionDelete:hover {
+  color: var(--vsql-accent-red);
+  background: rgba(248, 113, 113, 0.12);
+}
+
+.sessionDeleteIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.newSessionButton {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vsql-space-xs);
+  width: 100%;
+  font-size: var(--vsql-text-xs);
+}
+
+.newSessionIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+}
+
+.consolePanel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.terminalPanel {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-xs);
+}
+
+.terminalPanelHead {
+  flex-shrink: 0;
+}
+
+.terminalPanelTitle {
+  font-size: 0.625rem;
+  letter-spacing: var(--vsql-tracking-widest);
+  text-transform: uppercase;
+  font-weight: var(--vsql-font-bold);
+  color: var(--vsql-text-muted);
+}
+
+.historyScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: var(--vsql-bg-primary);
+  border: 1px solid var(--vsql-border-secondary);
+  border-radius: var(--vsql-radius-md);
+  padding: var(--vsql-space-sm);
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-sm);
+  line-height: var(--vsql-leading-relaxed);
+  box-shadow: var(--vsql-shadow-sm);
+  scrollbar-width: thin;
+  scrollbar-color: var(--vsql-border-secondary) transparent;
+}
+
+.historyScroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.historyScroll::-webkit-scrollbar-thumb {
+  background: var(--vsql-border-secondary);
+  border-radius: var(--vsql-radius-full);
+}
+
+/* Main Container */
+.container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--vsql-workspace-canvas);
+  overflow: hidden;
+}
+
+/* Content Area */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  background-color: var(--vsql-bg-elevated);
+  padding: var(--vsql-space-xs);
+  border-bottom: 1px solid var(--vsql-border-primary);
+  flex-shrink: 0;
+}
+
+.tabButton {
+  flex: 1;
+  font-size: var(--vsql-text-sm);
+  padding: 0.375rem 0;
+  border-radius: var(--vsql-radius-md);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--vsql-text-muted);
+  font-family: var(--vsql-font-sans);
+  transition: all var(--vsql-transition-fast);
+}
+
+.tabButton:hover {
+  color: var(--vsql-text-secondary);
+}
+
+.tabButtonActive {
+  background-color: var(--vsql-bg-primary);
+  color: var(--vsql-accent-cyan);
+  font-weight: var(--vsql-font-semibold);
+  box-shadow: var(--vsql-shadow-sm);
+}
+
+/* Query Tab */
+.queryContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: var(--vsql-font-mono);
+  flex: 1;
+  overflow: hidden;
+  padding: 5px;
+  min-height: 0;
+}
+
+/* History entries (full-width inside historyScroll) */
+.consoleEntry {
+  display: flex;
+  flex-direction: column;
+}
+
+.consoleInput {
+  display: flex;
+  gap: var(--vsql-space-sm);
+  color: var(--vsql-accent-cyan);
+}
+
+.consolePrompt {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.consoleContent {
+  white-space: pre-wrap;
+}
+
+.consoleInfo {
+  color: var(--vsql-text-muted);
+  white-space: pre-wrap;
+  margin-top: var(--vsql-space-xs);
+}
+
+.consoleError {
+  color: var(--vsql-accent-red);
+  white-space: pre-wrap;
+  margin-top: var(--vsql-space-xs);
+}
+
+.consoleSuccess {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--vsql-space-xs);
+}
+
+.consoleSuccessMessage {
+  color: var(--vsql-accent-green);
+}
+
+/* Composer-style SQL input (structure from docs/uiux/texteditor.md; CSS modules + vSQL tokens) */
+.composerCard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex-shrink: 0;
+  min-height: 0;
+  border-radius: var(--vsql-radius-lg);
+  border: 1px solid var(--vsql-border-secondary);
+  background-color: var(--vsql-bg-primary);
+  box-shadow: var(--vsql-shadow-sm);
+  overflow: hidden;
+  transition:
+    border-color var(--vsql-transition-fast),
+    box-shadow var(--vsql-transition-fast);
+}
+
+.composerCard:focus-within {
+  border-color: rgba(34, 211, 238, 0.5);
+  box-shadow:
+    var(--vsql-shadow-inner),
+    0 0 0 2px rgba(34, 211, 238, 0.12);
+}
+
+.composerToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: var(--vsql-space-sm);
+  padding: var(--vsql-space-sm) var(--vsql-space-md);
+  border-bottom: 1px solid var(--vsql-border-primary);
+  background-color: var(--vsql-bg-secondary);
+}
+
+.composerToolbarLabel {
+  font-size: 0.625rem;
+  letter-spacing: var(--vsql-tracking-widest);
+  text-transform: uppercase;
+  font-weight: var(--vsql-font-bold);
+  color: var(--vsql-text-muted);
+}
+
+.composerIconButton {
+  height: 2rem;
+  width: 2rem;
+  flex-shrink: 0;
+  color: var(--vsql-text-tertiary);
+}
+
+.composerIconButton:hover:not(:disabled) {
+  color: var(--vsql-accent-red-light);
+  background-color: rgba(248, 113, 113, 0.08);
+}
+
+.composerIconGlyph {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.composerEditorWrap {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  min-height: 7.75rem;
+  padding: var(--vsql-space-sm);
+  gap: 0;
+}
+
+.composerFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vsql-space-md);
+  flex-shrink: 0;
+  padding: var(--vsql-space-sm) var(--vsql-space-md);
+  border-top: 1px solid var(--vsql-border-primary);
+  background-color: var(--vsql-bg-secondary);
+}
+
+.codeMirrorShell {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  min-height: 7.5rem;
+  max-height: min(46vh, 22rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--vsql-border-secondary) transparent;
+}
+
+.codeMirrorShell :global(.cm-theme) {
+  height: fit-content !important;
+  min-height: 7.5rem !important;
+  width: 100% !important;
+}
+
+.codeMirrorShell :global(.cm-editor) {
+  background: transparent !important;
+  height: fit-content !important;
+  min-height: 7.5rem !important;
+  width: 100% !important;
+}
+
+.codeMirrorShell :global(.cm-scroller) {
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-sm);
+}
+
+.inputPrompt {
+  padding: 0.5rem 5px 0.625rem 15px;
+  align-self: flex-start;
+  color: var(--vsql-sql-prompt-fg);
+  -webkit-user-select: none;
+  user-select: none;
+  display: none;
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-sm);
+  line-height: 1.5;
+}
+
+@media (min-width: 640px) {
+  .inputPrompt {
+    display: block;
+  }
+}
+
+.textarea {
+  flex: 1;
+  background: transparent;
+  padding: 0.625rem;
+  color: var(--vsql-sql-editor-fg);
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-sm);
+  min-height: 60px;
+}
+
+@media (min-width: 640px) {
+  .textarea {
+    min-height: 44px;
+  }
+}
+
+.textarea::placeholder {
+  color: var(--vsql-text-tertiary);
+}
+
+.runButton {
+  flex-shrink: 0;
+  border-radius: var(--vsql-radius-md);
+  background-color: var(--vsql-run-button-bg);
+  color: var(--vsql-run-button-fg);
+  padding: 0.375rem 0.75rem;
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-xs);
+  font-weight: var(--vsql-font-semibold);
+  cursor: pointer;
+  transition: background-color var(--vsql-transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.runButtonIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+  opacity: 0.9;
+}
+
+.inputHint {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--vsql-text-tertiary);
+  font-family: var(--vsql-font-mono);
+}
+
+.runButton:hover {
+  background-color: var(--vsql-run-button-hover-bg);
+}
+
+.runButton:disabled {
+  background-color: var(--vsql-bg-elevated);
+  color: var(--vsql-text-muted);
+  cursor: not-allowed;
+}
+
+/* Error Banner */
+.errorBanner {
+  background-color: rgba(127, 29, 29, 0.2);
+  border: 1px solid rgba(127, 29, 29, 0.5);
+  color: var(--vsql-accent-red);
+  padding: var(--vsql-space-md);
+  border-radius: var(--vsql-radius-md);
+  font-size: var(--vsql-text-sm);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--vsql-space-sm);
+  flex-shrink: 0;
+  font-family: var(--vsql-font-mono);
+}
+
+.errorIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--vsql-accent-red);
+}
+
+.errorText {
+  line-height: var(--vsql-leading-relaxed);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+/* Result Table */
+.resultContainer {
+  margin-top: var(--vsql-space-xs);
+  margin-bottom: var(--vsql-space-xs);
+  overflow-x: auto;
+  border: 1px solid var(--vsql-border-secondary);
+  border-radius: var(--vsql-radius-md);
+  background-color: var(--vsql-result-table-bg);
+  box-shadow: var(--vsql-shadow-sm);
+}
+
+.resultTable {
+  width: 100%;
+  font-size: var(--vsql-text-xs);
+  text-align: left;
+  border-collapse: collapse;
+}
+
+.resultHeader {
+  background-color: var(--vsql-bg-card);
+  color: var(--vsql-text-muted);
+}
+
+.resultHeaderCell {
+  padding: var(--vsql-space-sm);
+  border-bottom: 1px solid var(--vsql-border-secondary);
+  white-space: nowrap;
+}
+
+.resultBody {
+  color: var(--vsql-text-secondary);
+}
+
+.resultRow {
+  border-bottom: 1px solid var(--vsql-border-hairline);
+}
+
+.resultRow:hover {
+  background-color: var(--vsql-surface-row-hover);
+}
+
+.resultCell {
+  padding: var(--vsql-space-sm);
+  white-space: nowrap;
+}
+
+.resultCellNull {
+  color: var(--vsql-text-tertiary);
+  font-style: italic;
+}
+
+/* Empty States */
+.emptySuccess {
+  color: var(--vsql-text-muted);
+  font-style: italic;
+  margin-top: var(--vsql-space-xs);
+  font-size: var(--vsql-text-xs);
+}
+
+.emptySet {
+  padding: var(--vsql-space-md);
+  color: var(--vsql-text-muted);
+  font-style: italic;
+  text-align: center;
+}

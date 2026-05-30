@@ -1,0 +1,138 @@
+/* SearchModal Component Styles */
+
+/* Modal Content */
+.modalContent {
+  padding: var(--vsql-space-xs);
+}
+
+/* Command Wrapper */
+.command {
+  background-color: var(--vsql-bg-primary);
+  border-radius: var(--vsql-radius-md);
+}
+
+@media (min-width: 768px) {
+  .command {
+    background-color: var(--vsql-bg-card);
+    border: 1px solid var(--vsql-border-primary);
+  }
+}
+
+/* Command Input */
+.input {
+  display: flex;
+  height: 3rem;
+  width: 100%;
+  border-radius: var(--vsql-radius-md);
+  background-color: transparent;
+  padding: var(--vsql-space-xs) 0;
+  font-size: var(--vsql-text-sm);
+  outline: none;
+  border: none;
+  color: var(--vsql-text-primary);
+}
+
+.input::placeholder {
+  color: var(--vsql-text-muted);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Command List */
+.list {
+  max-height: 380px;
+  min-height: 380px;
+  padding-left: var(--vsql-space-xs);
+  padding-right: var(--vsql-space-xs);
+}
+
+@media (min-width: 768px) {
+  .list {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* Empty State */
+.empty {
+  display: flex;
+  min-height: 280px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Search Icon in Empty State */
+.emptyIcon {
+  color: var(--vsql-text-muted);
+  margin-bottom: var(--vsql-space-xs);
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Empty Text */
+.emptyText {
+  color: var(--vsql-text-muted);
+  margin-bottom: var(--vsql-space-xs);
+  font-size: var(--vsql-text-xs);
+}
+
+/* Command Item */
+.item {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+}
+
+/* Item Icon */
+.itemIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Item Content */
+.itemContent {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Item Title */
+.itemTitle {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--vsql-text-sm);
+  font-weight: var(--vsql-font-medium);
+  color: var(--vsql-text-primary);
+}
+
+/* Item Description */
+.itemDescription {
+  color: var(--vsql-text-muted);
+  font-size: var(--vsql-text-xs);
+}
+
+/* Item Category */
+.itemCategory {
+  color: var(--vsql-text-muted);
+  margin-left: auto;
+  font-size: var(--vsql-text-xs);
+}
+
+/* Screen Reader Only */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

@@ -12,6 +12,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Info,
+  Sparkles,
 } from 'lucide-react';
 
 // GitHub Octocat SVG (lucide-react v1.16.0 doesn't include Github)
@@ -38,6 +39,7 @@ import { RepositoriesTab, type Repository } from '@/components/apps/repo/Reposit
 import { StarsTab } from '@/components/apps/repo/StarsTab';
 import { ProjectsTab } from '@/components/apps/repo/ProjectsTab';
 import { PackagesTab } from '@/components/apps/repo/PackagesTab';
+import { RepoReverseTab } from '@/components/apps/repo/RepoReverseTab';
 import {
   GITHUB_README,
   GITHUB_REPOS,
@@ -49,7 +51,7 @@ import {
 import { parseLinkedGithubAccounts, type LinkedGithubAccount } from '@/lib/linked-github-accounts';
 import { CACHE_TTL_MS } from '@/lib/local-cache';
 
-type TabId = 'overview' | 'repos' | 'stars' | 'projects' | 'packages';
+type TabId = 'overview' | 'repos' | 'stars' | 'projects' | 'packages' | 'repo-reverse';
 
 type ProfileSelection =
   | { kind: 'default' }
@@ -61,6 +63,7 @@ const TAB_ICONS: Record<TabId, React.ElementType> = {
   stars: Star,
   projects: Briefcase,
   packages: Package,
+  'repo-reverse': Sparkles,
 };
 
 function StatusBanner({
@@ -188,6 +191,15 @@ export function RepoApp() {
   const [profileSelection, setProfileSelection] = useState<ProfileSelection>({ kind: 'default' });
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [localRepos, setLocalRepos] = useState<Repository[]>([]);
+  const [reverseRepoTarget, setReverseRepoTarget] = useState<{
+    owner: string;
+    repo: string;
+  } | null>(null);
+
+  const handleReverseEngineer = useCallback((owner: string, repo: string) => {
+    setReverseRepoTarget({ owner, repo });
+    setActiveTab('repo-reverse');
+  }, []);
 
   const activeUsername = useMemo(() => {
     if (profileSelection.kind === 'explicit') return profileSelection.username;
@@ -290,6 +302,7 @@ export function RepoApp() {
       { id: 'stars' as const, label: 'Stars', count: nStars },
       { id: 'projects' as const, label: 'Projects' },
       { id: 'packages' as const, label: 'Packages' },
+      { id: 'repo-reverse' as const, label: 'Reverse Engineer' },
     ];
   }, [mergedRepos.length, starredQ.data?.githubStarred]);
 
@@ -394,6 +407,7 @@ export function RepoApp() {
                 loading={reposCached.loading}
                 error={reposCached.error ?? undefined}
                 onCreateRepo={(newRepo) => setLocalRepos((prev) => [newRepo, ...prev])}
+                onReverseEngineer={handleReverseEngineer}
               />
             ) : activeTab === 'stars' ? (
               <StarsTab
@@ -403,6 +417,11 @@ export function RepoApp() {
               />
             ) : activeTab === 'projects' ? (
               <ProjectsTab username={activeUsername ?? ''} repos={mergedRepos} />
+            ) : activeTab === 'repo-reverse' ? (
+              <RepoReverseTab
+                target={reverseRepoTarget}
+                onClearTarget={() => setReverseRepoTarget(null)}
+              />
             ) : (
               <PackagesTab />
             )}

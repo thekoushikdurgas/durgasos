@@ -172,11 +172,11 @@ export function useRoadRashGameCore() {
   const spritesheetImg = useRef<HTMLImageElement | null>(null);
 
   // Forward refs for game loop fns (defined later; avoids forward-declaration lint errors)
-  const startGameRef = useRef<(trackId: string, isMultiplayerMode?: boolean) => void>(() => { });
+  const startGameRef = useRef<(trackId: string, isMultiplayerMode?: boolean) => void>(() => {});
   const updateGamePhysicsRef = useRef<(dt: number, maxSpd: number, isMultiplayer: boolean) => void>(
-    () => { }
+    () => {}
   );
-  const renderCanvasRef = useRef<(drawDistance: number) => void>(() => { });
+  const renderCanvasRef = useRef<(drawDistance: number) => void>(() => {});
   const calculateRankPlaceRef = useRef<(isMultiplayer: boolean) => number>(() => 1);
 
   // WS Notification Dispatcher
@@ -548,7 +548,7 @@ export function useRoadRashGameCore() {
       src.connect(gain);
       gain.connect(ctx.destination);
       src.start();
-    } catch (e) { }
+    } catch (e) {}
   };
 
   const stopEngineSound = () => {
@@ -558,7 +558,7 @@ export function useRoadRashGameCore() {
       engineGainRef.current?.disconnect();
       ambientGainRef.current?.disconnect();
       rainGainRef.current?.disconnect();
-    } catch (e) { }
+    } catch (e) {}
     engineOscRef.current = null;
     engineGainRef.current = null;
     ambientGainRef.current = null;
@@ -572,8 +572,8 @@ export function useRoadRashGameCore() {
         `/assets/roadrash/music/${type === 'crash' ? 'bike_crash' : 'kick'}.mp3`
       );
       audio.volume = 0.4;
-      audio.play().catch(() => { });
-    } catch (e) { }
+      audio.play().catch(() => {});
+    } catch (e) {}
   };
 
   // Controller vibration trigger
@@ -589,7 +589,7 @@ export function useRoadRashGameCore() {
             weakMagnitude: intensity,
             strongMagnitude: intensity,
           })
-          .catch(() => { });
+          .catch(() => {});
       }
     }
   };
@@ -1060,7 +1060,7 @@ export function useRoadRashGameCore() {
                 },
               })
             );
-          } catch (e) { }
+          } catch (e) {}
         }
 
         // Check race completion
@@ -1329,7 +1329,7 @@ export function useRoadRashGameCore() {
             params: { weather: state.weather, track_name: state.currentTrackId },
           })
         );
-      } catch (e) { }
+      } catch (e) {}
     }
 
     state.traffic.forEach((t) => {
@@ -1747,11 +1747,7 @@ export function useRoadRashGameCore() {
 
     // WICG HTML-in-Canvas drawing & sync for HUD
     const hudContainer = document.getElementById('rr-hud-container');
-    if (
-      hudContainer &&
-      ctx.drawElementImage &&
-      ctx.canvas.hasAttribute('layoutsubtree')
-    ) {
+    if (hudContainer && ctx.drawElementImage && ctx.canvas.hasAttribute('layoutsubtree')) {
       const transform = ctx.drawElementImage(hudContainer, 0, 0);
       hudContainer.style.transform = transform.toString();
     }

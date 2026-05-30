@@ -144,6 +144,12 @@ type Mutation {
   deleteTodoTask(taskId: String!): Boolean!
   createTodoComment(taskId: String!, content: String!): TodoComment!
   deleteTodoComment(commentId: String!): Boolean!
+  libraryBookUpsert(input: LibraryBookUpsertInput!): LibraryBook!
+  libraryBookDelete(bookId: String!): Boolean!
+  libraryNoteUpsert(input: LibraryNoteUpsertInput!): LibraryNote!
+  libraryNoteDelete(noteId: String!): Boolean!
+  libraryTriggerSync: JSON!
+  libraryNotificationDelete(notificationId: String!): Boolean!
 }
 
 type Query {
@@ -200,6 +206,92 @@ type Query {
   githubReadme(username: String!, githubUserId: String = null): JSON!
   aiProviderSettings: JSON!
   jobStatus(jobId: String!): AsyncJobStatus
+  libraryBooks: [LibraryBook!]!
+  libraryNotes: [LibraryNote!]!
+  libraryDevices: [LibraryDevice!]!
+  libraryNotifications: [LibraryNotification!]!
+}
+
+type LibraryBook {
+  id: ID!
+  title: String!
+  author: String!
+  isbn: String!
+  category: String!
+  description: String!
+  coverUrl: String!
+  borrowingStatus: String!
+  borrower: String
+  borrowDate: String
+  returnDueDate: String
+  pdfAttached: Boolean!
+  pdfStoragePath: String
+  pdfName: String
+  pdfContent: String
+  pagesTotal: Int!
+  pagesRead: Int!
+  rating: Float
+  publishedDate: String
+  authorInfo: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+type LibraryNote {
+  id: ID!
+  title: String!
+  content: String!
+  linkedBookIds: [String!]!
+  lastSaved: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type LibraryDevice {
+  id: ID!
+  name: String!
+  type: String!
+  lastSync: String!
+  active: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type LibraryNotification {
+  id: ID!
+  message: String!
+  type: String!
+  timestamp: String!
+}
+
+input LibraryBookUpsertInput {
+  id: String!
+  title: String!
+  author: String!
+  isbn: String
+  category: String
+  description: String
+  coverUrl: String
+  borrowingStatus: String
+  borrower: String
+  borrowDate: String
+  returnDueDate: String
+  pdfAttached: Boolean
+  pdfStoragePath: String
+  pdfName: String
+  pdfContent: String
+  pagesTotal: Int
+  pagesRead: Int
+  rating: Float
+  publishedDate: String
+  authorInfo: String
+}
+
+input LibraryNoteUpsertInput {
+  id: String!
+  title: String!
+  content: String
+  linkedBookIds: [String!]
 }
 
 type RefreshPayload {

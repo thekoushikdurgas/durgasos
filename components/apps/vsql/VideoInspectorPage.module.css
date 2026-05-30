@@ -1,0 +1,752 @@
+/* VideoInspectorPage Component Styles */
+
+/* Main Container */
+.container {
+  width: 100%;
+  height: 100%;
+  background-color: var(--vsql-bg-primary);
+  padding: var(--vsql-space-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--vsql-space-md);
+  overflow-y: auto;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: var(--vsql-space-2xl);
+    gap: var(--vsql-space-lg);
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: var(--vsql-space-3xl);
+    padding-bottom: var(--vsql-space-xl);
+  }
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 64rem;
+  flex-shrink: 0;
+  margin-top: var(--vsql-space-md);
+}
+
+@media (min-width: 768px) {
+  .header {
+    margin-top: 0;
+  }
+}
+
+.headerTitle {
+  font-size: var(--vsql-text-sm);
+  font-weight: var(--vsql-font-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--vsql-tracking-widest);
+  color: var(--vsql-text-muted);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+}
+
+/* Table Select */
+.tableSelect {
+  background-color: var(--vsql-bg-input);
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-md);
+  padding: 0.25rem 0.75rem;
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-accent-cyan-dark);
+  font-family: var(--vsql-font-mono);
+  cursor: pointer;
+}
+
+.tableSelect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Download Link */
+.downloadLink {
+  font-size: 10px;
+  color: var(--vsql-text-muted);
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--vsql-border-secondary);
+  border-radius: var(--vsql-radius-md);
+  background-color: var(--vsql-bg-elevated);
+  font-family: var(--vsql-font-mono);
+  text-decoration: none;
+  transition: color var(--vsql-transition-fast);
+}
+
+.downloadLink:hover {
+  color: var(--vsql-accent-cyan);
+}
+
+/* Status Badge */
+.statusBadge {
+  font-size: 10px;
+  color: var(--vsql-accent-cyan);
+  padding: 2px 0.5rem;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  border-radius: var(--vsql-radius-md);
+  background-color: rgba(34, 211, 238, 0.05);
+  font-family: var(--vsql-font-mono);
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.statusDotBusy {
+  background-color: var(--vsql-accent-orange);
+}
+
+.statusDotLive {
+  background-color: var(--vsql-accent-cyan);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Video Preview */
+.videoContainer {
+  position: relative;
+  width: 100%;
+  max-width: 64rem;
+  aspect-ratio: 16 / 9;
+  box-shadow: var(--vsql-shadow-2xl);
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--vsql-radius-lg);
+  border: 1px solid var(--vsql-border-secondary);
+  background-color: black;
+}
+
+.videoContainer:hover .scanLine {
+  opacity: 1;
+}
+
+/* Video Placeholder */
+.videoPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--vsql-bg-secondary);
+}
+
+.videoLoading {
+  color: var(--vsql-text-muted);
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-xs);
+}
+
+/* Frame Image */
+.frameImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+/* Scan Line Effect */
+.scanLine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--vsql-accent-cyan), transparent);
+  opacity: 0;
+  pointer-events: none;
+  animation: scan 2s linear infinite;
+  transition: opacity var(--vsql-transition-fast);
+}
+
+@keyframes scan {
+  0% {
+    top: 0%;
+  }
+
+  100% {
+    top: 100%;
+  }
+}
+
+/* Shader Canvas */
+.shaderCanvas {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+/* Controls */
+.controls {
+  width: 100%;
+  max-width: 64rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-sm);
+  flex-shrink: 0;
+}
+
+.controlsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.controlsLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: var(--vsql-tracking-widest);
+  color: var(--vsql-text-muted);
+  font-weight: var(--vsql-font-bold);
+}
+
+.timeDisplay {
+  display: flex;
+  background-color: var(--vsql-inspector-chrome);
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-md);
+  padding: 0.25rem 0.75rem;
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-xs);
+  gap: var(--vsql-space-md);
+}
+
+.timeBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeLabel {
+  color: var(--vsql-text-tertiary);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.timeValue {
+  color: var(--vsql-accent-cyan);
+}
+
+.timeDivider {
+  width: 1px;
+  height: 100%;
+  background-color: var(--vsql-border-primary);
+}
+
+.numericRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vsql-space-md);
+  margin-bottom: var(--vsql-space-sm);
+}
+
+.numLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  flex: 1;
+  min-width: 120px;
+}
+
+.numInput {
+  background: var(--vsql-bg-card);
+  border: 1px solid var(--vsql-border-secondary);
+  border-radius: var(--vsql-radius-md);
+  padding: 4px 8px;
+  color: var(--vsql-text-primary);
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-sm);
+}
+
+/* Frame timeline slider (docs/uiux/frame_slider.md — track, fill, thumb, ticks) */
+.frameSliderBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-sm);
+  width: 100%;
+}
+
+.frameSliderHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vsql-space-md);
+  min-height: 1.25rem;
+}
+
+.frameSliderLabel {
+  font-size: var(--vsql-text-sm);
+  font-weight: var(--vsql-font-medium);
+  line-height: 1.25;
+  color: var(--vsql-text-primary);
+}
+
+.frameSliderValueBadge {
+  font-size: var(--vsql-text-xs);
+  font-weight: var(--vsql-font-semibold);
+  font-family: var(--vsql-font-mono);
+  color: var(--vsql-accent-cyan);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--vsql-radius-md);
+  border: 1px solid var(--vsql-border-secondary);
+  background: var(--vsql-bg-tertiary);
+}
+
+.frameSliderInner {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+
+.frameSliderInput {
+  --fill-pct: 0%;
+  --track-bg: var(--vsql-slider-track-bg);
+  --fill-bg: var(--vsql-accent-cyan);
+  width: 100%;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: none;
+}
+
+.frameSliderInput:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.frameSliderInput::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: var(--vsql-radius-full);
+  background: linear-gradient(
+    to right,
+    var(--fill-bg) 0%,
+    var(--fill-bg) var(--fill-pct),
+    var(--track-bg) var(--fill-pct),
+    var(--track-bg) 100%
+  );
+}
+
+.frameSliderInput::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background-color: var(--vsql-bg-primary);
+  border: 2px solid var(--vsql-accent-cyan);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(0, 0, 0, 0.2);
+  transition: border-color var(--vsql-transition-fast);
+}
+
+.frameSliderInput:hover::-webkit-slider-thumb {
+  border-color: #a5f3fc;
+}
+
+.frameSliderInput:focus-visible {
+  outline: none;
+}
+
+.frameSliderInput:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid rgba(34, 211, 238, 0.45);
+  outline-offset: 3px;
+}
+
+.frameSliderInput::-moz-range-track {
+  height: 8px;
+  border-radius: var(--vsql-radius-full);
+  background: var(--track-bg);
+}
+
+.frameSliderInput::-moz-range-progress {
+  height: 8px;
+  border-radius: var(--vsql-radius-full);
+  background: var(--fill-bg);
+}
+
+.frameSliderInput::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--vsql-bg-primary);
+  border: 2px solid var(--vsql-accent-cyan);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.frameSliderInput:focus-visible::-moz-range-thumb {
+  outline: 2px solid rgba(34, 211, 238, 0.45);
+  outline-offset: 3px;
+}
+
+.frameSliderTicks {
+  display: flex;
+  width: 100%;
+  margin-top: 0.65rem;
+  padding: 0 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1px;
+  font-size: 10px;
+  font-weight: var(--vsql-font-medium);
+  color: var(--vsql-text-muted);
+}
+
+.frameSliderTick {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.frameSliderTickMarkMajor {
+  width: 1px;
+  height: 4px;
+  background-color: var(--vsql-text-tertiary);
+  opacity: 0.75;
+}
+
+.frameSliderTickMarkMinor {
+  width: 1px;
+  height: 2px;
+  background-color: var(--vsql-text-tertiary);
+  opacity: 0.45;
+}
+
+.frameSliderTickNum {
+  font-variant-numeric: tabular-nums;
+  color: var(--vsql-text-muted);
+}
+
+.frameSliderTickNumHidden {
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Info Panel */
+.infoPanel {
+  background-color: var(--vsql-inspector-chrome);
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-lg);
+  padding: var(--vsql-space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-xs);
+  font-size: var(--vsql-text-xs);
+  box-shadow: var(--vsql-shadow-sm);
+  font-family: var(--vsql-font-sans);
+  width: 100%;
+  max-width: 64rem;
+  margin-top: var(--vsql-space-xs);
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .infoPanel {
+    font-size: var(--vsql-text-sm);
+  }
+}
+
+.infoHeader {
+  font-size: 10px;
+  color: var(--vsql-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--vsql-tracking-widest);
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  font-family: var(--vsql-font-mono);
+  font-weight: var(--vsql-font-semibold);
+}
+
+.infoIcon {
+  margin-right: var(--vsql-space-sm);
+  opacity: 0.5;
+}
+
+.infoText {
+  color: var(--vsql-text-muted);
+  line-height: var(--vsql-leading-relaxed);
+  font-weight: var(--vsql-font-medium);
+}
+
+.infoHighlight {
+  color: var(--vsql-accent-cyan);
+  font-family: var(--vsql-font-mono);
+}
+
+/* Details Grid */
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--vsql-space-md);
+  margin-top: var(--vsql-space-sm);
+}
+
+@media (min-width: 640px) {
+  .detailsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Detail Card */
+.detailCard {
+  background-color: var(--vsql-bg-primary);
+  border: 1px solid var(--vsql-border-primary);
+  border-radius: var(--vsql-radius-md);
+  padding: 0.75rem;
+}
+
+.detailLabel {
+  color: var(--vsql-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--vsql-tracking-widest);
+  font-size: 9px;
+  font-weight: var(--vsql-font-bold);
+}
+
+.detailValue {
+  color: var(--vsql-accent-cyan);
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-sm);
+  margin-top: 4px;
+}
+
+/* ─── Storage Metrics Panel ─────────────────────────────────────────────── */
+
+.metricsPanel {
+  border: 1px solid var(--vsql-border-subtle, #2a3a2a);
+  border-radius: 6px;
+  margin-top: 1rem;
+  overflow: hidden;
+  background: var(--vsql-bg-card, rgba(0, 255, 100, 0.03));
+}
+
+.metricsPanelToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--vsql-text-muted, #8fbc8f);
+  font-size: var(--vsql-text-sm, 0.75rem);
+  font-family: var(--vsql-font-mono, monospace);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: background 0.15s;
+}
+
+.metricsPanelToggle:hover {
+  background: rgba(0, 255, 100, 0.05);
+}
+
+.metricsPanelIcon {
+  font-size: 0.6rem;
+  color: var(--vsql-accent-cyan, #00e5ff);
+}
+
+.parquetBadge {
+  margin-left: auto;
+  background: rgba(0, 200, 80, 0.15);
+  color: #00e87a;
+  border: 1px solid #00e87a44;
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metricsPanelBody {
+  padding: 0.75rem;
+  border-top: 1px solid var(--vsql-border-subtle, #2a3a2a);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* format comparison bars */
+.metricsBars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formatBar {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.formatBarLabelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.formatBarLabel {
+  font-family: var(--vsql-font-mono, monospace);
+  font-size: 10px;
+  color: var(--vsql-text-primary, #c8e6c9);
+  font-weight: 600;
+}
+
+.formatBarSublabel {
+  font-family: var(--vsql-font-mono, monospace);
+  font-size: 9px;
+  color: var(--vsql-text-muted, #8fbc8f);
+}
+
+.formatBarTrack {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.formatBarFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.barMkv {
+  background: linear-gradient(90deg, #00e5ff 0%, #00b4cc 100%);
+}
+
+.barCsv {
+  background: linear-gradient(90deg, #ff6b35 0%, #cc4400 100%);
+}
+
+.barParquet {
+  background: linear-gradient(90deg, #00e87a 0%, #00b45e 100%);
+}
+
+/* stats grid */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.metricStat {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--vsql-border-subtle, #2a3a2a);
+  border-radius: 4px;
+  padding: 0.4rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metricStatLabel {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--vsql-text-muted, #8fbc8f);
+  font-weight: 700;
+}
+
+.metricStatValue {
+  font-family: var(--vsql-font-mono, monospace);
+  font-size: var(--vsql-text-sm, 0.75rem);
+  color: var(--vsql-accent-cyan, #00e5ff);
+}
+
+/* export row */
+.metricsExportRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.metricsExportLabel {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--vsql-text-muted, #8fbc8f);
+  font-weight: 700;
+}
+
+.metricsExportBtn {
+  display: inline-block;
+  padding: 3px 10px;
+  border: 1px solid var(--vsql-accent-cyan, #00e5ff);
+  border-radius: 3px;
+  color: var(--vsql-accent-cyan, #00e5ff);
+  font-family: var(--vsql-font-mono, monospace);
+  font-size: 10px;
+  text-decoration: none;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.metricsExportBtn:hover {
+  background: var(--vsql-accent-cyan, #00e5ff);
+  color: #000;
+}
+
+/* explanatory note */
+.metricsNote {
+  font-size: 9px;
+  color: var(--vsql-text-muted, #8fbc8f);
+  line-height: 1.5;
+  margin: 0;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--vsql-border-subtle, #2a3a2a);
+}

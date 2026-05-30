@@ -1,0 +1,223 @@
+/* AppShell Component Styles */
+
+/* Main Layout */
+.appShell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background-color: var(--vsql-bg-primary);
+  color: var(--vsql-text-secondary);
+  font-family: var(--vsql-font-sans);
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@media (min-width: 768px) {
+  .appShell {
+    flex-direction: row;
+  }
+}
+
+/* Main Content Area */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: var(--vsql-bg-primary);
+  overflow: hidden;
+}
+
+/* Top Header */
+.topHeader {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--vsql-border-primary);
+  padding-left: var(--vsql-space-md);
+  padding-right: var(--vsql-space-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background-color: var(--vsql-surface-header);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .topHeader {
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 54px;
+    flex-direction: row;
+    gap: 0;
+  }
+}
+
+/* Overview: Rate button cluster before main header actions */
+.overviewTopbarActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vsql-space-sm);
+}
+
+@media (min-width: 640px) {
+  .overviewTopbarActions {
+    justify-content: flex-end;
+  }
+}
+
+.overviewTopbarIcon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.35rem;
+  flex-shrink: 0;
+}
+
+.overviewRateButton {
+  border-radius: var(--vsql-radius-lg);
+  border-color: var(--vsql-border-secondary);
+  background: var(--vsql-surface-muted);
+}
+
+.overviewRateButton:hover {
+  border-color: var(--vsql-rating-hover-border);
+  background: var(--vsql-surface-muted-hover);
+}
+
+/* Metadata Tags */
+.metaTags {
+  display: none;
+  gap: var(--vsql-space-sm);
+}
+
+@media (min-width: 768px) {
+  .metaTags {
+    display: flex;
+  }
+}
+
+.metaTag {
+  font-size: var(--vsql-text-xs);
+  font-family: var(--vsql-font-mono);
+  padding: 0.25rem 0.5rem;
+  background-color: var(--vsql-bg-elevated);
+  border-radius: var(--vsql-radius-md);
+  border: 1px solid var(--vsql-border-secondary);
+  color: var(--vsql-text-secondary);
+}
+
+.metaTagCyan {
+  color: var(--vsql-accent-cyan);
+}
+
+/* Action Buttons */
+.actionBar {
+  display: flex;
+  gap: var(--vsql-space-sm);
+  align-items: center;
+  width: 100%;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .actionBar {
+    width: auto;
+    justify-content: flex-end;
+    gap: var(--vsql-space-md);
+  }
+}
+
+.headerToolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .headerToolbar {
+    flex-direction: row;
+    width: auto;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--vsql-space-md);
+  }
+}
+
+.actionButton {
+  flex: 1;
+}
+
+@media (min-width: 640px) {
+  .actionButton {
+    flex: none;
+  }
+}
+
+.actionIconGreen {
+  width: 1rem;
+  height: 1rem;
+  color: var(--vsql-accent-green-light);
+  margin-right: var(--vsql-space-sm);
+}
+
+.actionIconCyan {
+  width: 1rem;
+  height: 1rem;
+  color: var(--vsql-accent-cyan);
+  margin-right: var(--vsql-space-sm);
+}
+
+.actionIconDefault {
+  width: 1rem;
+  height: 1rem;
+  margin-right: var(--vsql-space-sm);
+}
+
+.encodeButton {
+  background-color: #0891b2;
+  color: var(--vsql-text-on-accent);
+  font-weight: var(--vsql-font-bold);
+}
+
+.encodeButton:hover {
+  background-color: var(--vsql-accent-cyan);
+}
+
+.downloadButton {
+  background-color: var(--vsql-bg-elevated);
+  color: var(--vsql-text-secondary);
+}
+
+/* Content Area — flex host so views can expose a first-child rail (e.g. Durgas Search) */
+.content {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+@media (max-width: 980px) {
+  .content {
+    flex-direction: column;
+  }
+}
+
+/* Overview fills main content width like other views. */
+.contentOverview {
+  width: 100%;
+}

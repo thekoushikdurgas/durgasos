@@ -1,0 +1,775 @@
+/* OverviewPage Component Styles */
+
+/* Main Container */
+.overview {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  position: relative;
+  width: 100%;
+}
+
+/* Shader Background */
+.shaderBackground {
+  position: absolute;
+  inset: 0;
+  z-index: -10;
+  opacity: var(--vsql-overview-shader-opacity);
+  width: 100%;
+}
+
+/* Content Wrapper */
+.content {
+  padding: 0;
+  margin: 0;
+  margin-right: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Rating dialog (Origin-style layout, vSQL tokens) */
+.rateDialogContent {
+  max-width: 25rem;
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--vsql-surface-dialog);
+  border: 1px solid var(--vsql-border-primary);
+}
+
+.rateDialogHeader {
+  position: relative;
+  background-color: var(--vsql-surface-dialog);
+  border-bottom: 1px solid var(--vsql-border-primary);
+  padding: var(--vsql-space-md) var(--vsql-space-lg);
+  text-align: left;
+}
+
+.rateDialogTitle {
+  font-size: var(--vsql-text-base);
+  font-weight: var(--vsql-font-semibold);
+  color: var(--vsql-text-primary);
+  letter-spacing: var(--vsql-tracking-tight);
+}
+
+.rateDialogDescription {
+  margin-top: var(--vsql-space-xs);
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  line-height: var(--vsql-leading-relaxed);
+}
+
+.rateDialogBody {
+  padding: var(--vsql-space-lg);
+}
+
+.rateForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-lg);
+}
+
+.rateFormStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-lg);
+}
+
+.ratingFieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+}
+
+.ratingLegend {
+  font-size: var(--vsql-text-lg);
+  font-weight: var(--vsql-font-semibold);
+  color: var(--vsql-text-primary);
+  line-height: var(--vsql-leading-tight);
+  margin-bottom: var(--vsql-space-md);
+  padding: 0;
+}
+
+.ratingGroup {
+  display: flex;
+  width: 100%;
+  border-radius: var(--vsql-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--vsql-shadow-sm);
+}
+
+.ratingSegment {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  margin-left: -1px;
+  border: 1px solid var(--vsql-border-secondary);
+  background: var(--vsql-bg-primary);
+  cursor: pointer;
+  font-size: var(--vsql-text-sm);
+  font-weight: var(--vsql-font-medium);
+  color: var(--vsql-text-secondary);
+  outline-offset: 2px;
+  transition:
+    background-color var(--vsql-transition-fast),
+    border-color var(--vsql-transition-fast),
+    color var(--vsql-transition-fast),
+    z-index var(--vsql-transition-fast);
+}
+
+.ratingSegment:first-child {
+  margin-left: 0;
+  border-top-left-radius: var(--vsql-radius-lg);
+  border-bottom-left-radius: var(--vsql-radius-lg);
+}
+
+.ratingSegment:last-child {
+  border-top-right-radius: var(--vsql-radius-lg);
+  border-bottom-right-radius: var(--vsql-radius-lg);
+}
+
+.ratingSegment:hover:not(:has(input:disabled)) {
+  background: var(--vsql-surface-muted-strong);
+}
+
+.ratingSegment:focus-within {
+  z-index: 2;
+  box-shadow: 0 0 0 2px var(--vsql-rating-focus-ring);
+}
+
+.ratingSegmentChecked {
+  z-index: 1;
+  border-color: var(--vsql-rating-checked-border);
+  background: var(--vsql-rating-checked-bg);
+  color: var(--vsql-accent-cyan);
+}
+
+.ratingInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ratingDigit {
+  pointer-events: none;
+  user-select: none;
+}
+
+.ratingScaleHints {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--vsql-space-sm);
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+}
+
+.rateTextareaBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-sm);
+}
+
+.rateTextareaLabel {
+  font-size: var(--vsql-text-sm);
+  font-weight: var(--vsql-font-medium);
+  color: var(--vsql-text-primary);
+}
+
+.rateTextarea {
+  width: 100%;
+  min-height: 5rem;
+  padding: var(--vsql-space-md);
+  border-radius: var(--vsql-radius-lg);
+  border: 1px solid var(--vsql-border-secondary);
+  background: var(--vsql-bg-primary);
+  color: var(--vsql-text-primary);
+  font-size: var(--vsql-text-sm);
+  line-height: var(--vsql-leading-relaxed);
+  resize: vertical;
+  box-shadow: var(--vsql-inset-shadow-soft);
+  transition:
+    border-color var(--vsql-transition-fast),
+    box-shadow var(--vsql-transition-fast);
+}
+
+.rateTextarea::placeholder {
+  color: var(--vsql-text-tertiary);
+}
+
+.rateTextarea:focus {
+  outline: none;
+  border-color: var(--vsql-rating-hover-border);
+  box-shadow:
+    var(--vsql-inset-shadow-soft),
+    0 0 0 3px var(--vsql-rating-focus-ring);
+}
+
+.rateTextarea:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.rateSubmit {
+  width: 100%;
+  height: auto;
+  padding: 0.65rem var(--vsql-space-md);
+  border-radius: var(--vsql-radius-lg);
+  font-weight: var(--vsql-font-semibold);
+  box-shadow: var(--vsql-shadow-sm);
+}
+
+/* Hero Section */
+.hero {
+  max-width: 48rem;
+  margin-bottom: var(--vsql-space-3xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-lg);
+}
+
+.heroTitle {
+  font-size: 2.25rem;
+  line-height: 1.1;
+  font-weight: var(--vsql-font-semibold);
+  color: var(--vsql-text-primary);
+  letter-spacing: var(--vsql-tracking-tight);
+}
+
+@media (min-width: 768px) {
+  .heroTitle {
+    font-size: 3.25rem;
+  }
+}
+
+.heroTitleMuted {
+  color: var(--vsql-text-tertiary);
+}
+
+.heroDescription {
+  font-size: var(--vsql-text-lg);
+  color: var(--vsql-text-muted);
+  line-height: var(--vsql-leading-relaxed);
+  font-weight: var(--vsql-font-medium);
+  max-width: 42rem;
+  margin-top: var(--vsql-space-md);
+}
+
+/* Action Buttons */
+.actionBar {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 15px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: fit-content;
+}
+
+.importButton {
+  padding: 0.75rem 1.5rem;
+  height: auto;
+  border-radius: var(--vsql-radius-lg);
+  background-color: var(--vsql-btn-import-bg);
+  color: var(--vsql-btn-import-fg);
+  font-weight: var(--vsql-font-semibold);
+  box-shadow: var(--vsql-btn-import-shadow);
+}
+
+.importButton:hover {
+  background-color: var(--vsql-btn-import-hover);
+}
+
+.importIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #16a34a;
+  margin-right: var(--vsql-space-sm);
+}
+
+.sqlButton {
+  padding: 0.75rem 1.5rem;
+  height: auto;
+  border-radius: var(--vsql-radius-lg);
+  background-color: var(--vsql-btn-sql-bg);
+  color: var(--vsql-text-on-accent);
+  border: 1px solid var(--vsql-btn-sql-border);
+}
+
+.sqlButton:hover {
+  background-color: var(--vsql-btn-sql-hover);
+}
+
+.sqlIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: var(--vsql-space-sm);
+}
+
+.inspectButton {
+  padding: 0.75rem 1.5rem;
+  height: auto;
+  color: var(--vsql-accent-cyan);
+  background: transparent;
+}
+
+.inspectButton:hover {
+  color: var(--vsql-accent-cyan-light);
+  background-color: var(--vsql-surface-muted-hover);
+}
+
+.inspectIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: var(--vsql-space-sm);
+}
+
+/* Metrics Grid */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--vsql-space-lg);
+  margin-bottom: var(--vsql-space-3xl);
+}
+
+@media (min-width: 768px) {
+  .metricsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Metric Card */
+.metricCard {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--vsql-surface-card-raised);
+  padding: var(--vsql-space-lg);
+  border-radius: var(--vsql-radius-2xl);
+  border: 1px solid var(--vsql-border-secondary);
+  box-shadow: var(--vsql-shadow-sm);
+}
+
+.metricLabel {
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: var(--vsql-tracking-widest);
+  font-weight: var(--vsql-font-bold);
+  margin-bottom: var(--vsql-space-sm);
+}
+
+.metricValue {
+  font-size: 2rem;
+  font-weight: var(--vsql-font-bold);
+  font-family: var(--vsql-font-mono);
+}
+
+.metricValueCyan {
+  color: var(--vsql-accent-cyan);
+}
+
+.metricValueGreen {
+  color: var(--vsql-accent-green);
+}
+
+.metricValueWhite {
+  color: var(--vsql-text-primary);
+}
+
+.metricSuffix {
+  font-size: var(--vsql-text-lg);
+  color: var(--vsql-text-tertiary);
+  font-family: var(--vsql-font-sans);
+  letter-spacing: normal;
+  font-weight: var(--vsql-font-semibold);
+}
+
+/* Hybrid storage architecture callout */
+.archCallout {
+  width: 100%;
+  max-width: 56rem;
+  margin: 0 auto var(--vsql-space-3xl);
+  padding: var(--vsql-space-lg);
+  border-radius: var(--vsql-radius-2xl);
+  border: 1px solid var(--vsql-border-secondary);
+  background: linear-gradient(
+    135deg,
+    var(--vsql-surface-card-raised) 0%,
+    var(--vsql-surface-muted) 100%
+  );
+  box-shadow: var(--vsql-shadow-md);
+}
+
+.archCalloutHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+  margin-bottom: var(--vsql-space-md);
+}
+
+.archCalloutDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--vsql-accent-green);
+  box-shadow: 0 0 10px var(--vsql-accent-green);
+}
+
+.archCalloutTitle {
+  font-size: var(--vsql-text-sm);
+  font-weight: var(--vsql-font-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--vsql-tracking-widest);
+  color: var(--vsql-text-primary);
+}
+
+.archCalloutSub {
+  flex: 1 1 100%;
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  line-height: var(--vsql-leading-relaxed);
+}
+
+@media (min-width: 640px) {
+  .archCalloutSub {
+    flex: 1 1 auto;
+    margin-left: var(--vsql-space-md);
+  }
+}
+
+.archTable {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--vsql-text-xs);
+  font-family: var(--vsql-font-mono);
+  border-radius: var(--vsql-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--vsql-border-primary);
+}
+
+.archTableHead,
+.archTableRow {
+  display: grid;
+  grid-template-columns: minmax(5rem, 1.1fr) 2fr minmax(4rem, 0.9fr) minmax(4rem, 0.9fr);
+  gap: var(--vsql-space-sm);
+  padding: var(--vsql-space-sm) var(--vsql-space-md);
+  align-items: center;
+}
+
+.archTableHead {
+  background: var(--vsql-surface-muted-strong);
+  color: var(--vsql-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: var(--vsql-font-bold);
+}
+
+.archTableRow:nth-child(odd) {
+  background: var(--vsql-bg-primary);
+}
+
+.archTableRow:nth-child(even) {
+  background: var(--vsql-surface-muted);
+}
+
+.archLayerName {
+  color: var(--vsql-accent-cyan);
+  font-weight: var(--vsql-font-semibold);
+}
+
+.archLayerRole {
+  color: var(--vsql-text-secondary);
+  line-height: var(--vsql-leading-snug);
+}
+
+.archLayerSpeed {
+  color: var(--vsql-text-muted);
+}
+
+.archLayerSize {
+  font-weight: var(--vsql-font-bold);
+}
+
+.archSizeCyan {
+  color: var(--vsql-accent-cyan);
+}
+
+.archSizeGreen {
+  color: var(--vsql-accent-green);
+}
+
+.archSizeYellow {
+  color: #eab308;
+}
+
+.archCalloutNote {
+  margin: var(--vsql-space-md) 0 0;
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  line-height: var(--vsql-leading-relaxed);
+}
+
+.archCalloutNote code {
+  font-family: var(--vsql-font-mono);
+  font-size: 0.7rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--vsql-radius-sm);
+  background: var(--vsql-surface-muted-strong);
+  color: var(--vsql-accent-cyan);
+}
+
+/* Features Grid */
+.featuresGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* Feature Card */
+.featureCard {
+  background-color: var(--vsql-surface-card-raised);
+  padding: 20px 25px;
+  border-radius: var(--vsql-radius-2xl);
+  border: 1px solid var(--vsql-border-secondary);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--vsql-shadow-xl);
+  transition: transform var(--vsql-transition-normal);
+}
+
+.featureCard:hover {
+  transform: translateY(-4px);
+}
+
+.featureHeader {
+  margin-bottom: var(--vsql-space-xl);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.featureHeaderBody {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.featureLabel {
+  font-size: 10px;
+  letter-spacing: var(--vsql-tracking-widest);
+  font-family: var(--vsql-font-mono);
+  text-transform: uppercase;
+  margin-bottom: var(--vsql-space-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+}
+
+.featureLabelCyan {
+  color: var(--vsql-accent-cyan);
+}
+
+.featureLabelGreen {
+  color: var(--vsql-accent-green);
+}
+
+.featureDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.featureDotCyan {
+  background-color: var(--vsql-accent-cyan);
+}
+
+.featureDotGreen {
+  background-color: var(--vsql-accent-green);
+}
+
+.featureTitle {
+  font-size: var(--vsql-text-xl);
+  font-weight: var(--vsql-font-semibold);
+  color: var(--vsql-text-primary);
+  margin-bottom: var(--vsql-space-sm);
+}
+
+.featureDescription {
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-muted);
+  line-height: var(--vsql-leading-relaxed);
+  font-weight: var(--vsql-font-medium);
+}
+
+.featureFooter {
+  margin-top: auto;
+  padding: var(--vsql-space-md);
+  background-color: var(--vsql-bg-tertiary);
+  border-radius: var(--vsql-radius-xl);
+  border: 1px solid var(--vsql-border-hairline);
+  font-family: var(--vsql-font-mono);
+  font-size: var(--vsql-text-xs);
+  color: var(--vsql-text-muted);
+  box-shadow: var(--vsql-shadow-inner);
+}
+
+/* Code/Text styling in footer */
+.codeCyan {
+  color: var(--vsql-accent-cyan);
+  font-weight: var(--vsql-font-semibold);
+}
+
+.codeCyanLight {
+  color: var(--vsql-syntax-cyan-muted);
+}
+
+.codeGreen {
+  color: var(--vsql-accent-green);
+  font-weight: var(--vsql-font-semibold);
+}
+
+.codeMuted {
+  color: var(--vsql-text-tertiary);
+}
+
+/* CSV Card (3rd feature) */
+.csvCard {
+  background-color: var(--vsql-surface-card-raised);
+  padding: var(--vsql-space-2xl);
+  border-radius: var(--vsql-radius-2xl);
+  border: 1px solid var(--vsql-border-secondary);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--vsql-shadow-xl);
+  transition: transform var(--vsql-transition-normal);
+}
+
+.csvCard:hover {
+  transform: translateY(-4px);
+}
+
+.csvLabel {
+  font-size: 10px;
+  color: var(--vsql-accent-orange);
+  letter-spacing: var(--vsql-tracking-widest);
+  font-family: var(--vsql-font-mono);
+  text-transform: uppercase;
+  margin-bottom: var(--vsql-space-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+}
+
+.csvDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--vsql-accent-orange);
+}
+
+.csvTitle {
+  font-size: var(--vsql-text-xl);
+  font-weight: var(--vsql-font-semibold);
+  color: var(--vsql-text-primary);
+  margin-bottom: var(--vsql-space-sm);
+}
+
+.csvDescription {
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-muted);
+  line-height: var(--vsql-leading-relaxed);
+  font-weight: var(--vsql-font-medium);
+}
+
+/* Data Table Preview */
+.tableContainer {
+  border-radius: var(--vsql-radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--vsql-border-hairline);
+  background-color: var(--vsql-bg-primary);
+  margin-top: var(--vsql-space-lg);
+  box-shadow: var(--vsql-shadow-inner);
+}
+
+.tableHeader {
+  background-color: var(--vsql-bg-card);
+  padding: 0 var(--vsql-space-md);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--vsql-border-hairline);
+  font-size: 10px;
+  font-family: var(--vsql-font-mono);
+  color: var(--vsql-text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: var(--vsql-font-semibold);
+}
+
+.tableHeaderIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--vsql-text-tertiary);
+}
+
+.table {
+  width: 100%;
+  font-size: var(--vsql-text-xs);
+  text-align: left;
+}
+
+.tableBody {
+  color: var(--vsql-text-secondary);
+  font-family: var(--vsql-font-mono);
+}
+
+.tableRow {
+  border-top: 1px solid var(--vsql-border-hairline);
+}
+
+.tableRow:hover {
+  background-color: var(--vsql-surface-row-hover);
+}
+
+.tableCell {
+  padding: 0.625rem var(--vsql-space-md);
+}
+
+.tableCellName {
+  color: var(--vsql-syntax-cyan);
+  font-weight: var(--vsql-font-semibold);
+}
+
+.tableCellType {
+  color: rgba(16, 185, 129, 0.9);
+}
+
+.tableCellValue {
+  color: var(--vsql-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 80px;
+}
+
+.inlineCode {
+  font-family: var(--vsql-font-mono);
+  color: var(--vsql-accent-cyan);
+  font-size: 0.9em;
+}

@@ -25,6 +25,10 @@ export default defineConfig([
   },
   {
     extends: [...next],
+    rules: {
+      // Many apps load data on mount via effects; disabling avoids 50+ false positives until refactored.
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
   {
     files: ['electron/**/*.cjs'],

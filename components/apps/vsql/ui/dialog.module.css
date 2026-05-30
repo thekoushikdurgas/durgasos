@@ -1,0 +1,193 @@
+/* Dialog Component Styles */
+
+/* Overlay */
+.overlay {
+  background-color: var(--vsql-dialog-overlay-scrim);
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.overlay[data-state='open'] {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.overlay[data-state='closed'] {
+  animation: fadeOut 0.2s ease-out;
+}
+
+/* Content */
+.content {
+  background-color: var(--vsql-bg-card);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 50;
+  width: 100%;
+  max-width: calc(100% - 2rem);
+  transform: translate(-50%, -50%);
+  border-radius: var(--vsql-radius-lg);
+  border: 1px solid var(--vsql-border-primary);
+  box-shadow: var(--vsql-shadow-lg);
+}
+
+@media (min-width: 640px) {
+  .content {
+    max-width: 32rem;
+  }
+}
+
+.content[data-state='open'] {
+  animation:
+    fadeIn 0.2s ease-out,
+    zoomIn 0.2s ease-out;
+}
+
+.content[data-state='closed'] {
+  animation:
+    fadeOut 0.2s ease-out,
+    zoomOut 0.2s ease-out;
+}
+
+/* Body */
+.body {
+  padding: var(--vsql-space-md) var(--vsql-space-md);
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+/* Header */
+.header {
+  background-color: rgba(15, 23, 42, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--vsql-space-xs);
+  border-top-left-radius: var(--vsql-radius-lg);
+  border-top-right-radius: var(--vsql-radius-lg);
+  border-bottom: 1px solid var(--vsql-border-primary);
+  padding: var(--vsql-space-md);
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .header {
+    text-align: left;
+  }
+}
+
+/* Close Button */
+.closeButton {
+  position: absolute;
+  top: var(--vsql-space-md);
+  right: var(--vsql-space-md);
+  border-radius: 50%;
+  opacity: 0.8;
+  transition: opacity var(--vsql-transition-fast);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: var(--vsql-text-muted);
+}
+
+.closeButton:hover {
+  opacity: 1;
+}
+
+.closeButton:focus {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--vsql-accent-cyan),
+    0 0 0 4px var(--vsql-bg-primary);
+}
+
+.closeButton[data-state='open'] {
+  background-color: var(--vsql-bg-elevated);
+  color: var(--vsql-text-muted);
+}
+
+.closeIcon {
+  width: 1rem;
+  height: 1rem;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--vsql-space-sm);
+  padding: var(--vsql-space-md);
+  border-top: 1px solid var(--vsql-border-primary);
+}
+
+/* Title */
+.title {
+  font-size: var(--vsql-text-lg);
+  font-weight: var(--vsql-font-semibold);
+  color: var(--vsql-text-primary);
+  line-height: var(--vsql-leading-tight);
+}
+
+/* Description */
+.description {
+  font-size: var(--vsql-text-sm);
+  color: var(--vsql-text-muted);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+
+  to {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes zoomOut {
+  from {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  to {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+}

@@ -1,0 +1,112 @@
+query LibraryBooks {
+  libraryBooks {
+    id
+    title
+    author
+    isbn
+    category
+    description
+    coverUrl
+    borrowingStatus
+    borrower
+    borrowDate
+    returnDueDate
+    pdfAttached
+    pdfStoragePath
+    pdfName
+    pdfContent
+    pagesTotal
+    pagesRead
+    rating
+    publishedDate
+    authorInfo
+    createdAt
+    updatedAt
+  }
+}
+
+query LibraryNotes {
+  libraryNotes {
+    id
+    title
+    content
+    linkedBookIds
+    lastSaved
+    createdAt
+    updatedAt
+  }
+}
+
+query LibraryDevices {
+  libraryDevices {
+    id
+    name
+    type
+    lastSync
+    active
+    createdAt
+    updatedAt
+  }
+}
+
+query LibraryNotifications {
+  libraryNotifications {
+    id
+    message
+    type
+    timestamp
+  }
+}
+
+mutation LibraryBookUpsert($input: LibraryBookUpsertInput!) {
+  libraryBookUpsert(input: $input) {
+    id
+    title
+    author
+    isbn
+    category
+    description
+    coverUrl
+    borrowingStatus
+    borrower
+    borrowDate
+    returnDueDate
+    pdfAttached
+    pdfStoragePath
+    pdfName
+    pdfContent
+    pagesTotal
+    pagesRead
+    rating
+    publishedDate
+    authorInfo
+    updatedAt
+  }
+}
+
+mutation LibraryBookDelete($bookId: String!) {
+  libraryBookDelete(bookId: $bookId)
+}
+
+mutation LibraryNoteUpsert($input: LibraryNoteUpsertInput!) {
+  libraryNoteUpsert(input: $input) {
+    id
+    title
+    content
+    linkedBookIds
+    lastSaved
+    updatedAt
+  }
+}
+
+mutation LibraryNoteDelete($noteId: String!) {
+  libraryNoteDelete(noteId: $noteId)
+}
+
+mutation LibraryTriggerSync {
+  libraryTriggerSync
+}
+
+mutation LibraryNotificationDelete($notificationId: String!) {
+  libraryNotificationDelete(notificationId: $notificationId)
+}

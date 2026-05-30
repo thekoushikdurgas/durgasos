@@ -1,0 +1,129 @@
+/* StatusBar Component Styles */
+
+.statusBar {
+  height: 2rem;
+  border-top: 1px solid var(--vsql-border-primary);
+  padding: 0 var(--vsql-space-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  background-color: var(--vsql-bg-elevated);
+  color: var(--vsql-text-muted);
+  text-transform: uppercase;
+  font-family: var(--vsql-font-mono);
+  letter-spacing: var(--vsql-tracking-widest);
+  flex-shrink: 0;
+}
+
+.statusLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-lg);
+  min-width: 0;
+}
+
+.statusRight {
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-lg);
+  min-width: 0;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+}
+
+.statusIconGreen {
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-right: var(--vsql-space-sm);
+  color: var(--vsql-accent-green);
+}
+
+.statusIconMuted {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--vsql-text-tertiary);
+}
+
+.statusFrames {
+  display: none;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+}
+
+@media (min-width: 640px) {
+  .statusFrames {
+    display: flex;
+  }
+}
+
+.statusOnline {
+  display: none;
+  align-items: center;
+  gap: var(--vsql-space-sm);
+}
+
+@media (min-width: 1024px) {
+  .statusOnline {
+    display: flex;
+  }
+}
+
+.statusOnlineDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--vsql-accent-green);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.statusApi {
+  display: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: none;
+}
+
+@media (min-width: 768px) {
+  .statusApi {
+    display: inline;
+  }
+}
+
+.statusState {
+  display: flex;
+  align-items: center;
+  gap: var(--vsql-space-xs);
+  transition: color 300ms ease;
+}
+
+.statusReady {
+  color: var(--vsql-text-muted);
+}
+
+.statusBusy {
+  color: var(--vsql-accent-cyan);
+}
+
+.statusActivityIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.statusActivityPulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

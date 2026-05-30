@@ -47,13 +47,17 @@ type Pending = StreamPending | RpcPending;
 function safeCloseWebSocket(ws: WebSocket | null | undefined): void {
   if (!ws) return;
   if (ws.readyState === WebSocket.CONNECTING) {
-    ws.addEventListener('open', () => {
-      try {
-        ws.close();
-      } catch (err) {
-        swallowClientError('ai-chat-gateway.ws.safeClose', err);
-      }
-    }, { once: true });
+    ws.addEventListener(
+      'open',
+      () => {
+        try {
+          ws.close();
+        } catch (err) {
+          swallowClientError('ai-chat-gateway.ws.safeClose', err);
+        }
+      },
+      { once: true }
+    );
     return;
   }
   if (ws.readyState === WebSocket.OPEN) {
@@ -276,7 +280,7 @@ export function useAiChatGateway() {
   const pendingRef = useRef<Map<string, Pending>>(new Map());
   const reconnectRef = useRef<number | null>(null);
   const unmountedRef = useRef(false);
-  const scheduleReconnectRef = useRef<() => void>(() => { });
+  const scheduleReconnectRef = useRef<() => void>(() => {});
 
   const scheduleReconnect = useCallback(() => {
     if (typeof window === 'undefined' || unmountedRef.current) return;
