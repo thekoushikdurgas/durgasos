@@ -38,7 +38,7 @@ export function SystemStatusBridge() {
 export function SystemStatusIcons({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { systemStatus, openApp } = useOS();
+  const { systemStatus, telemetry, openApp } = useOS();
   const [wsHttp, setWsHttp] = useState<'up' | 'down' | 'unknown'>('unknown');
   const [menuOpen, setMenuOpen] = useState(false);
   const signedIn = Boolean(readStoredAuthTokens()?.access);
@@ -88,6 +88,24 @@ export function SystemStatusIcons({ compact = false }: { compact?: boolean }) {
         <Activity className={cn('h-2 w-2 shrink-0 rounded-full', dotClass(wsHttp))} aria-hidden />
         {!compact && 'WS'}
       </span>
+      {telemetry && (
+        <>
+          <span
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400"
+            title={`CPU Load: ${telemetry.cpuLoad}%`}
+          >
+            <span className="text-[9px] font-semibold text-cyan-400">CPU</span>
+            <span className="tabular-nums font-mono">{telemetry.cpuLoad}%</span>
+          </span>
+          <span
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400"
+            title={`RAM Usage: ${telemetry.ramUsage.toFixed(1)}%`}
+          >
+            <span className="text-[9px] font-semibold text-purple-400">RAM</span>
+            <span className="tabular-nums font-mono">{Math.round(telemetry.ramUsage)}%</span>
+          </span>
+        </>
+      )}
       <div className="relative">
         {menuOpen ? (
           <button

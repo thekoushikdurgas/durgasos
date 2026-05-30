@@ -7,4 +7,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   maximize: () => ipcRenderer.send('window-maximize'),
   close: () => ipcRenderer.send('window-close'),
   isMaximized: () => ipcRenderer.invoke('window-is-maximized'),
+  getSystemTelemetry: () => ipcRenderer.invoke('get-system-telemetry'),
 });

@@ -174,6 +174,31 @@ const DevToolApp = dynamic(() => import('./apps/DevToolApp').then((m) => m.DevTo
   ssr: false,
   loading: LoadingSpinner,
 });
+const OsAcademyApp = dynamic(() => import('./apps/OsAcademyApp').then((m) => m.OsAcademyApp), {
+  ssr: false,
+  loading: LoadingSpinner,
+});
+const StraceInspectorApp = dynamic(
+  () => import('./apps/StraceInspectorApp').then((m) => m.StraceInspectorApp),
+  {
+    ssr: false,
+    loading: LoadingSpinner,
+  }
+);
+const LoadVisualizerApp = dynamic(
+  () => import('./apps/LoadVisualizerApp').then((m) => m.LoadVisualizerApp),
+  {
+    ssr: false,
+    loading: LoadingSpinner,
+  }
+);
+const BootSimulatorApp = dynamic(
+  () => import('./apps/BootSimulatorApp').then((m) => m.BootSimulatorApp),
+  {
+    ssr: false,
+    loading: LoadingSpinner,
+  }
+);
 
 const FallbackApp = ({ name }: { name: string }) => (
   <div className="absolute inset-0 bg-slate-900 border border-t-0 border-white/5 flex items-center justify-center flex-col gap-4 text-white/50">
@@ -281,6 +306,14 @@ export function WindowManager() {
         return <LibraryApp />;
       case 'dev-tool':
         return <DevToolApp />;
+      case 'os-academy':
+        return <OsAcademyApp />;
+      case 'strace-inspector':
+        return <StraceInspectorApp />;
+      case 'load-visualizer':
+        return <LoadVisualizerApp />;
+      case 'boot-simulator':
+        return <BootSimulatorApp />;
       default:
         return <FallbackApp name={appId} />;
     }

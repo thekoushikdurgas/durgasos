@@ -203,6 +203,10 @@ export const APP_SUPPORTED_EXTENSIONS: Record<AppId, readonly string[]> = {
   sudoku: [],
   library: [],
   'dev-tool': [],
+  'os-academy': [],
+  'strace-inspector': [],
+  'load-visualizer': [],
+  'boot-simulator': [],
 };
 
 /** Built-in default handler when the user has not set an override. */

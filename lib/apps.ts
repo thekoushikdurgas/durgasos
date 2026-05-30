@@ -40,6 +40,9 @@ import {
   Grid3X3,
   BookOpen,
   Wrench,
+  GraduationCap,
+  Binary,
+  Activity,
 } from 'lucide-react';
 
 export type AppCategory = 'core' | 'workflows' | 'data' | 'system';
@@ -84,6 +87,10 @@ export type AppId =
   | 'datavideo'
   | 'sudoku'
   | 'library'
+  | 'os-academy'
+  | 'strace-inspector'
+  | 'load-visualizer'
+  | 'boot-simulator'
   | 'dev-tool';
 
 export interface AppDefinition {
@@ -416,6 +423,38 @@ export const APPS: Record<AppId, AppDefinition> = {
     category: 'core',
     tags: ['devtools', 'ai'],
   },
+  'os-academy': {
+    id: 'os-academy',
+    name: 'OS Academy',
+    icon: GraduationCap,
+    color: 'text-cyan-400',
+    category: 'core',
+    tags: ['education', 'system'],
+  },
+  'strace-inspector': {
+    id: 'strace-inspector',
+    name: 'Syscall Inspector',
+    icon: Binary,
+    color: 'text-emerald-400',
+    category: 'system',
+    tags: ['devtools', 'system'],
+  },
+  'load-visualizer': {
+    id: 'load-visualizer',
+    name: 'Load Visualizer',
+    icon: Activity,
+    color: 'text-rose-400',
+    category: 'system',
+    tags: ['system', 'telemetry'],
+  },
+  'boot-simulator': {
+    id: 'boot-simulator',
+    name: 'Boot Simulator',
+    icon: PlayCircle,
+    color: 'text-amber-400',
+    category: 'system',
+    tags: ['system', 'telemetry'],
+  },
 };
 
 export const APP_CATEGORY_LABELS: Record<AppCategory, string> = {
@@ -475,6 +514,14 @@ export const APP_DESCRIPTIONS: Record<AppId, string> = {
     'Personal book library with borrowing tracking, research notes, and Gemma-grounded chat over your catalog.',
   'dev-tool':
     'AI-powered dev utilities: minify, regex, JSON types, prompts, memory bank, icon generator, and more.',
+  'os-academy':
+    'Interactive OS Academy with lessons, visual diagrams, and graded quizzes on core OS concepts.',
+  'strace-inspector':
+    'Trace backend system calls (syscalls) in real-time under an interactive C/Python code execution sandbox.',
+  'load-visualizer':
+    'Live CPU telemetry visualizer simulating C/P-state transitions, DVFS frequency scaling, and TjMax thermal throttling loops.',
+  'boot-simulator':
+    'Simulate the low-level operating system boot stages (POST, BIOS/UEFI, Bootloader, Kernel, PID 1 init) dynamically.',
 };
 
 /** Sorted unique tags across all apps (launcher filter dropdown). */

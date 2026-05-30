@@ -20,6 +20,16 @@ import { clampWindowZIndex, MAX_WINDOW_Z_INDEX, SHELL_Z } from '@/lib/shell-z-in
 
 export type DesktopSystemStatus = 'online' | 'degraded' | 'offline';
 
+export interface SystemTelemetryData {
+  cpuLoad: number;
+  ramUsage: number;
+  totalMemoryGB: number;
+  freeMemoryGB: number;
+  uptime: number;
+  platform: string;
+  arch: string;
+}
+
 export interface WindowState {
   id: string;
   appId: AppId;
@@ -39,6 +49,7 @@ interface OSContextType {
   isWidgetSidebarOpen: boolean;
   isWidgetEditMode: boolean;
   systemStatus: DesktopSystemStatus;
+  telemetry: SystemTelemetryData | null;
   openApp: (appId: AppId, launch?: LaunchPayload) => void;
   closeWindow: (id: string) => void;
   minimizeWindow: (id: string) => void;
@@ -113,6 +124,42 @@ export function OSProvider({ children }: { children: ReactNode }) {
   const [isWidgetSidebarOpen, setIsWidgetSidebarOpen] = useState(false);
   const [isWidgetEditMode, setIsWidgetEditMode] = useState(false);
   const [systemStatus, setSystemStatus] = useState<DesktopSystemStatus>('online');
+  const [telemetry, setTelemetry] = useState<SystemTelemetryData | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hasElectron =
+      'electronAPI' in window &&
+      typeof (window as any).electronAPI.getSystemTelemetry === 'function';
+
+    const updateTelemetry = async () => {
+      if (hasElectron) {
+        try {
+          const stats = await (window as any).electronAPI.getSystemTelemetry();
+          setTelemetry(stats);
+        } catch (e) {
+          console.error('[Telemetry] Failed to get Electron telemetry', e);
+        }
+      } else {
+        setTelemetry({
+          cpuLoad: Math.floor(Math.random() * 15) + 5,
+          ramUsage: 45,
+          totalMemoryGB: 16,
+          freeMemoryGB: 8.8,
+          uptime: Math.floor(performance.now() / 1000),
+          platform: 'web',
+          arch: 'wasm',
+        });
+      }
+    };
+
+    void updateTelemetry();
+    const interval = setInterval(() => {
+      void updateTelemetry();
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const focusWindow = useCallback(
     (id: string) => {
@@ -369,6 +416,7 @@ export function OSProvider({ children }: { children: ReactNode }) {
         isWidgetSidebarOpen,
         isWidgetEditMode,
         systemStatus,
+        telemetry,
         openApp,
         closeWindow,
         minimizeWindow,

@@ -6,6 +6,39 @@ const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const waitOn = require('wait-on');
+const os = require('os');
+
+function cpuAverage() {
+  let totalIdle = 0;
+  let totalTick = 0;
+  const cpus = os.cpus();
+  if (!cpus) return { idle: 0, total: 0 };
+  for (let i = 0, len = cpus.length; i < len; i++) {
+    const cpu = cpus[i];
+    for (const type in cpu.times) {
+      totalTick += cpu.times[type];
+    }
+    totalIdle += cpu.times.idle;
+  }
+  return { idle: totalIdle / cpus.length, total: totalTick / cpus.length };
+}
+
+function getCpuUsage() {
+  return new Promise((resolve) => {
+    const startMeasure = cpuAverage();
+    setTimeout(() => {
+      const endMeasure = cpuAverage();
+      const idleDifference = endMeasure.idle - startMeasure.idle;
+      const totalDifference = endMeasure.total - startMeasure.total;
+      if (totalDifference === 0) {
+        resolve(0);
+        return;
+      }
+      const percentageCPU = 100 - Math.round((100 * idleDifference) / totalDifference);
+      resolve(percentageCPU);
+    }, 100);
+  });
+}
 
 /** When true, load `next dev` / `next start` on port 3000 (see `npm run dev:electron`). */
 const USE_DEV_SERVER = process.env.ELECTRON_DEV === '1';
@@ -123,6 +156,24 @@ app.whenReady().then(() => {
     if (typeof url === 'string' && /^https?:\/\//i.test(url)) {
       await shell.openExternal(url);
     }
+  });
+
+  ipcMain.handle('get-system-telemetry', async () => {
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const ramUsage = (usedMem / totalMem) * 100;
+    const cpuLoad = await getCpuUsage();
+
+    return {
+      cpuLoad,
+      ramUsage,
+      totalMemoryGB: totalMem / (1024 * 1024 * 1024),
+      freeMemoryGB: freeMem / (1024 * 1024 * 1024),
+      uptime: os.uptime(),
+      platform: os.platform(),
+      arch: os.arch(),
+    };
   });
 
   ipcMain.on('window-minimize', () => {

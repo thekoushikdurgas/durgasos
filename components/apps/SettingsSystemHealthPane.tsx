@@ -5,6 +5,7 @@ import {
   Activity,
   AlertCircle,
   CheckCircle2,
+  Cpu,
   Database,
   HardDrive,
   Loader2,
@@ -18,6 +19,14 @@ import {
 import { cn } from '@/lib/utils';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { useChatProviders } from '@/hooks/use-chat-providers';
+import { useOS } from '@/components/os-context';
+
+function formatUptime(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${h}h ${m}m ${s}s`;
+}
 
 /* ─── types ─── */
 
@@ -271,6 +280,7 @@ function ServiceCard({ svc }: { svc: ServiceEntry }) {
 
 /* ─── SettingsSystemHealthPane (main export) ─── */
 export function SettingsSystemHealthPane() {
+  const { telemetry } = useOS();
   const { providers: llmProviders, loading: llmLoading } = useChatProviders();
   const { raw, overall, loading, error, refetch } = useSystemHealth(30_000);
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -417,6 +427,77 @@ export function SettingsSystemHealthPane() {
             />
           </button>
         </div>
+      </section>
+
+      {/* Host Telemetry Section */}
+      <section className="frost-glass-surface mb-0 border border-white/10 p-6">
+        <h2 className="mb-3 text-lg font-semibold text-white/90 flex items-center gap-2">
+          <Cpu className="h-5 w-5 text-cyan-400" />
+          Host hardware telemetry
+        </h2>
+        <p className="mb-4 text-sm text-white/45 font-normal">
+          Real-time metrics from the host operating system.
+        </p>
+        {telemetry ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-white/8 bg-black/25 p-4">
+              <div className="flex justify-between text-xs text-white/45 mb-1">
+                <span>Operating System</span>
+                <span className="font-semibold text-cyan-400 capitalize">{telemetry.platform}</span>
+              </div>
+              <p className="text-lg font-bold text-white/95 capitalize leading-none pt-1">
+                {telemetry.platform} ({telemetry.arch})
+              </p>
+              <div className="flex justify-between text-[11px] text-white/40 mt-3 pt-2 border-t border-white/5">
+                <span>Uptime</span>
+                <span className="font-mono text-white/60">{formatUptime(telemetry.uptime)}</span>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-white/8 bg-black/25 p-4">
+              <div className="flex justify-between text-xs text-white/45 mb-1">
+                <span>CPU Load</span>
+                <span className="font-semibold text-cyan-400">{telemetry.cpuLoad}%</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden mt-2.5">
+                <div
+                  className="h-full rounded-full bg-cyan-400 transition-all duration-500"
+                  style={{ width: `${telemetry.cpuLoad}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-white/8 bg-black/25 p-4">
+              <div className="flex justify-between text-xs text-white/45 mb-1">
+                <span>RAM Usage</span>
+                <span className="font-semibold text-purple-400">
+                  {Math.round(telemetry.ramUsage)}%
+                </span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden mt-2.5">
+                <div
+                  className="h-full rounded-full bg-purple-400 transition-all duration-500"
+                  style={{ width: `${telemetry.ramUsage}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[11px] text-white/40 mt-3 pt-2 border-t border-white/5">
+                <span>Memory</span>
+                <span className="font-mono text-white/60">
+                  {(telemetry.totalMemoryGB - telemetry.freeMemoryGB).toFixed(2)} GB /{' '}
+                  {telemetry.totalMemoryGB.toFixed(1)} GB
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-white/10 bg-white/3 p-6 text-center">
+            <Cpu className="mx-auto h-8 w-8 text-white/20 mb-2" />
+            <p className="text-xs text-white/45">
+              Running in web browser. Run inside the DurgasOS Electron desktop client to capture
+              local system diagnostics.
+            </p>
+          </div>
+        )}
       </section>
 
       <section className="frost-glass-surface mb-0 border border-white/10 p-6">
