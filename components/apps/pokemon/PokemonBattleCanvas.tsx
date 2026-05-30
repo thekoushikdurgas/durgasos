@@ -17,6 +17,7 @@ import {
   RefreshCcw,
   Sparkles,
 } from 'lucide-react';
+import { RemoteImage } from '@/components/ui/remote-image';
 import { useStore, getTypeEffectiveness } from './store';
 import { Move, Pokemon } from './types';
 
@@ -303,8 +304,10 @@ export function PokemonBattleCanvas() {
       <div className="border border-slate-800 bg-slate-900/60 p-4 rounded-b-2xl z-10 flex flex-col md:flex-row justify-between gap-4">
         {/* Core HUD status */}
         <div className="flex items-center gap-3">
-          <img
+          <RemoteImage
             src={avatar || `https://picsum.photos/40/40?seed=hud`}
+            width={36}
+            height={36}
             className="w-9 h-9 rounded-full object-cover border border-slate-700 bg-slate-800"
             alt="HUD player"
           />

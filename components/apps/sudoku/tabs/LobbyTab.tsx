@@ -12,6 +12,7 @@ import {
   Activity,
   Star,
 } from 'lucide-react';
+import { RemoteImage } from '@/components/ui/remote-image';
 import { cn } from '@/lib/utils';
 import { useAuthSession } from '@/components/auth/AuthSessionContext';
 
@@ -256,9 +257,11 @@ export const LobbyTab: React.FC = () => {
                   >
                     {/* Header */}
                     <div className="flex items-center gap-2">
-                      <img
+                      <RemoteImage
                         src={p.avatar}
                         alt="avatar"
+                        width={24}
+                        height={24}
                         className="w-6 h-6 rounded-lg bg-slate-800 shrink-0 border border-slate-700"
                       />
                       <div className="min-w-0 flex-1">

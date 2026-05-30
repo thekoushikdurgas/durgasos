@@ -208,6 +208,8 @@ export const APP_SUPPORTED_EXTENSIONS: Record<AppId, readonly string[]> = {
   'strace-inspector': [],
   'load-visualizer': [],
   'boot-simulator': [],
+  'kafka-monitor': [],
+  'system-health': [],
 };
 
 /** Built-in default handler when the user has not set an override. */

@@ -67,9 +67,9 @@ export function PokemonRoster({ labMode = false }: RosterProps) {
           AI Team Synthesizer (Gemini Powered)
         </h3>
         <p className="text-xs text-slate-400 mb-4">
-          Type a thematic prompt (e.g. "Steampunk Clockwork", "Vaporwave Neon", "Deep-sea
-          Bio-luminescent") to synthesize a completely custom 3-Pokémon team with custom moves,
-          stats, and origins!
+          Type a thematic prompt (e.g. &lsquo;Steampunk Clockwork&rsquo;, &lsquo;Vaporwave
+          Neon&rsquo;, &lsquo;Deep-sea Bio-luminescent&rsquo;) to synthesize a completely custom
+          3-Pokémon team with custom moves, stats, and origins!
         </p>
         <form onSubmit={handleGenerate} className="flex gap-2">
           <input

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -549,50 +549,77 @@ function WorldMapNewsSidebar({ country, onClose }: NewsSidebarProps) {
   });
   const [activeTab, setActiveTab] = useState<NewsTab>('Energy News');
 
-  const loadNews = async (targetCountry: string, tab: NewsTab, forceRefresh = false) => {
-    if (!forceRefresh && news[tab]) return; // Already cached locally
+  const newsRef = useRef(news);
+  const loadingRef = useRef(loading);
+  const errorRef = useRef(error);
+  newsRef.current = news;
+  loadingRef.current = loading;
+  errorRef.current = error;
 
-    setLoading((prev) => ({ ...prev, [tab]: true }));
-    setError((prev) => ({ ...prev, [tab]: null }));
+  const loadNews = useCallback(
+    async (targetCountry: string, tab: NewsTab, forceRefresh = false) => {
+      if (!forceRefresh && newsRef.current[tab]) return; // Already cached locally
 
-    try {
-      // Map frontend category tabs to backend categories
-      let category = 'Energy';
-      if (tab === 'Military Conflicts') category = 'Military';
-      if (tab === 'Political Appointments') category = 'Geopolitics';
+      setLoading((prev) => ({ ...prev, [tab]: true }));
+      setError((prev) => ({ ...prev, [tab]: null }));
 
-      const origin = getBackendOrigin();
-      const res = await fetch(
-        `${origin}/api/news?country=${encodeURIComponent(targetCountry)}&category=${encodeURIComponent(category)}&refresh=${forceRefresh}`
-      );
-      if (!res.ok) throw new Error('Downstream link failure');
+      try {
+        // Map frontend category tabs to backend categories
+        let category = 'Energy';
+        if (tab === 'Military Conflicts') category = 'Military';
+        if (tab === 'Political Appointments') category = 'Geopolitics';
 
-      const responseBody: NewsResponse = await res.json();
-      setNews((prev) => ({ ...prev, [tab]: responseBody.data }));
-    } catch (err: any) {
-      console.error(err);
-      setError((prev) => ({ ...prev, [tab]: err.message || 'Failed to download news vectors.' }));
-    } finally {
-      setLoading((prev) => ({ ...prev, [tab]: false }));
-    }
-  };
+        const origin = getBackendOrigin();
+        const res = await fetch(
+          `${origin}/api/news?country=${encodeURIComponent(targetCountry)}&category=${encodeURIComponent(category)}&refresh=${forceRefresh}`
+        );
+        if (!res.ok) throw new Error('Downstream link failure');
+
+        const responseBody: NewsResponse = await res.json();
+        setNews((prev) => ({ ...prev, [tab]: responseBody.data }));
+      } catch (err: any) {
+        console.error(err);
+        setError((prev) => ({ ...prev, [tab]: err.message || 'Failed to download news vectors.' }));
+      } finally {
+        setLoading((prev) => ({ ...prev, [tab]: false }));
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (!country) return;
 
     // Reset state on target change
-    setNews({ 'Energy News': null, 'Military Conflicts': null, 'Political Appointments': null });
-    setError({ 'Energy News': null, 'Military Conflicts': null, 'Political Appointments': null });
+    const emptyNews = {
+      'Energy News': null,
+      'Military Conflicts': null,
+      'Political Appointments': null,
+    } as Record<NewsTab, NewsData | null>;
+    const emptyError = {
+      'Energy News': null,
+      'Military Conflicts': null,
+      'Political Appointments': null,
+    } as Record<NewsTab, string | null>;
+    setNews(emptyNews);
+    setError(emptyError);
+    newsRef.current = emptyNews;
+    errorRef.current = emptyError;
     setActiveTab('Energy News');
 
-    loadNews(country, 'Energy News');
-  }, [country]);
+    void loadNews(country, 'Energy News');
+  }, [country, loadNews]);
 
   useEffect(() => {
-    if (country && !news[activeTab] && !loading[activeTab] && !error[activeTab]) {
-      loadNews(country, activeTab);
+    if (
+      country &&
+      !newsRef.current[activeTab] &&
+      !loadingRef.current[activeTab] &&
+      !errorRef.current[activeTab]
+    ) {
+      void loadNews(country, activeTab);
     }
-  }, [activeTab, country]);
+  }, [activeTab, country, loadNews]);
 
   const handleRefresh = () => {
     if (country) {

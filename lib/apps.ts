@@ -92,7 +92,9 @@ export type AppId =
   | 'strace-inspector'
   | 'load-visualizer'
   | 'boot-simulator'
-  | 'dev-tool';
+  | 'dev-tool'
+  | 'kafka-monitor'
+  | 'system-health';
 
 export interface AppDefinition {
   id: AppId;
@@ -464,6 +466,22 @@ export const APPS: Record<AppId, AppDefinition> = {
     category: 'system',
     tags: ['system', 'telemetry'],
   },
+  'kafka-monitor': {
+    id: 'kafka-monitor',
+    name: 'Event Monitor',
+    icon: Server,
+    color: 'text-green-400',
+    category: 'system',
+    tags: ['system', 'devtools', 'kafka'],
+  },
+  'system-health': {
+    id: 'system-health',
+    name: 'Task Manager',
+    icon: Activity,
+    color: 'text-cyan-400',
+    category: 'system',
+    tags: ['system', 'telemetry'],
+  },
 };
 
 export const APP_CATEGORY_LABELS: Record<AppCategory, string> = {
@@ -533,6 +551,9 @@ export const APP_DESCRIPTIONS: Record<AppId, string> = {
     'Live CPU telemetry visualizer simulating C/P-state transitions, DVFS frequency scaling, and TjMax thermal throttling loops.',
   'boot-simulator':
     'Simulate the low-level operating system boot stages (POST, BIOS/UEFI, Bootloader, Kernel, PID 1 init) dynamically.',
+  'kafka-monitor': 'Real-time DurgasOS system bus event stream viewer (Kafka event log).',
+  'system-health':
+    'Live monitoring of core system services (Postgres, Redis, Kafka, ChromaDB, MinIO, Ollama) and host telemetry.',
 };
 
 /** Sorted unique tags across all apps (launcher filter dropdown). */

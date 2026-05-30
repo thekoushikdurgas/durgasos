@@ -126,7 +126,7 @@ const EnvironmentManager: React.FC<EnvironmentManagerProps> = ({
         { name: 'Generic Strings', value: plainText, fill: '#64748b' },
       ].filter((item) => item.value > 0),
     };
-  }, [selectedEnv?.variables]);
+  }, [selectedEnv]);
 
   React.useEffect(() => {
     if (environments.length > 0) {
@@ -141,15 +141,6 @@ const EnvironmentManager: React.FC<EnvironmentManagerProps> = ({
   const handleCreateNew = () => {
     onCreateEnvironment();
   };
-
-  React.useEffect(() => {
-    if (
-      environments.length > 0 &&
-      (!selectedEnvId || !environments.some((e) => e.id === selectedEnvId))
-    ) {
-      setSelectedEnvId(environments[environments.length - 1].id);
-    }
-  }, [environments.length]);
 
   const handleStartRename = (env: Environment) => {
     setEditingNameId(env.id);

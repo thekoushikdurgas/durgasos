@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, Circle, Loader2, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSystemHealth } from '@/hooks/use-system-health';
@@ -17,6 +17,22 @@ type CheckStep = {
 type StepState = 'pending' | 'running' | 'done' | 'skipped';
 
 /* ─── Config ─── */
+
+type BootConsoleLine = {
+  delay: number;
+  message: string;
+  checkService?: string;
+};
+
+const BOOT_LOG_LINES: BootConsoleLine[] = [
+  { delay: 100, message: 'BIOS POST complete — DurgasOS v1.0 initializing' },
+  { delay: 350, message: 'Loading kernel modules...' },
+  { delay: 700, message: 'Mounting PostgreSQL filesystem...', checkService: 'postgres' },
+  { delay: 1100, message: 'Starting Redis memory manager...', checkService: 'redis' },
+  { delay: 1500, message: 'Connecting Kafka event bus...', checkService: 'kafka' },
+  { delay: 2000, message: 'ChromaDB AI memory initialized...', checkService: 'chromadb' },
+  { delay: 2400, message: 'DurgasOS shell ready' },
+];
 
 const BOOT_STEPS: CheckStep[] = [
   {
@@ -137,7 +153,42 @@ export function BootScreen() {
   const startedRef = useRef(false);
   const dismissedRef = useRef(false);
 
-  const { overall, loading: healthLoading } = useSystemHealth(5000);
+  const { raw, overall, loading: healthLoading } = useSystemHealth(5000);
+  const [elapsed, setElapsed] = useState(0);
+
+  const servicesList = useMemo(() => {
+    return (raw?.services as Record<string, any>[]) || [];
+  }, [raw]);
+
+  const getServiceStatus = useCallback((serviceName: string) => {
+    const srv = servicesList.find((s: Record<string, any>) => s.name === serviceName);
+    if (!srv) return 'OK';
+    return srv.status === 'healthy' ? 'OK' : srv.status.toUpperCase();
+  }, [servicesList]);
+
+  useEffect(() => {
+    if (!show) return;
+    const start = Date.now();
+    const interval = setInterval(() => {
+      setElapsed(Date.now() - start);
+    }, 50);
+    return () => clearInterval(interval);
+  }, [show]);
+
+  const consoleLines = useMemo(() => {
+    const lines: string[] = [];
+    BOOT_LOG_LINES.forEach((line) => {
+      if (elapsed >= line.delay) {
+        let msg = `[ ${(line.delay / 1000).toFixed(3)} ] ${line.message}`;
+        if (line.checkService) {
+          const status = getServiceStatus(line.checkService);
+          msg += `... ${status}`;
+        }
+        lines.push(msg);
+      }
+    });
+    return lines;
+  }, [elapsed, getServiceStatus]);
 
   const dismissAfter = useCallback((delay: number) => {
     if (dismissedRef.current) return;
@@ -153,7 +204,7 @@ export function BootScreen() {
   useEffect(() => {
     if (!shouldShowBoot()) return;
     const init: Record<string, StepState> = {};
-    BOOT_STEPS.forEach((s) => (init[s.id] = 'pending'));
+    BOOT_STEPS.forEach((s: CheckStep) => (init[s.id] = 'pending'));
     queueMicrotask(() => {
       setShow(true);
       setStepStates(init);
@@ -290,6 +341,20 @@ export function BootScreen() {
             className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
+        </div>
+      </div>
+
+      {/* OS Kernel Logs Console */}
+      <div className="mt-6 w-full max-w-xs rounded-lg border border-white/5 bg-black/50 p-3 font-mono text-[9px] text-emerald-400/80 shadow-inner">
+        <div className="flex flex-col gap-1 min-h-[92px]">
+          {consoleLines.map((line: string, idx: number) => (
+            <div key={idx} className="truncate">
+              {line}
+            </div>
+          ))}
+          {consoleLines.length < BOOT_LOG_LINES.length && (
+            <div className="h-2.5 w-1.5 bg-emerald-400/80 animate-pulse mt-0.5" />
+          )}
         </div>
       </div>
 

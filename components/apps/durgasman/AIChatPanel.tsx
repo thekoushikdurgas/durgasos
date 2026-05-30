@@ -23,6 +23,7 @@ import {
   decodeAudioData,
   generateImage,
 } from './geminiService';
+import { RemoteImage } from '@/components/ui/remote-image';
 import { ChatMessage } from './types';
 
 interface AIChatPanelProps {
@@ -348,7 +349,7 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ messages, onAddMessage, onCle
                   key={idx}
                   className="relative group rounded-lg overflow-hidden border border-slate-800 aspect-square"
                 >
-                  <img src={img} alt="Generated" className="w-full h-full object-cover" />
+                  <RemoteImage src={img} alt="Generated" fill className="object-cover" />
                   <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                     <a
                       href={img}

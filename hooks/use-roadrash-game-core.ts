@@ -852,18 +852,61 @@ export function useRoadRashGameCore() {
       // Pole
       ctx.fillStyle = '#6b7280';
       ctx.fillRect(x - 5, y - h, 10, h);
-      // Signboard board
-      ctx.fillStyle = '#1e1b4b';
-      ctx.strokeStyle = '#e0f2fe';
-      ctx.lineWidth = 3;
-      ctx.fillRect(x - w / 2, y - h, w, h * 0.5);
-      ctx.strokeRect(x - w / 2, y - h, w, h * 0.5);
-      // Text
-      ctx.fillStyle = '#f8fafc';
-      ctx.font = `bold ${Math.max(9, Math.round(h * 0.12))}px system-ui, sans-serif`;
-      ctx.textAlign = 'center';
-      const label = (adText || 'AMUL').slice(0, 12);
-      ctx.fillText(label, x, y - h * 0.72);
+
+      // Try to render via HTML-in-Canvas drawElementImage API
+      let htmlDrawn = false;
+      const drawContext = ctx as CanvasRenderingContext2D & {
+        drawElementImage?: (
+          element: HTMLElement,
+          x: number,
+          y: number,
+          w: number,
+          h: number
+        ) => any;
+      };
+
+      if (typeof document !== 'undefined' && typeof drawContext.drawElementImage === 'function') {
+        const textKey = (adText || '').toLowerCase();
+        let elementId = 'ad-amul'; // default fallback
+        if (textKey.includes('tata')) elementId = 'ad-tata';
+        else if (textKey.includes('amul')) elementId = 'ad-amul';
+        else if (textKey.includes('royal')) elementId = 'ad-royal';
+        else if (textKey.includes('bisleri')) elementId = 'ad-bisleri';
+
+        const domElement = document.getElementById(elementId);
+        if (domElement) {
+          try {
+            const transform = drawContext.drawElementImage(
+              domElement,
+              x - w / 2,
+              y - h,
+              w,
+              h * 0.5
+            );
+            if (transform && typeof domElement.style !== 'undefined') {
+              domElement.style.transform = transform.toString();
+            }
+            htmlDrawn = true;
+          } catch (e) {
+            // Silently fall back to standard drawing
+          }
+        }
+      }
+
+      if (!htmlDrawn) {
+        // Signboard board (Fallback Vector Graphic)
+        ctx.fillStyle = '#1e1b4b';
+        ctx.strokeStyle = '#e0f2fe';
+        ctx.lineWidth = 3;
+        ctx.fillRect(x - w / 2, y - h, w, h * 0.5);
+        ctx.strokeRect(x - w / 2, y - h, w, h * 0.5);
+        // Text
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = `bold ${Math.max(9, Math.round(h * 0.12))}px system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        const label = (adText || 'AMUL').slice(0, 12);
+        ctx.fillText(label, x, y - h * 0.72);
+      }
     }
     ctx.restore();
   };

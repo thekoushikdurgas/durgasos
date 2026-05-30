@@ -7,6 +7,7 @@ import type { LibraryBook, UserDevice } from '@/components/apps/library/types';
 import { lookupBookByIsbn } from '@/lib/library-api';
 import { newBookId } from '@/lib/library-format';
 import { readStoredAuthTokens } from '@/lib/auth-tokens-local';
+import { RemoteImage } from '@/components/ui/remote-image';
 import { uploadFileInChunks } from '@/lib/chunked-upload';
 
 type Props = {
@@ -194,9 +195,11 @@ export function BookSidebar({
                 >
                   <div className="flex gap-2">
                     {book.coverUrl ? (
-                      <img
+                      <RemoteImage
                         src={book.coverUrl}
                         alt=""
+                        width={40}
+                        height={56}
                         className="w-10 h-14 object-cover rounded shrink-0"
                       />
                     ) : (

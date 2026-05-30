@@ -12,6 +12,7 @@ import {
   User,
   RefreshCw,
 } from 'lucide-react';
+import { RemoteImage } from '@/components/ui/remote-image';
 import { useStore } from './store';
 import { ThemeName } from './types';
 import { PokemonRoster } from './PokemonRoster';
@@ -114,9 +115,11 @@ export function PokemonShell() {
 
         {/* Profile Card Summary */}
         <div className="flex items-center gap-3 bg-slate-900/40 px-3 py-1.5 rounded-lg border border-slate-800">
-          <img
+          <RemoteImage
             src={avatar}
             alt="avatar"
+            width={32}
+            height={32}
             className="w-8 h-8 rounded-full border border-slate-700 bg-slate-800 object-cover"
           />
           <div>

@@ -75,7 +75,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
         });
       }
     }
-  }, [selectedItemId]);
+  }, [selectedItem]);
 
   const handleCopyText = (text: string, id: string) => {
     navigator.clipboard.writeText(text);

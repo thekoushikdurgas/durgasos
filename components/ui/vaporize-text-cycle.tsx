@@ -578,27 +578,14 @@ const createParticles = (
   // Clear any previous content
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Set text properties for sampling
-  ctx.fillStyle = color;
+  // Calculate text boundaries using standard canvas metrics first
+  ctx.save();
   ctx.font = font;
-  ctx.textAlign = alignment;
-  ctx.textBaseline = 'middle';
-  ctx.imageSmoothingQuality = 'high';
-  ctx.imageSmoothingEnabled = true;
-
-  const ctxExt = ctx as CanvasRenderingContext2D & { fontKerning?: string; textRendering?: string };
-  if ('fontKerning' in ctxExt) {
-    ctxExt.fontKerning = 'normal';
-  }
-  if ('textRendering' in ctxExt) {
-    ctxExt.textRendering = 'geometricPrecision';
-  }
-
-  // Calculate text boundaries
   const metrics = ctx.measureText(text);
-  let textLeft;
   const textWidth = metrics.width;
+  ctx.restore();
 
+  let textLeft;
   if (alignment === 'center') {
     textLeft = textX - textWidth / 2;
   } else if (alignment === 'left') {
@@ -613,8 +600,69 @@ const createParticles = (
     width: textWidth,
   };
 
-  // Render the text for sampling
-  ctx.fillText(text, textX, textY);
+  // Check if drawElementImage is available
+  const drawContext = ctx as CanvasRenderingContext2D & {
+    drawElementImage?: (element: HTMLElement, x: number, y: number, w: number, h: number) => any;
+  };
+  let htmlDrawn = false;
+
+  if (typeof document !== 'undefined' && typeof drawContext.drawElementImage === 'function') {
+    // Create a dynamic, styled DOM element to sample from
+    let sampleEl = document.getElementById('vaporize-sample-element');
+    if (!sampleEl) {
+      sampleEl = document.createElement('div');
+      sampleEl.id = 'vaporize-sample-element';
+      // Append inside canvas layoutsubtree or body hidden
+      canvas.appendChild(sampleEl);
+    }
+
+    // Match styles to the parameters passed
+    sampleEl.style.position = 'absolute';
+    sampleEl.style.visibility = 'hidden';
+    sampleEl.style.whiteSpace = 'nowrap';
+    sampleEl.style.font = font;
+    sampleEl.style.color = color;
+    sampleEl.style.textShadow = '0px 0px 8px rgba(255,255,255,0.3)'; // Premium aesthetic
+    sampleEl.innerText = text;
+
+    try {
+      // Draw element at matching bounds
+      drawContext.drawElementImage(
+        sampleEl,
+        textLeft,
+        textY - (metrics.actualBoundingBoxAscent || 20),
+        textWidth,
+        (metrics.actualBoundingBoxAscent || 20) + (metrics.actualBoundingBoxDescent || 10)
+      );
+      htmlDrawn = true;
+    } catch (e) {
+      // Fallback
+    }
+  }
+
+  if (!htmlDrawn) {
+    // Fallback: Set text properties for standard canvas sampling
+    ctx.fillStyle = color;
+    ctx.font = font;
+    ctx.textAlign = alignment;
+    ctx.textBaseline = 'middle';
+    ctx.imageSmoothingQuality = 'high';
+    ctx.imageSmoothingEnabled = true;
+
+    const ctxExt = ctx as CanvasRenderingContext2D & {
+      fontKerning?: string;
+      textRendering?: string;
+    };
+    if ('fontKerning' in ctxExt) {
+      ctxExt.fontKerning = 'normal';
+    }
+    if ('textRendering' in ctxExt) {
+      ctxExt.textRendering = 'geometricPrecision';
+    }
+
+    // Render the text for sampling
+    ctx.fillText(text, textX, textY);
+  }
 
   // Sample the rendered text
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);

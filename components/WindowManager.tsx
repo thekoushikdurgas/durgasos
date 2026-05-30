@@ -203,6 +203,14 @@ const BootSimulatorApp = dynamic(
     loading: LoadingSpinner,
   }
 );
+const KafkaMonitorApp = dynamic(
+  () => import('./apps/KafkaMonitorApp').then((m) => m.default || m.KafkaMonitorApp || m),
+  { ssr: false, loading: LoadingSpinner }
+);
+const SystemHealthApp = dynamic(
+  () => import('./apps/SystemHealthApp').then((m) => m.default || m.SystemHealthApp || m),
+  { ssr: false, loading: LoadingSpinner }
+);
 
 const FallbackApp = ({ name }: { name: string }) => (
   <div className="absolute inset-0 bg-slate-900 border border-t-0 border-white/5 flex items-center justify-center flex-col gap-4 text-white/50">
@@ -320,6 +328,10 @@ export function WindowManager() {
         return <LoadVisualizerApp />;
       case 'boot-simulator':
         return <BootSimulatorApp />;
+      case 'kafka-monitor':
+        return <KafkaMonitorApp />;
+      case 'system-health':
+        return <SystemHealthApp />;
       default:
         return <FallbackApp name={appId} />;
     }

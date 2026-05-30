@@ -654,7 +654,7 @@ export function VsqlApp() {
     } finally {
       setBusy(false);
     }
-  }, [dbId, refreshFrameMeta, refreshTables, sqlQuery]);
+  }, [dbId, refreshFrameMeta, refreshTables, setConsoleHistory, setSqlQuery, sqlQuery]);
 
   const saveCell = useCallback(async () => {
     if (!dbId || !editingCell || !expandedTable) return;
@@ -928,6 +928,8 @@ export function VsqlApp() {
     refreshFrameMeta,
     refreshTables,
     selectedInspectorTable,
+    setConsoleHistory,
+    setSqlQuery,
     toast,
   ]);
 

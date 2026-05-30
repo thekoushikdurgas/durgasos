@@ -12,6 +12,7 @@ import {
   uploadDevToolFile,
   type IconHistoryItem,
 } from '@/lib/dev-tool-api';
+import { RemoteImage } from '@/components/ui/remote-image';
 import { swallowClientError } from '@/lib/safe-client-storage';
 
 import styles from '../DevToolApp.module.css';
@@ -104,9 +105,11 @@ export function IconGeneratorTab() {
       <input type="file" accept="image/*" onChange={onFile} className="text-sm mb-4" />
       <canvas ref={canvasRef} className="hidden" />
       {sourceUrl && (
-        <img
+        <RemoteImage
           src={sourceUrl}
           alt="Source"
+          width={96}
+          height={96}
           className="w-24 h-24 object-contain mb-4 border border-slate-600 rounded"
         />
       )}
@@ -133,7 +136,13 @@ export function IconGeneratorTab() {
                   }}
                   className="mb-1"
                 />
-                <img src={icon.dataUrl} alt="" className="w-12 h-12" />
+                <RemoteImage
+                  src={icon.dataUrl}
+                  alt=""
+                  width={48}
+                  height={48}
+                  className="w-12 h-12"
+                />
                 <span className="text-xs font-mono mt-1">{icon.size}px</span>
               </label>
             ))}
@@ -152,7 +161,13 @@ export function IconGeneratorTab() {
                 className="flex justify-between items-center p-2 bg-slate-800/50 rounded"
               >
                 {h.source_image_url ? (
-                  <img src={h.source_image_url} alt="" className="h-8 w-8 object-cover rounded" />
+                  <RemoteImage
+                    src={h.source_image_url}
+                    alt=""
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 object-cover rounded"
+                  />
                 ) : (
                   <span className="truncate">{h.source_image_path}</span>
                 )}

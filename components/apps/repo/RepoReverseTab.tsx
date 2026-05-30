@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { RemoteImage } from '@/components/ui/remote-image';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -122,7 +123,7 @@ export function RepoReverseTab({ target, onClearTarget }: RepoReverseTabProps) {
     }
   }, [apiKey]);
 
-  const handleScanFiles = async (ownerStr: string, repoStr: string) => {
+  const handleScanFiles = useCallback(async (ownerStr: string, repoStr: string) => {
     setScannedLoading(true);
     setScannedError('');
     try {
@@ -133,7 +134,7 @@ export function RepoReverseTab({ target, onClearTarget }: RepoReverseTabProps) {
     } finally {
       setScannedLoading(false);
     }
-  };
+  }, []);
 
   const handleAnalyzeClick = () => {
     if (!repoInput.trim()) return;
@@ -168,41 +169,44 @@ export function RepoReverseTab({ target, onClearTarget }: RepoReverseTabProps) {
     handleAnalyze(owner, repo);
   };
 
-  const handleAnalyze = async (owner: string, repo: string) => {
-    setLoading(true);
-    setError('');
-    setGeneratedPrompt(null);
-    setRepoMetadata(null);
-    setAdaptedPrompt(null);
-    setRefinedPrompt(null);
-    setAdaptError('');
-    setRefineError('');
-    setUserRating(0);
-    setSelectedTags([]);
-    setCustomFeedback('');
-    setActivePromptTab('generated');
+  const handleAnalyze = useCallback(
+    async (owner: string, repo: string) => {
+      setLoading(true);
+      setError('');
+      setGeneratedPrompt(null);
+      setRepoMetadata(null);
+      setAdaptedPrompt(null);
+      setRefinedPrompt(null);
+      setAdaptError('');
+      setRefineError('');
+      setUserRating(0);
+      setSelectedTags([]);
+      setCustomFeedback('');
+      setActivePromptTab('generated');
 
-    try {
-      // Trigger file scanning concurrently in the background
-      handleScanFiles(owner, repo).catch((e) => console.error('Background scanning failed:', e));
+      try {
+        // Trigger file scanning concurrently in the background
+        handleScanFiles(owner, repo).catch((e) => console.error('Background scanning failed:', e));
 
-      const res = await analyzeRepository({
-        owner,
-        repo,
-        model: selectedModel,
-        apiKey: apiKey || undefined,
-        style: selectedStyle,
-        manualFiles: selectedFilesToInclude,
-      });
+        const res = await analyzeRepository({
+          owner,
+          repo,
+          model: selectedModel,
+          apiKey: apiKey || undefined,
+          style: selectedStyle,
+          manualFiles: selectedFilesToInclude,
+        });
 
-      setGeneratedPrompt(res.prompt);
-      setRepoMetadata(res.metadata);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred during analysis.');
-    } finally {
-      setLoading(false);
-    }
-  };
+        setGeneratedPrompt(res.prompt);
+        setRepoMetadata(res.metadata);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred during analysis.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [apiKey, handleScanFiles, selectedFilesToInclude, selectedModel, selectedStyle]
+  );
   // Handle target loading when triggered externally
   useEffect(() => {
     if (target) {
@@ -577,11 +581,13 @@ export function RepoReverseTab({ target, onClearTarget }: RepoReverseTabProps) {
             {/* Metadata Card */}
             {repoMetadata && (
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 flex items-center gap-3">
-                <img
+                <RemoteImage
                   src={
                     repoMetadata.ownerAvatar || 'https://avatars.githubusercontent.com/u/9919?v=4'
                   }
                   alt={repoMetadata.owner}
+                  width={40}
+                  height={40}
                   className="h-10 w-10 rounded-xl bg-white/5 border border-white/10"
                 />
                 <div className="min-w-0 flex-1">

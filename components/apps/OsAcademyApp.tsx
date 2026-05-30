@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 import { BookOpen, HelpCircle, Check, X, ArrowRight, Loader2, Award } from 'lucide-react';
 import { useJsonRpcStream } from '@/hooks/use-json-rpc-ws';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,34 @@ export function OsAcademyApp() {
   const [selectedTopicId, setSelectedTopicId] = useState<number>(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Array<{ topicId: number; title: string; content: string; similarity: number }>>([]);
+  const [searching, setSearching] = useState(false);
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setSearching(true);
+    callStreaming(
+      'os_labs.search_topics',
+      { query },
+      {
+        onDone: (res) => {
+          setSearchResults((res.results as any[]) || []);
+          setSearching(false);
+        },
+        onError: () => {
+          setSearching(false);
+        }
+      }
+    ).catch(() => {
+      setSearching(false);
+    });
+  }, [callStreaming]);
 
   // App UI Tabs: 'lesson' | 'quiz'
   const [activeTab, setActiveTab] = useState<'lesson' | 'quiz'>('lesson');
@@ -125,25 +153,65 @@ export function OsAcademyApp() {
             OS Modules
           </span>
         </div>
+        <div className="p-3 border-b border-white/10">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search OS concepts..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-3 py-1.5 text-xs text-slate-300 placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            />
+            {searching && (
+              <Loader2 className="absolute right-2.5 top-2.5 h-3.5 w-3.5 animate-spin text-cyan-400" />
+            )}
+          </div>
+        </div>
         <nav className="flex-1 p-2 space-y-1">
-          {topics.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className={cn(
-                'w-full rounded-lg px-3 py-2.5 text-left transition-all duration-200 text-xs',
-                t.id === selectedTopicId
-                  ? 'bg-cyan-500/25 border border-cyan-500/35 text-cyan-200'
-                  : 'hover:bg-white/5 border border-transparent text-white/60 hover:text-white/90'
-              )}
-              onClick={() => handleSelectTopic(t.id)}
-            >
-              <div className="font-semibold truncate">
-                {t.id}. {t.title}
-              </div>
-              <div className="text-[10px] opacity-50 truncate mt-0.5">{t.coreFocus}</div>
-            </button>
-          ))}
+          {searchQuery.trim() ? (
+            searchResults.length > 0 ? (
+              searchResults.map((res) => (
+                <button
+                  key={res.topicId}
+                  type="button"
+                  className={cn(
+                    'w-full rounded-lg px-3 py-2.5 text-left transition-all duration-200 text-xs border border-transparent',
+                    res.topicId === selectedTopicId
+                      ? 'bg-cyan-500/25 border-cyan-500/35 text-cyan-200'
+                      : 'hover:bg-white/5 text-white/60 hover:text-white/90'
+                  )}
+                  onClick={() => handleSelectTopic(res.topicId)}
+                >
+                  <div className="flex items-center justify-between font-semibold">
+                    <span className="truncate">{res.topicId}. {res.title}</span>
+                    <span className="text-[9px] text-cyan-400 font-mono">{(res.similarity * 100).toFixed(0)}%</span>
+                  </div>
+                  <div className="text-[10px] opacity-40 line-clamp-1 mt-0.5">{res.content}</div>
+                </button>
+              ))
+            ) : (
+              <div className="text-center py-6 text-xs text-white/30">No matches found.</div>
+            )
+          ) : (
+            topics.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={cn(
+                  'w-full rounded-lg px-3 py-2.5 text-left transition-all duration-200 text-xs',
+                  t.id === selectedTopicId
+                    ? 'bg-cyan-500/25 border border-cyan-500/35 text-cyan-200'
+                    : 'hover:bg-white/5 border border-transparent text-white/60 hover:text-white/90'
+                )}
+                onClick={() => handleSelectTopic(t.id)}
+              >
+                <div className="font-semibold truncate">
+                  {t.id}. {t.title}
+                </div>
+                <div className="text-[10px] opacity-50 truncate mt-0.5">{t.coreFocus}</div>
+              </button>
+            ))
+          )}
         </nav>
       </aside>
 
