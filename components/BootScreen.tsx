@@ -160,11 +160,14 @@ export function BootScreen() {
     return (raw?.services as Record<string, any>[]) || [];
   }, [raw]);
 
-  const getServiceStatus = useCallback((serviceName: string) => {
-    const srv = servicesList.find((s: Record<string, any>) => s.name === serviceName);
-    if (!srv) return 'OK';
-    return srv.status === 'healthy' ? 'OK' : srv.status.toUpperCase();
-  }, [servicesList]);
+  const getServiceStatus = useCallback(
+    (serviceName: string) => {
+      const srv = servicesList.find((s: Record<string, any>) => s.name === serviceName);
+      if (!srv) return 'OK';
+      return srv.status === 'healthy' ? 'OK' : srv.status.toUpperCase();
+    },
+    [servicesList]
+  );
 
   useEffect(() => {
     if (!show) return;

@@ -4,17 +4,17 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { useSystemStats } from '@/hooks/use-system-stats';
-import { 
-  Activity, 
-  Database, 
-  Cpu, 
-  HardDrive, 
-  Server, 
-  Zap, 
-  CheckCircle2, 
-  AlertTriangle, 
-  XCircle, 
-  RefreshCw 
+import {
+  Activity,
+  Database,
+  Cpu,
+  HardDrive,
+  Server,
+  Zap,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  RefreshCw,
 } from 'lucide-react';
 
 interface ServiceDefinition {
@@ -32,12 +32,48 @@ const SERVICES: ServiceDefinition[] = [
 ];
 
 const SERVICE_META = [
-  { key: 'postgres', label: 'PostgreSQL', analogy: 'OS Disk Tables / Metadata', color: '#6366f1', icon: <Database className="h-4 w-4" /> },
-  { key: 'redis', label: 'Redis Cache', analogy: 'OS RAM / L2 Cache', color: '#f43f5e', icon: <Cpu className="h-4 w-4" /> },
-  { key: 'kafka', label: 'Kafka', analogy: 'OS System Bus / Signal Interrupts', color: '#eab308', icon: <Server className="h-4 w-4" /> },
-  { key: 'chromadb', label: 'ChromaDB', analogy: 'OS Long-Term Cognitive Storage', color: '#a855f7', icon: <Activity className="h-4 w-4" /> },
-  { key: 'minio', label: 'MinIO', analogy: 'OS Local Object Storage / Device Driver', color: '#06b6d4', icon: <HardDrive className="h-4 w-4" /> },
-  { key: 'ollama', label: 'Ollama', analogy: 'OS Core AI Co-Processor', color: '#10b981', icon: <Zap className="h-4 w-4" /> },
+  {
+    key: 'postgres',
+    label: 'PostgreSQL',
+    analogy: 'OS Disk Tables / Metadata',
+    color: '#6366f1',
+    icon: <Database className="h-4 w-4" />,
+  },
+  {
+    key: 'redis',
+    label: 'Redis Cache',
+    analogy: 'OS RAM / L2 Cache',
+    color: '#f43f5e',
+    icon: <Cpu className="h-4 w-4" />,
+  },
+  {
+    key: 'kafka',
+    label: 'Kafka',
+    analogy: 'OS System Bus / Signal Interrupts',
+    color: '#eab308',
+    icon: <Server className="h-4 w-4" />,
+  },
+  {
+    key: 'chromadb',
+    label: 'ChromaDB',
+    analogy: 'OS Long-Term Cognitive Storage',
+    color: '#a855f7',
+    icon: <Activity className="h-4 w-4" />,
+  },
+  {
+    key: 'minio',
+    label: 'MinIO',
+    analogy: 'OS Local Object Storage / Device Driver',
+    color: '#06b6d4',
+    icon: <HardDrive className="h-4 w-4" />,
+  },
+  {
+    key: 'ollama',
+    label: 'Ollama',
+    analogy: 'OS Core AI Co-Processor',
+    color: '#10b981',
+    icon: <Zap className="h-4 w-4" />,
+  },
 ];
 
 export function SystemHealthApp() {
@@ -79,7 +115,9 @@ export function SystemHealthApp() {
             <Activity className="h-5 w-5 text-cyan-400" />
             DurgasOS Task Manager
           </h2>
-          <p className="text-xs text-slate-500">Live monitoring of the DurgasOS core infrastructure services</p>
+          <p className="text-xs text-slate-500">
+            Live monitoring of the DurgasOS core infrastructure services
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -91,10 +129,15 @@ export function SystemHealthApp() {
           </button>
           <div className="flex items-center gap-2 rounded-lg bg-black/40 border border-white/5 px-3 py-1.5 text-xs">
             <span className="text-slate-500">Overall status:</span>
-            <span className={`flex items-center gap-1 font-bold ${
-              overall === 'online' ? 'text-emerald-400' :
-              overall === 'degraded' ? 'text-amber-400' : 'text-rose-400'
-            }`}>
+            <span
+              className={`flex items-center gap-1 font-bold ${
+                overall === 'online'
+                  ? 'text-emerald-400'
+                  : overall === 'degraded'
+                    ? 'text-amber-400'
+                    : 'text-rose-400'
+              }`}
+            >
               {overall === 'online' && <CheckCircle2 className="h-3.5 w-3.5" />}
               {overall === 'degraded' && <AlertTriangle className="h-3.5 w-3.5" />}
               {overall === 'offline' && <XCircle className="h-3.5 w-3.5" />}
@@ -107,7 +150,9 @@ export function SystemHealthApp() {
       {/* Host Metrics Card */}
       {hostStats && (
         <div className="mb-6 rounded-xl border border-white/5 bg-black/40 p-4 backdrop-blur-md">
-          <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Host Telemetry (psutil)</h3>
+          <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">
+            Host Telemetry (psutil)
+          </h3>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
               { label: 'CPU Load', value: `${hostStats.cpu.usagePct}%` },
@@ -115,8 +160,13 @@ export function SystemHealthApp() {
               { label: 'Disk Space', value: `${hostStats.storage?.[0]?.pct ?? 0}%` },
               { label: 'CPU Cores', value: `${hostStats.cpu.cores}` },
             ].map(({ label, value }) => (
-              <div key={label} className="flex flex-col gap-1 rounded-lg bg-white/[0.02] border border-white/[0.03] p-2.5">
-                <span className="text-[10px] uppercase tracking-widest text-slate-500">{label}</span>
+              <div
+                key={label}
+                className="flex flex-col gap-1 rounded-lg bg-white/[0.02] border border-white/[0.03] p-2.5"
+              >
+                <span className="text-[10px] uppercase tracking-widest text-slate-500">
+                  {label}
+                </span>
                 <span className="text-lg font-mono font-bold text-slate-200">{value}</span>
               </div>
             ))}
@@ -132,11 +182,14 @@ export function SystemHealthApp() {
           const latency = getServiceLatency(srv.key);
           const extra = getServiceExtra(srv.key);
 
-          const stateColor = 
-            state === 'healthy' ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' :
-            state === 'degraded' || state === 'warning' ? 'bg-amber-400 shadow-[0_0_8px_#fbbf24]' :
-            state === 'not_configured' || state === 'not_initialized' ? 'bg-slate-600' :
-            'bg-rose-500 shadow-[0_0_8px_#f43f5e]';
+          const stateColor =
+            state === 'healthy'
+              ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
+              : state === 'degraded' || state === 'warning'
+                ? 'bg-amber-400 shadow-[0_0_8px_#fbbf24]'
+                : state === 'not_configured' || state === 'not_initialized'
+                  ? 'bg-slate-600'
+                  : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]';
 
           return (
             <motion.div
@@ -145,23 +198,31 @@ export function SystemHealthApp() {
               className="rounded-xl border border-white/5 bg-black/30 p-4 backdrop-blur-md"
             >
               <div className="flex items-center justify-between">
-                <div className="rounded-lg p-2 bg-white/5 border border-white/5" style={{ color: meta?.color }}>
+                <div
+                  className="rounded-lg p-2 bg-white/5 border border-white/5"
+                  style={{ color: meta?.color }}
+                >
                   {meta?.icon}
                 </div>
                 <span className={`h-2.5 w-2.5 rounded-full ${stateColor}`} />
               </div>
-              <h3 className="mt-3 text-sm font-semibold text-slate-200">
-                {srv.name}
-              </h3>
+              <h3 className="mt-3 text-sm font-semibold text-slate-200">{srv.name}</h3>
               <p className="text-[11px] text-slate-500 mt-1">{meta?.analogy}</p>
-              
+
               <div className="mt-4 flex flex-col gap-1.5 border-t border-white/5 pt-3 text-[11px] font-mono">
                 <div className="flex items-center justify-between text-slate-400">
                   <span>Status</span>
-                  <span className={`uppercase font-bold ${
-                    state === 'healthy' ? 'text-emerald-400' :
-                    state === 'degraded' ? 'text-amber-400' : 'text-slate-500'
-                  }`}>{state.replace('_', ' ')}</span>
+                  <span
+                    className={`uppercase font-bold ${
+                      state === 'healthy'
+                        ? 'text-emerald-400'
+                        : state === 'degraded'
+                          ? 'text-amber-400'
+                          : 'text-slate-500'
+                    }`}
+                  >
+                    {state.replace('_', ' ')}
+                  </span>
                 </div>
                 {latency !== null && (
                   <div className="flex items-center justify-between text-slate-400">
@@ -183,9 +244,11 @@ export function SystemHealthApp() {
 
       {/* Architecture legend */}
       <div className="rounded-xl border border-white/5 bg-black/20 p-4">
-        <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">OS Architecture Mapping</h3>
+        <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+          OS Architecture Mapping
+        </h3>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 text-[11px]">
-          {SERVICE_META.map(m => (
+          {SERVICE_META.map((m) => (
             <div key={m.key} className="flex items-center gap-2 text-slate-500">
               <span style={{ color: m.color }}>{m.icon}</span>
               <span className="font-semibold text-slate-400">{m.label}</span>

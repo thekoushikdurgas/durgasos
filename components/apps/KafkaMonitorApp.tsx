@@ -29,22 +29,67 @@ const TOPIC_COLORS: Record<string, string> = {
 const ALL_TOPICS = Object.keys(TOPIC_COLORS);
 
 const SIMULATED_EVENTS: Omit<KafkaEvent, 'id' | 'timestamp'>[] = [
-  { topic: 'system.feed', eventType: 'kernel.boot', payload: { msg: 'DurgasOS kernel initialized', pid: 1 } },
-  { topic: 'agent.step', eventType: 'llm.request', payload: { model: 'gemini-2.5-flash', tokens: 512, user: 'durga' } },
-  { topic: 'file.uploaded', eventType: 'upload.complete', payload: { filename: 'research.pdf', size_bytes: 204800, bucket: 'user-uploads' } },
-  { topic: 'workflow.run.requested', eventType: 'workflow.queued', payload: { workflow_id: 'wf-001', name: 'Data Pipeline' } },
-  { topic: 'agent.completed', eventType: 'agent.done', payload: { result: 'success', duration_ms: 1243 } },
-  { topic: 'file.embedded', eventType: 'chromadb.indexed', payload: { chunks: 14, collection: 'durgasai_pages' } },
-  { topic: 'workflow.run.completed', eventType: 'workflow.done', payload: { steps: 5, duration_s: 8.2 } },
-  { topic: 'notification.sent', eventType: 'push.sent', payload: { title: 'File ready', user: 'durga' } },
-  { topic: 'os.desktop.event', eventType: 'window.opened', payload: { app: 'Terminal', pid: 4421 } },
-  { topic: 'system.feed', eventType: 'redis.cache_hit', payload: { key: 'gql:system_health', ttl: 15 } },
+  {
+    topic: 'system.feed',
+    eventType: 'kernel.boot',
+    payload: { msg: 'DurgasOS kernel initialized', pid: 1 },
+  },
+  {
+    topic: 'agent.step',
+    eventType: 'llm.request',
+    payload: { model: 'gemini-2.5-flash', tokens: 512, user: 'durga' },
+  },
+  {
+    topic: 'file.uploaded',
+    eventType: 'upload.complete',
+    payload: { filename: 'research.pdf', size_bytes: 204800, bucket: 'user-uploads' },
+  },
+  {
+    topic: 'workflow.run.requested',
+    eventType: 'workflow.queued',
+    payload: { workflow_id: 'wf-001', name: 'Data Pipeline' },
+  },
+  {
+    topic: 'agent.completed',
+    eventType: 'agent.done',
+    payload: { result: 'success', duration_ms: 1243 },
+  },
+  {
+    topic: 'file.embedded',
+    eventType: 'chromadb.indexed',
+    payload: { chunks: 14, collection: 'durgasai_pages' },
+  },
+  {
+    topic: 'workflow.run.completed',
+    eventType: 'workflow.done',
+    payload: { steps: 5, duration_s: 8.2 },
+  },
+  {
+    topic: 'notification.sent',
+    eventType: 'push.sent',
+    payload: { title: 'File ready', user: 'durga' },
+  },
+  {
+    topic: 'os.desktop.event',
+    eventType: 'window.opened',
+    payload: { app: 'Terminal', pid: 4421 },
+  },
+  {
+    topic: 'system.feed',
+    eventType: 'redis.cache_hit',
+    payload: { key: 'gql:system_health', ttl: 15 },
+  },
 ];
 
 function formatTime(iso: string): string {
   const d = new Date(iso);
   return (
-    d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) +
+    d.toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }) +
     '.' +
     String(d.getMilliseconds()).padStart(3, '0')
   );
@@ -117,7 +162,10 @@ export function KafkaMonitorApp() {
       ws = new WebSocket(`${proto}://${window.location.host}/ws/gateway`);
 
       ws.onopen = () => {
-        if (dead) { ws?.close(); return; }
+        if (dead) {
+          ws?.close();
+          return;
+        }
         setConnected(true);
         // Stop simulated events when real WS is live
         if (simIntervalRef.current) {

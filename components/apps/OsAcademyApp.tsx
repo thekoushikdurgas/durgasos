@@ -28,32 +28,37 @@ export function OsAcademyApp() {
   const [error, setError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Array<{ topicId: number; title: string; content: string; similarity: number }>>([]);
+  const [searchResults, setSearchResults] = useState<
+    Array<{ topicId: number; title: string; content: string; similarity: number }>
+  >([]);
   const [searching, setSearching] = useState(false);
 
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
-    setSearching(true);
-    callStreaming(
-      'os_labs.search_topics',
-      { query },
-      {
-        onDone: (res) => {
-          setSearchResults((res.results as any[]) || []);
-          setSearching(false);
-        },
-        onError: () => {
-          setSearching(false);
-        }
+  const handleSearch = useCallback(
+    (query: string) => {
+      setSearchQuery(query);
+      if (!query.trim()) {
+        setSearchResults([]);
+        return;
       }
-    ).catch(() => {
-      setSearching(false);
-    });
-  }, [callStreaming]);
+      setSearching(true);
+      callStreaming(
+        'os_labs.search_topics',
+        { query },
+        {
+          onDone: (res) => {
+            setSearchResults((res.results as any[]) || []);
+            setSearching(false);
+          },
+          onError: () => {
+            setSearching(false);
+          },
+        }
+      ).catch(() => {
+        setSearching(false);
+      });
+    },
+    [callStreaming]
+  );
 
   // App UI Tabs: 'lesson' | 'quiz'
   const [activeTab, setActiveTab] = useState<'lesson' | 'quiz'>('lesson');
@@ -183,8 +188,12 @@ export function OsAcademyApp() {
                   onClick={() => handleSelectTopic(res.topicId)}
                 >
                   <div className="flex items-center justify-between font-semibold">
-                    <span className="truncate">{res.topicId}. {res.title}</span>
-                    <span className="text-[9px] text-cyan-400 font-mono">{(res.similarity * 100).toFixed(0)}%</span>
+                    <span className="truncate">
+                      {res.topicId}. {res.title}
+                    </span>
+                    <span className="text-[9px] text-cyan-400 font-mono">
+                      {(res.similarity * 100).toFixed(0)}%
+                    </span>
                   </div>
                   <div className="text-[10px] opacity-40 line-clamp-1 mt-0.5">{res.content}</div>
                 </button>
