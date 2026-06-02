@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ChangeEvent } from 'react';
 import {
   Star,
   GitFork,
@@ -37,6 +37,12 @@ function asRepoList(raw: unknown): Repository[] {
   return raw.filter((x): x is Repository => x !== null && typeof x === 'object');
 }
 
+type FileTreeEntry = {
+  name: string;
+  type: 'dir' | 'file';
+  children?: FileTreeEntry[];
+};
+
 const getLanguageColor = (lang: string) => {
   switch (lang) {
     case 'TypeScript':
@@ -61,9 +67,7 @@ const getLanguageColor = (lang: string) => {
 };
 
 // Simulated File Trees based on Language
-function getFileTreeForLanguage(
-  lang: string = ''
-): { name: string; type: 'dir' | 'file'; children?: any[] }[] {
+function getFileTreeForLanguage(lang: string = ''): FileTreeEntry[] {
   const normalized = lang.toLowerCase();
   if (normalized === 'python') {
     return [
@@ -157,7 +161,7 @@ function getFileTreeForLanguage(
 }
 
 // Sub-component to render directory tree
-function FileTreeNode({ item, depth = 0 }: { item: any; depth?: number }) {
+function FileTreeNode({ item, depth = 0 }: { item: FileTreeEntry; depth?: number }) {
   const [isOpen, setIsOpen] = useState(true);
 
   if (item.type === 'file') {
@@ -189,7 +193,7 @@ function FileTreeNode({ item, depth = 0 }: { item: any; depth?: number }) {
       </button>
       {isOpen && item.children && (
         <div className="border-l border-white/5 ml-2.5">
-          {item.children.map((child: any, idx: number) => (
+          {item.children.map((child, idx) => (
             <FileTreeNode key={idx} item={child} depth={depth + 1} />
           ))}
         </div>
@@ -352,7 +356,9 @@ export function RepositoriesTab({
             <SlidersHorizontal className="h-3.5 w-3.5 text-white/40" />
             <select
               value={sortBy}
-              onChange={(e: any) => handleSort(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                handleSort(e.target.value as 'updated' | 'name' | 'stars')
+              }
               className="bg-transparent text-white/80 border-none outline-none text-[11px] font-medium cursor-pointer"
             >
               <option value="updated" className="bg-slate-900 text-white">
@@ -723,7 +729,9 @@ export function RepositoriesTab({
                     </label>
                     <select
                       value={newVisibility}
-                      onChange={(e: any) => setNewVisibility(e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                        setNewVisibility(e.target.value as 'public' | 'private')
+                      }
                       className="w-full rounded-xl border border-white/10 bg-slate-950 p-2 text-white outline-none focus:border-violet-400/30 text-xs cursor-pointer"
                     >
                       <option value="public">Public</option>

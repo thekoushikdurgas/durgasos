@@ -12,14 +12,14 @@
   },
   "main": "electron/main.cjs",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "node init && next dev",
+    "build": "node init && next build",
+    "start": "node init && next start",
     "postbuild": "node scripts/copy-standalone-assets.mjs",
     "icons:generate": "node scripts/generate-pwa-icons.mjs",
-    "dev:electron": "concurrently -k \"next dev\" \"wait-on http://127.0.0.1:3000 && cross-env ELECTRON_DEV=1 electron .\"",
+    "dev:electron": "node init && concurrently -k \"next dev\" \"wait-on http://127.0.0.1:3000 && cross-env ELECTRON_DEV=1 electron .\"",
     "electron:prep": "node scripts/copy-standalone-assets.mjs",
-    "build:electron": "next build && node scripts/copy-standalone-assets.mjs && electron-builder",
+    "build:electron": "node init && next build && node scripts/copy-standalone-assets.mjs && electron-builder",
     "make:win": "next build && node scripts/copy-standalone-assets.mjs && electron-builder --win",
     "make:mac": "next build && node scripts/copy-standalone-assets.mjs && electron-builder --mac",
     "make:linux": "next build && node scripts/copy-standalone-assets.mjs && electron-builder --linux",
@@ -130,7 +130,7 @@
   "build": {
     "appId": "ai.thekoushikdurgas.durgasos",
     "productName": "DurgasOS",
-    "copyright": "Copyright © DurgasOS",
+    "copyright": "Copyright \u00a9 DurgasOS",
     "directories": {
       "output": "dist-electron"
     },
