@@ -19,12 +19,21 @@ type PushNotifPayload = {
   timestamp?: number;
 };
 
+type NotificationLevel = PushNotifPayload['level'];
+
 type WsFrame = {
   type: 'notification' | 'heartbeat' | 'done' | string;
   notification?: PushNotifPayload;
   reason?: string;
   ts?: number;
 };
+
+const NOTIFICATION_LEVELS: readonly NotificationLevel[] = ['info', 'success', 'warning', 'error'];
+
+function parseNotificationLevel(raw: string | undefined): NotificationLevel {
+  if (raw === 'success' || raw === 'warning' || raw === 'error') return raw;
+  return 'info';
+}
 
 const RECONNECT_DELAY_MS = 5_000;
 const MAX_RECONNECT_DELAY_MS = 60_000;
@@ -115,9 +124,7 @@ export function useWsPushNotifications(enabled = true) {
 
       if (frame.type === 'notification' && frame.notification) {
         const n = frame.notification;
-        const level = (['info', 'success', 'warning', 'error'] as const).includes(n.level as 'info')
-          ? n.level
-          : ('info' as const);
+        const level = parseNotificationLevel(n.level);
 
         const input: OsNotificationInput = {
           title: n.title,
@@ -142,7 +149,9 @@ export function useWsPushNotifications(enabled = true) {
         return;
       }
 
-      // heartbeat: ignore (just keeps connection alive)
+      if (frame.type === 'heartbeat') {
+        return;
+      }
     };
 
     ws.onerror = () => {

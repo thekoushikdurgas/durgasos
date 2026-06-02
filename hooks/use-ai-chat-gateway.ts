@@ -23,7 +23,7 @@ export type AiStreamHandlers = {
   onChunk?: (delta: string, fullSoFar: string) => void;
   onDone: (full: string) => void;
   onError: (message: string) => void;
-  /** User stopped generation; server may still send chunks (ignored). */
+  /** User stopped generation; late chunks are dropped when `aborted` is set. */
   onAborted?: () => void;
 };
 

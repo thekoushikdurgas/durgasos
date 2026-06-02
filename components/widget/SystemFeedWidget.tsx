@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, Play, Pause, Trash2, Cpu } from 'lucide-react';
 import { DesktopWidgetChrome } from '@/components/widget/DesktopWidgetChrome';
+import { swallowClientError } from '@/lib/safe-client-storage';
 
 interface KafkaEvent {
   id: string;
@@ -200,8 +201,8 @@ export function SystemFeedWidget() {
               offset: msg.offset,
             });
           }
-        } catch {
-          // ignore non-json messages
+        } catch (err) {
+          swallowClientError('system-feed-widget.ws.parse', err);
         }
       };
 
